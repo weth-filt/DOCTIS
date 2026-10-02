@@ -1,0 +1,395 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family:'Poppins',sans-serif;
+  overflow-x:hidden;
+  background:#050816;
+  color:white;
+}
+
+/* =========================
+   AUTH CONTAINER
+========================= */
+
+.auth-container{
+  position:relative;
+  width:100%;
+  min-height:100vh;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  padding:30px;
+
+  overflow:hidden;
+}
+
+/* =========================
+   BACKGROUND GLOW
+========================= */
+
+.auth-container::before{
+  content:"";
+  position:absolute;
+
+  width:420px;
+  height:420px;
+
+  background:#00d4ff;
+
+  border-radius:50%;
+
+  filter:blur(160px);
+
+  top:-120px;
+  left:-120px;
+
+  opacity:.45;
+}
+
+.auth-container::after{
+  content:"";
+  position:absolute;
+
+  width:420px;
+  height:420px;
+
+  background:#ff00c8;
+
+  border-radius:50%;
+
+  filter:blur(160px);
+
+  bottom:-120px;
+  right:-120px;
+
+  opacity:.35;
+}
+
+/* =========================
+   FLOATING CIRCLES
+========================= */
+
+.circle{
+  position:absolute;
+  border-radius:50%;
+  background:rgba(255,255,255,.08);
+
+  animation:float 6s infinite ease-in-out;
+}
+
+.circle:nth-child(1){
+  width:90px;
+  height:90px;
+
+  top:10%;
+  left:12%;
+}
+
+.circle:nth-child(2){
+  width:130px;
+  height:130px;
+
+  bottom:10%;
+  right:12%;
+
+  animation-delay:2s;
+}
+
+.circle:nth-child(3){
+  width:70px;
+  height:70px;
+
+  top:70%;
+  left:22%;
+
+  animation-delay:4s;
+}
+
+/* =========================
+   AUTH CARD
+========================= */
+
+.auth-card{
+  position:relative;
+
+  width:100%;
+  max-width:400px;
+
+  padding:42px 34px;
+
+  border-radius:30px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.12),
+      rgba(255,255,255,.04)
+    );
+
+  backdrop-filter:blur(24px);
+
+  border:
+    1px solid rgba(255,255,255,.14);
+
+  box-shadow:
+    0 10px 40px rgba(0,0,0,.35);
+
+  z-index:2;
+
+  animation:fadeUp .6s ease;
+}
+
+/* =========================
+   LOGO
+========================= */
+
+.logo{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+
+  margin-bottom:32px;
+}
+
+.logo-icon{
+  font-size:38px;
+  color:#00d4ff;
+
+  animation:pulse 2s infinite;
+}
+
+.logo h2{
+  font-size:34px;
+  font-weight:700;
+}
+
+/* =========================
+   INPUT
+========================= */
+
+.input-group{
+  position:relative;
+  margin-bottom:18px;
+}
+
+.input-icon{
+  position:absolute;
+
+  left:16px;
+  top:50%;
+
+  transform:translateY(-50%);
+
+  color:#64748b;
+
+  font-size:15px;
+}
+
+.input{
+  width:100%;
+
+  padding:15px 18px 15px 46px;
+
+  border:none;
+  outline:none;
+
+  border-radius:16px;
+
+  background:rgba(255,255,255,.92);
+
+  font-size:15px;
+  font-weight:500;
+
+  transition:.3s;
+}
+
+.input:focus{
+  box-shadow:
+    0 0 0 3px rgba(34,211,238,.25);
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.btn{
+  width:100%;
+
+  padding:15px;
+
+  border:none;
+  border-radius:16px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #06b6d4,
+      #3b82f6
+    );
+
+  color:white;
+
+  font-size:16px;
+  font-weight:700;
+
+  cursor:pointer;
+
+  transition:.3s;
+
+  margin-top:8px;
+}
+
+.btn:hover{
+  transform:translateY(-3px);
+
+  box-shadow:
+    0 12px 25px rgba(0,0,0,.35);
+}
+
+/* =========================
+   LINK
+========================= */
+
+.link{
+  text-align:center;
+
+  margin-top:18px;
+
+  font-size:14px;
+
+  color:#cbd5e1;
+
+  cursor:pointer;
+
+  transition:.3s;
+}
+
+.link:hover{
+  color:#22d3ee;
+}
+
+/* =========================
+   HEALTH BADGE
+========================= */
+
+.health-badge{
+  margin-top:24px;
+
+  text-align:center;
+
+  font-size:13px;
+
+  color:#94a3b8;
+}
+
+/* =========================
+   MAIN CONTENT
+========================= */
+
+.main-content{
+  width:100%;
+}
+
+/* =========================
+   ACTIVE STATE
+========================= */
+
+.active{
+  background:rgba(255,255,255,.1);
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+
+@keyframes float{
+
+  0%{
+    transform:translateY(0);
+  }
+
+  50%{
+    transform:translateY(-18px);
+  }
+
+  100%{
+    transform:translateY(0);
+  }
+
+}
+
+@keyframes pulse{
+
+  0%{
+    transform:scale(1);
+  }
+
+  50%{
+    transform:scale(1.08);
+  }
+
+  100%{
+    transform:scale(1);
+  }
+
+}
+
+@keyframes fadeUp{
+
+  from{
+    opacity:0;
+    transform:translateY(20px);
+  }
+
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:768px){
+
+  .auth-card{
+    padding:34px 24px;
+    border-radius:24px;
+  }
+
+  .logo h2{
+    font-size:28px;
+  }
+
+}
+
+@media(max-width:480px){
+
+  .auth-container{
+    padding:18px;
+  }
+
+  .auth-card{
+    padding:28px 20px;
+  }
+
+  .logo h2{
+    font-size:24px;
+  }
+
+  .btn{
+    font-size:15px;
+  }
+
+}

@@ -1,0 +1,1963 @@
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap");
+
+:root {
+  --doctis-ink: #183153;
+  --doctis-title: #122542;
+  --doctis-text: #5d7190;
+  --doctis-muted: #8b9bb2;
+  --doctis-line: #dfe8f4;
+  --doctis-bg: #f4f8ff;
+  --doctis-white: #ffffff;
+  --doctis-blue: #3977f2;
+  --doctis-cyan: #20c6e6;
+  --doctis-purple: #8068ee;
+  --doctis-pink: #ed6f91;
+  --doctis-green: #20b987;
+  --doctis-orange: #e8a22a;
+  --doctis-red: #e45d70;
+  --doctis-accent: #ff7a45;
+  --doctis-accent-dark: #e0601f;
+  --doctis-accent-soft: #fff1e8;
+  --doctis-shadow: 0 14px 38px rgba(40, 78, 125, .075);
+}
+
+html, body, #root { min-width: 100%; min-height: 100%; margin: 0; padding: 0; }
+body { background: var(--doctis-bg); color: var(--doctis-ink); }
+
+.dashboard-layout.doctis-v5,
+.dashboard-layout.doctis-v5 * { box-sizing: border-box; }
+
+.dashboard-layout.doctis-v5 {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  color: var(--doctis-ink);
+  background:
+    radial-gradient(700px 360px at 92% 3%, rgba(64, 151, 255, .13), transparent 65%),
+    radial-gradient(650px 360px at 3% 30%, rgba(44, 207, 224, .09), transparent 65%),
+    linear-gradient(180deg, #fbfdff 0%, #f4f8ff 56%, #f9fbff 100%);
+  font-family: "Be Vietnam Pro", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dashboard-layout.doctis-v5 .dashboard-bg,
+.dashboard-layout.doctis-v5 > .sidebar { display: none !important; }
+
+.dashboard-layout.doctis-v5 button,
+.dashboard-layout.doctis-v5 input,
+.dashboard-layout.doctis-v5 select,
+.dashboard-layout.doctis-v5 textarea { font: inherit; }
+
+/* Keep all dashboard text on the same Vietnamese-compatible font. */
+.dashboard-layout.doctis-v5,
+.dashboard-layout.doctis-v5 button,
+.dashboard-layout.doctis-v5 input,
+.dashboard-layout.doctis-v5 select,
+.dashboard-layout.doctis-v5 textarea,
+.dashboard-layout.doctis-v5 table,
+.dashboard-layout.doctis-v5 th,
+.dashboard-layout.doctis-v5 td {
+  font-family: "Be Vietnam Pro", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+
+/* =========================================================
+   TOP NAV
+   ========================================================= */
+.dashboard-layout.doctis-v5 .v5-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px clamp(18px, 3.4vw, 54px);
+  background: rgba(255,255,255,.94);
+  border: 0;
+  border-bottom: 1px solid #e2eaf4;
+  box-shadow: 0 8px 28px rgba(34, 70, 112, .055);
+  backdrop-filter: blur(18px);
+}
+
+.dashboard-layout.doctis-v5 .v5-brand {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: max-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--doctis-title);
+  cursor: pointer;
+  text-align: left;
+}
+.dashboard-layout.doctis-v5 .v5-brand-mark {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  color: #fff;
+  background: linear-gradient(135deg, #22cbe6, #3977f2 70%, #735ee7);
+  box-shadow: 0 9px 22px rgba(55,121,242,.20);
+  font-size: 20px;
+}
+.dashboard-layout.doctis-v5 .v5-brand strong,
+.dashboard-layout.doctis-v5 .v5-brand small { display: block; }
+.dashboard-layout.doctis-v5 .v5-brand strong { font-size: 18px; font-weight: 800; letter-spacing: -.4px; }
+.dashboard-layout.doctis-v5 .v5-brand small { margin-top: 1px; color: #6c7e97; font-size: 13px; font-weight: 600; }
+.dashboard-layout.doctis-v5 .v5-brand:hover .v5-brand-mark { transform: translateY(-1px); }
+
+.dashboard-layout.doctis-v5 .v5-primary-nav {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.dashboard-layout.doctis-v5 .v5-primary-nav button {
+  position: relative;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #60728f;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: .2s ease;
+}
+.dashboard-layout.doctis-v5 .v5-primary-nav button svg { color: #7186a5; font-size: 15px; }
+.dashboard-layout.doctis-v5 .v5-primary-nav button:hover {
+  color: var(--doctis-blue);
+  background: #f2f6ff;
+}
+.dashboard-layout.doctis-v5 .v5-primary-nav button.active {
+  color: #fff;
+  background: linear-gradient(135deg, #3f83f5, #376fe7);
+  border-color: #3977f2;
+  box-shadow: 0 7px 17px rgba(55,119,242,.18);
+}
+.dashboard-layout.doctis-v5 .v5-primary-nav button.active svg { color: #fff; }
+
+.dashboard-layout.doctis-v5 .v5-header-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.dashboard-layout.doctis-v5 .v5-notification,
+.dashboard-layout.doctis-v5 .v5-account,
+.dashboard-layout.doctis-v5 .v5-menu-toggle {
+  border: 1px solid #dfe7f2;
+  background: #fff;
+  color: #536987;
+  cursor: pointer;
+  transition: .2s ease;
+}
+.dashboard-layout.doctis-v5 .v5-notification {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+}
+.dashboard-layout.doctis-v5 .v5-notification:hover,
+.dashboard-layout.doctis-v5 .v5-account:hover,
+.dashboard-layout.doctis-v5 .v5-menu-toggle:hover { border-color: #bdd1f3; color: var(--doctis-blue); background: #f7faff; }
+.dashboard-layout.doctis-v5 .v5-notification > span {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #ed6378;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+.dashboard-layout.doctis-v5 .v5-account {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.dashboard-layout.doctis-v5 .v5-account > svg:first-child { color: #3977f2; font-size: 17px; }
+.dashboard-layout.doctis-v5 .v5-account > svg:last-child { font-size: 12px; color: #93a2b7; }
+.dashboard-layout.doctis-v5 .v5-menu-toggle {
+  position: relative;
+  display: none;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 11px;
+  overflow: hidden;
+}
+/* Guaranteed 3-bar (hamburger) icon drawn in pure CSS, so the button always
+   shows a clear icon even if its inner icon markup is missing or fails to load. */
+.dashboard-layout.doctis-v5 .v5-menu-toggle::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  box-shadow: 0 -6px 0 currentColor, 0 6px 0 currentColor;
+}
+.dashboard-layout.doctis-v5 .v5-menu-toggle svg,
+.dashboard-layout.doctis-v5 .v5-menu-toggle img { display: none; }
+
+/* =========================================================
+   MAIN / HERO
+   ========================================================= */
+.dashboard-layout.doctis-v5 > .dashboard {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0 clamp(18px, 3.4vw, 54px) 70px;
+  color: var(--doctis-ink);
+  background: transparent;
+}
+
+.dashboard-layout.doctis-v5 .v5-welcome-hero {
+  position: relative;
+  width: min(1420px, 100%);
+  min-height: 286px;
+  margin: 28px auto 0;
+  padding: 36px clamp(25px, 4vw, 54px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(270px, .72fr);
+  align-items: center;
+  gap: 25px;
+  overflow: hidden;
+  border: 1px solid #dbe7f5;
+  border-radius: 27px;
+  background:
+    radial-gradient(circle at 90% 55%, rgba(64, 143, 248, .09), transparent 30%),
+    linear-gradient(115deg, #fff 0%, #f7fbff 52%, #eaf6ff 100%);
+  box-shadow: 0 20px 52px rgba(42, 85, 145, .085);
+}
+.dashboard-layout.doctis-v5 .v5-welcome-hero::before {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  right: -80px;
+  top: -100px;
+  border-radius: 50%;
+  background: rgba(48, 164, 239, .08);
+}
+.dashboard-layout.doctis-v5 .v5-hero-copy { position: relative; z-index: 2; min-width: 0; }
+.dashboard-layout.doctis-v5 .v5-eyebrow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  color: var(--doctis-accent-dark);
+  background: var(--doctis-accent-soft);
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+}
+.dashboard-layout.doctis-v5 .v5-eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--doctis-accent);
+  box-shadow: 0 0 0 4px rgba(255, 122, 69, .18);
+  animation: doctisPulse 2.4s ease-in-out infinite;
+}
+.dashboard-layout.doctis-v5 .v5-hero-copy h1 {
+  margin: 8px 0 7px;
+  color: var(--doctis-title);
+  font-size: clamp(28px, 3.1vw, 43px);
+  line-height: 1.14;
+  letter-spacing: -1.5px;
+}
+.dashboard-layout.doctis-v5 .v5-hero-copy h1 strong { color: #244d8f; }
+.dashboard-layout.doctis-v5 .v5-hero-copy p {
+  max-width: 690px;
+  margin: 0;
+  color: #526480;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.dashboard-layout.doctis-v5 .v5-hero-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+.dashboard-layout.doctis-v5 .v5-hero-actions button {
+  min-height: 39px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border: 1px solid #3977f2;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(135deg, #4388f7, #3470e8);
+  box-shadow: 0 8px 18px rgba(55,119,242,.16);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: .2s ease;
+}
+.dashboard-layout.doctis-v5 .v5-hero-actions button:hover { transform: translateY(-2px); box-shadow: 0 12px 23px rgba(55,119,242,.2); }
+.dashboard-layout.doctis-v5 .v5-hero-actions button.ghost {
+  color: var(--doctis-accent-dark);
+  border-color: #ffd7bd;
+  background: var(--doctis-accent-soft);
+  box-shadow: none;
+}
+.dashboard-layout.doctis-v5 .v5-hero-actions button.ghost:hover {
+  color: #fff;
+  background: linear-gradient(135deg, var(--doctis-accent), var(--doctis-accent-dark));
+  border-color: var(--doctis-accent-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(255,122,69,.28);
+}
+
+.dashboard-layout.doctis-v5 .v5-hero-art { position: relative; min-height: 210px; display: grid; place-items: center; }
+.dashboard-layout.doctis-v5 .v5-hero-orb {
+  position: relative;
+  z-index: 1;
+  width: 145px;
+  height: 145px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(71, 137, 244, .2);
+  border-radius: 50%;
+  color: #3c80f4;
+  background: linear-gradient(145deg, #e9f6ff, #edf0ff);
+  box-shadow: 0 18px 38px rgba(55, 111, 221, .12);
+  font-size: 60px;
+}
+.dashboard-layout.doctis-v5 .v5-hero-orb::after {
+  content: "";
+  position: absolute;
+  inset: -16px;
+  border: 1px solid rgba(71,137,244,.12);
+  border-radius: 50%;
+  animation: doctisPulse 3.5s ease-in-out infinite;
+}
+.dashboard-layout.doctis-v5 .v5-hero-note {
+  position: absolute;
+  z-index: 4;
+  right: 2%;
+  top: 4%;
+  max-width: 46%;
+  padding: 8px 12px;
+  border: 1px solid #dfebf7;
+  border-radius: 99px;
+  color: #4a5f80;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(43,82,135,.14);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.dashboard-layout.doctis-v5 .v5-sticker {
+  position: absolute;
+  z-index: 2;
+  width: 43px;
+  height: 43px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e3ebf6;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(45,85,139,.12);
+  font-size: 22px;
+  animation: doctisFloat 4.5s ease-in-out infinite;
+}
+.dashboard-layout.doctis-v5 .sticker-one { left: 12%; top: 15%; }
+.dashboard-layout.doctis-v5 .sticker-two { right: 14%; bottom: 10%; animation-delay: 1.4s; }
+.dashboard-layout.doctis-v5 .v5-sticker:hover { box-shadow: 0 14px 30px rgba(255,122,69,.22); border-color: #ffd7bd; }
+
+/* Extra floating doctor-themed accents inside the hero art, purely decorative */
+.dashboard-layout.doctis-v5 .v5-hero-art::before,
+.dashboard-layout.doctis-v5 .v5-hero-art::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.dashboard-layout.doctis-v5 .v5-hero-art::before {
+  width: 30px;
+  height: 30px;
+  left: 6%;
+  bottom: 22%;
+  background: radial-gradient(circle at 35% 35%, #fff, var(--doctis-accent-soft) 60%, transparent 75%);
+  border: 1px solid #ffe0cc;
+  box-shadow: 0 8px 18px rgba(255,122,69,.18);
+  animation: doctisFloat 5.5s ease-in-out infinite .5s;
+}
+.dashboard-layout.doctis-v5 .v5-hero-art::after {
+  width: 16px;
+  height: 16px;
+  right: 4%;
+  bottom: 30%;
+  z-index: 0;
+  background: radial-gradient(circle at 35% 35%, #fff, #e9f6ff 60%, transparent 75%);
+  border: 1px solid #d7ebfb;
+  animation: doctisFloat 4s ease-in-out infinite .2s;
+}
+
+/* =========================================================
+   QUICK ACTIONS
+   ========================================================= */
+.dashboard-layout.doctis-v5 .v5-quick-section,
+.dashboard-layout.doctis-v5 .v5-diabetes-section {
+  width: min(1420px, 100%);
+  margin: 24px auto 0;
+}
+.dashboard-layout.doctis-v5 .v5-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 14px;
+}
+.dashboard-layout.doctis-v5 .v5-section-heading h2 {
+  margin: 4px 0 0;
+  color: var(--doctis-title);
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -.65px;
+}
+.dashboard-layout.doctis-v5 .v5-section-heading p { margin: 5px 0 0; color: #6a7c94; font-size: 13px; }
+.dashboard-layout.doctis-v5 .v5-date-pill {
+  flex: 0 0 auto;
+  padding: 7px 11px;
+  border: 1px solid #dfe8f4;
+  border-radius: 99px;
+  background: #fff;
+  color: #7b8da7;
+  font-size: 13px;
+  font-weight: 700;
+}
+.dashboard-layout.doctis-v5 .v5-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.dashboard-layout.doctis-v5 .v5-quick-card {
+  position: relative;
+  min-height: 104px;
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr) auto;
+  align-items: start;
+  gap: 11px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid #e0e8f3;
+  border-radius: 16px;
+  background: rgba(255,255,255,.96);
+  color: #263b5d;
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(38,78,130,.055);
+  cursor: pointer;
+  transition: .23s ease;
+}
+.dashboard-layout.doctis-v5 .v5-quick-card::after {
+  content: "";
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  right: -35px;
+  bottom: -35px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .045;
+}
+.dashboard-layout.doctis-v5 .v5-quick-card:hover { transform: translateY(-4px); border-color: #c8d9f2; box-shadow: 0 15px 30px rgba(39,83,140,.1); }
+.dashboard-layout.doctis-v5 .v5-quick-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #3977f2;
+  background: #edf4ff;
+  font-size: 17px;
+}
+.dashboard-layout.doctis-v5 .v5-quick-card:nth-child(2) .v5-quick-icon { color: #19a9bf; background: #e9f9fc; }
+.dashboard-layout.doctis-v5 .v5-quick-card:nth-child(3) .v5-quick-icon { color: #7962e7; background: #f1edff; }
+.dashboard-layout.doctis-v5 .v5-quick-card:nth-child(4) .v5-quick-icon { color: #e28d22; background: #fff5e5; }
+.dashboard-layout.doctis-v5 .v5-quick-card:nth-child(5) .v5-quick-icon { color: var(--doctis-accent-dark); background: var(--doctis-accent-soft); }
+.dashboard-layout.doctis-v5 .v5-quick-card:nth-child(6) .v5-quick-icon { color: #20a77e; background: #eafaf5; }
+.dashboard-layout.doctis-v5 .v5-quick-card strong { display: block; color: #263b5d; font-size: 14px; font-weight: 800; }
+.dashboard-layout.doctis-v5 .v5-quick-card small { display: block; margin-top: 4px; color: #8393aa; font-size: 13px; line-height: 1.45; }
+.dashboard-layout.doctis-v5 .v5-quick-card > b { color: #9aa9bd; font-size: 17px; font-weight: 500; }
+
+/* =========================================================
+   KNOWLEDGE
+   ========================================================= */
+.dashboard-layout.doctis-v5 .v5-diabetes-section { margin-top: 34px; }
+.dashboard-layout.doctis-v5 .v5-diabetes-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+.dashboard-layout.doctis-v5 .v5-diabetes-card {
+  overflow: hidden;
+  border: 1px solid #e0e8f3;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 25px rgba(36,78,130,.055);
+  transition: .25s ease;
+}
+.dashboard-layout.doctis-v5 .v5-diabetes-card:hover { transform: translateY(-4px); box-shadow: 0 17px 34px rgba(37,85,150,.1); }
+.dashboard-layout.doctis-v5 .v5-image-placeholder {
+  position: relative;
+  width: 100%;
+  height: 174px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  padding: 15px;
+  color: #fff;
+  background: linear-gradient(135deg,#dff5ff,#e8edff 55%,#f8ecff);
+  background-size: cover;
+  background-position: center;
+}
+.dashboard-layout.doctis-v5 .v5-image-placeholder::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 35%, rgba(13,32,65,.58) 100%);
+}
+.dashboard-layout.doctis-v5 .v5-image-placeholder > span { position: relative; z-index: 1; font-size: 16px; font-weight: 800; }
+.dashboard-layout.doctis-v5 .v5-image-placeholder > small { display: none; }
+.dashboard-layout.doctis-v5 .v5-diabetes-card > strong { display: block; padding: 14px 15px 0; color: #263b5d; font-size: 14px; }
+.dashboard-layout.doctis-v5 .v5-diabetes-card > p { margin: 5px 15px 16px; color: #67798f; font-size: 13px; line-height: 1.55; }
+
+/* =========================================================
+   SHARED CONTENT / METRICS
+   ========================================================= */
+.dashboard-layout.doctis-v5 .latest-data-notice,
+.dashboard-layout.doctis-v5 .modern-card,
+.dashboard-layout.doctis-v5 .ai-analysis-box,
+.dashboard-layout.doctis-v5 .health-form,
+.dashboard-layout.doctis-v5 .chart-card,
+.dashboard-layout.doctis-v5 .chat-wrapper,
+.dashboard-layout.doctis-v5 .care-plan-page,
+.dashboard-layout.doctis-v5 .profile-card,
+.dashboard-layout.doctis-v5 .doctor-chat-container {
+  color: #263b60;
+  background: rgba(255,255,255,.97);
+  border: 1px solid #e0e8f3;
+  box-shadow: var(--doctis-shadow);
+}
+.dashboard-layout.doctis-v5 .latest-data-notice {
+  width: min(1420px,100%);
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 24px auto 10px;
+  padding: 11px 15px;
+  border-radius: 14px;
+  background: linear-gradient(100deg,#eef8ff,#fbfdff);
+}
+.dashboard-layout.doctis-v5 .latest-data-dot { width: 10px; height: 10px; flex: 0 0 10px; border-radius: 50%; background: #27c8e4; box-shadow: 0 0 0 5px #e2f8fc; }
+.dashboard-layout.doctis-v5 .latest-data-notice > div { min-width: 0; flex: 1; }
+.dashboard-layout.doctis-v5 .latest-data-notice strong { display: block; color: #5b759a; font-size: 13px; }
+.dashboard-layout.doctis-v5 .latest-data-notice > div > span { display: block; margin-top: 3px; color: #91a1b7; font-size: 13px; }
+.dashboard-layout.doctis-v5 .latest-data-notice time { flex: 0 0 auto; padding: 7px 9px; border: 1px solid #d7edf8; border-radius: 9px; color: #45b7d1; background: #f4fcff; font-size: 13px; font-weight: 700; }
+
+.dashboard-layout.doctis-v5 .modern-grid {
+  width: min(1420px,100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(5,minmax(0,1fr));
+  gap: 12px;
+}
+.dashboard-layout.doctis-v5 .modern-card {
+  position: relative;
+  min-width: 0;
+  min-height: 142px;
+  padding: 16px;
+  overflow: hidden;
+  border-radius: 17px;
+  transition: .22s ease;
+}
+.dashboard-layout.doctis-v5 .modern-card:hover { transform: translateY(-4px); box-shadow: 0 17px 34px rgba(36,78,130,.11); }
+.dashboard-layout.doctis-v5 .card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dashboard-layout.doctis-v5 .card-icon {
+  width: 36px; height: 36px; display: grid; place-items: center; border-radius: 11px;
+  color: #3977f2; background: #edf4ff; font-size: 16px;
+}
+.dashboard-layout.doctis-v5 .modern-card.danger .card-icon { color: #e45d70; background: #fff0f2; }
+.dashboard-layout.doctis-v5 .modern-card.info .card-icon { color: #18a9c0; background: #eaf9fc; }
+.dashboard-layout.doctis-v5 .modern-card.pink .card-icon { color: #e46b8a; background: #fff0f4; }
+.dashboard-layout.doctis-v5 .modern-card.success .card-icon { color: #18aa7a; background: #eafaf4; }
+.dashboard-layout.doctis-v5 .modern-card.warning .card-icon { color: #d99521; background: #fff6e7; }
+.dashboard-layout.doctis-v5 .card-title { margin-top: 18px; color: #586a88; font-size: 13px; font-weight: 700; }
+.dashboard-layout.doctis-v5 .card-value { margin-top: 4px; color: #293f64; font-size: 27px; font-weight: 800; line-height: 1.08; letter-spacing: -.7px; }
+.dashboard-layout.doctis-v5 .modern-card.warning .card-value { font-size: 23px; }
+.dashboard-layout.doctis-v5 .card-status { padding: 5px 7px; border-radius: 99px; color: #586a88; background: #f1f5fa; font-size: 13px; font-weight: 800; }
+.dashboard-layout.doctis-v5 .modern-card.danger .card-status { color: #db6071; background: #fff0f2; }
+.dashboard-layout.doctis-v5 .modern-card.info .card-status { color: #3977f2; background: #edf4ff; }
+.dashboard-layout.doctis-v5 .modern-card.success .card-status { color: #16986f; background: #eafaf4; }
+.dashboard-layout.doctis-v5 .modern-card.warning .card-status { color: #b77e16; background: #fff6e7; }
+
+/* =========================================================
+   AI ANALYSIS / FORMS / TABLES
+   ========================================================= */
+.dashboard-layout.doctis-v5 .ai-analysis-box,
+.dashboard-layout.doctis-v5 .health-form,
+.dashboard-layout.doctis-v5 .chart-card,
+.dashboard-layout.doctis-v5 .care-plan-page,
+.dashboard-layout.doctis-v5 .profile-card,
+.dashboard-layout.doctis-v5 .doctor-chat-container {
+  width: min(1420px,100%);
+  margin: 18px auto 0;
+  border-radius: 21px;
+}
+.dashboard-layout.doctis-v5 .ai-analysis-box { padding: 21px; }
+.dashboard-layout.doctis-v5 .analysis-header { display: flex; align-items: center; gap: 11px; margin-bottom: 15px; }
+.dashboard-layout.doctis-v5 .analysis-avatar { width: 43px; height: 43px; display: grid; place-items: center; flex: 0 0 43px; border-radius: 13px; color: #fff; background: linear-gradient(135deg,#3f83f5,#8068ee); box-shadow: 0 8px 19px rgba(66,113,221,.17); }
+.dashboard-layout.doctis-v5 .analysis-header h2 { margin: 0; color: #1d3558; font-size: 18px; }
+.dashboard-layout.doctis-v5 .analysis-header p { margin: 3px 0 0; color: #62748d; font-size: 13px; }
+.dashboard-layout.doctis-v5 .analysis-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.dashboard-layout.doctis-v5 .analysis-item { display: flex; gap: 10px; min-width: 0; padding: 12px; border: 1px solid #e5ecf5; border-radius: 13px; background: #f8fbff; }
+.dashboard-layout.doctis-v5 .analysis-icon { width: 32px; height: 32px; display: grid; place-items: center; flex: 0 0 32px; border-radius: 9px; color: #3977f2; background: #edf4ff; }
+.dashboard-layout.doctis-v5 .analysis-icon.red { color:#df6476; background:#fff0f2; }
+.dashboard-layout.doctis-v5 .analysis-icon.green { color:#1da97e; background:#eafaf4; }
+.dashboard-layout.doctis-v5 .analysis-icon.orange { color:#d99220; background:#fff6e6; }
+.dashboard-layout.doctis-v5 .analysis-item h4 { margin: 1px 0 3px; color: #2b4264; font-size: 13px; }
+.dashboard-layout.doctis-v5 .analysis-item p { margin: 0; color: #61738c; font-size: 13px; line-height: 1.5; }
+.dashboard-layout.doctis-v5 .danger-alert,
+.dashboard-layout.doctis-v5 .nutrition-missing-alert,
+.dashboard-layout.doctis-v5 .nutrition-ai-note,
+.dashboard-layout.doctis-v5 .bmi-info-box {
+  width: min(1420px,100%);
+  margin: 14px auto 0;
+  border-radius: 13px;
+}
+.dashboard-layout.doctis-v5 .danger-alert { display:flex; align-items:center; gap:9px; padding:11px 13px; color:#bd5b6b; background:#fff5f6; border:1px solid #ffd8df; font-size:13px; }
+.dashboard-layout.doctis-v5 .danger-alert svg { color:#e45d70; }
+.dashboard-layout.doctis-v5 input,
+.dashboard-layout.doctis-v5 select,
+.dashboard-layout.doctis-v5 textarea { color:#263b60; background:#fff; border-color:#dfe7f2; }
+.dashboard-layout.doctis-v5 input::placeholder,
+.dashboard-layout.doctis-v5 textarea::placeholder { color:#9aa9bc; opacity:1; }
+.dashboard-layout.doctis-v5 input:focus,
+.dashboard-layout.doctis-v5 select:focus,
+.dashboard-layout.doctis-v5 textarea:focus { outline: none; border-color:#8cb0f5; box-shadow:0 0 0 4px rgba(57,119,242,.1); }
+.dashboard-layout.doctis-v5 .history-table { width:100%; border-collapse:collapse; }
+.dashboard-layout.doctis-v5 .history-table th { padding:10px; color:#5b7091; background:#f5f8fc; font-size:13px; text-align:left; }
+.dashboard-layout.doctis-v5 .history-table td { padding:10px; color:#526887; border-top:1px solid #e8eef6; font-size:13px; }
+
+/* =========================================================
+   PROFILE
+   ========================================================= */
+.dashboard-layout.doctis-v5 .profile-card { padding: 22px; }
+.dashboard-layout.doctis-v5 .profile-page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px; }
+.dashboard-layout.doctis-v5 .profile-page-header h2 { margin:0; color:#1d3558; font-size:21px; }
+.dashboard-layout.doctis-v5 .profile-page-header p { margin:5px 0 0; color:#62748d; font-size:13px; }
+.dashboard-layout.doctis-v5 .profile-photo-section { display:flex; flex-direction:column; align-items:center; padding:6px 0 20px; }
+.dashboard-layout.doctis-v5 .patient-photo-box { width:150px; height:190px; overflow:hidden; display:grid; place-items:center; border:2px dashed #cbd9ec; border-radius:15px; background:#f8fbff; cursor:pointer; }
+.dashboard-layout.doctis-v5 .patient-photo-box img { width:100%; height:100%; object-fit:cover; }
+.dashboard-layout.doctis-v5 .photo-placeholder { display:flex; flex-direction:column; align-items:center; gap:6px; color:#6c7e97; }
+.dashboard-layout.doctis-v5 .photo-placeholder svg { color:#5b8bf0; font-size:25px; }
+.dashboard-layout.doctis-v5 .photo-placeholder strong { color:#536d91; font-size:14px; }
+.dashboard-layout.doctis-v5 .photo-placeholder span { font-size:13px; }
+.dashboard-layout.doctis-v5 .photo-placeholder small { font-size:13px; }
+.dashboard-layout.doctis-v5 .photo-note { margin:8px 0 0; color:#8b9bb1; font-size:13px; }
+.dashboard-layout.doctis-v5 .profile-section { margin-top:13px; padding:17px; border:1px solid #e2e9f3; border-radius:15px; background:#fbfdff; }
+.dashboard-layout.doctis-v5 .profile-section-title { display:flex; align-items:center; gap:7px; margin-bottom:13px; padding-bottom:9px; border-bottom:1px solid #e9eef6; color:#294362; font-size:14px; font-weight:800; }
+.dashboard-layout.doctis-v5 .profile-section-title svg { color:#3977f2; }
+.dashboard-layout.doctis-v5 .profile-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.dashboard-layout.doctis-v5 .profile-field { min-width:0; display:flex; flex-direction:column; gap:6px; }
+.dashboard-layout.doctis-v5 .profile-field.full { grid-column:1/-1; }
+.dashboard-layout.doctis-v5 .profile-field label,
+.dashboard-layout.doctis-v5 .input-label,
+.dashboard-layout.doctis-v5 .field-label,
+.dashboard-layout.doctis-v5 .form-grid label,
+.dashboard-layout.doctis-v5 .care-editor label { color:#58708f; font-size:13px; font-weight:800; }
+.dashboard-layout.doctis-v5 .profile-field input,
+.dashboard-layout.doctis-v5 .profile-field select { min-height:46px; padding:10px 12px; border:1px solid #dfe7f2; border-radius:10px; font-size:14px; }
+.dashboard-layout.doctis-v5 .profile-input-wrap { position:relative; display:flex; align-items:center; }
+.dashboard-layout.doctis-v5 .profile-input-wrap > svg { position:absolute; left:10px; z-index:1; color:#8ca0ba; font-size:14px; }
+.dashboard-layout.doctis-v5 .profile-input-wrap input { padding-left:30px; width:100%; }
+.dashboard-layout.doctis-v5 .allergy-chip { display:inline-flex; align-items:center; gap:5px; margin:4px 5px 0 0; padding:5px 8px; border:1px solid #cfe0ff; border-radius:99px; color:#345aa5; background:#eaf2ff; font-size:13px; }
+.dashboard-layout.doctis-v5 .chronic-option { min-height:34px; padding:7px 9px; border:1px solid #e0e8f4; border-radius:9px; color:#445d82; background:#f8faff; font-size:13px; cursor:pointer; }
+.dashboard-layout.doctis-v5 .chronic-option.selected { color:#2454bd; background:#eaf2ff; border-color:#8bb0ff; }
+.dashboard-layout.doctis-v5 .profile-save-area { display:flex; justify-content:flex-end; margin-top:16px; }
+.dashboard-layout.doctis-v5 .profile-save-btn,
+.dashboard-layout.doctis-v5 .save-btn,
+.dashboard-layout.doctis-v5 .generate-plan-btn { min-height:39px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:0 14px; border:0; border-radius:10px; color:#fff; background:linear-gradient(135deg,#4388f7,#3470e8); box-shadow:0 8px 18px rgba(55,119,242,.16); font-size:13px; font-weight:800; cursor:pointer; }
+
+/* =========================================================
+   HEALTH FORM
+   ========================================================= */
+.dashboard-layout.doctis-v5 .health-form { padding:21px; }
+.dashboard-layout.doctis-v5 .health-form h2 { margin:0; color:#1d3558; font-size:20px; }
+.dashboard-layout.doctis-v5 .health-form > p { margin:5px 0 17px; color:#62748d; font-size:13px; }
+.dashboard-layout.doctis-v5 .health-form-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.dashboard-layout.doctis-v5 .input-card { padding:14px; border:1px solid #e2e9f3; border-radius:13px; background:#fbfdff; }
+.dashboard-layout.doctis-v5 .input-label { display:flex; align-items:center; gap:6px; margin-bottom:8px; color:#58708f; }
+.dashboard-layout.doctis-v5 .input-label:first-letter { font-size:16px; }
+.dashboard-layout.doctis-v5 .health-input { width:100%; min-height:46px; padding:10px 12px; border:1px solid #dfe7f2; border-radius:10px; font-size:14px; }
+.dashboard-layout.doctis-v5 .bmi-display { display:flex; align-items:center; min-height:46px; padding:10px 12px; border-radius:10px; color:#2a4f9d; background:#f1f6ff; font-size:14px; font-weight:800; }
+.dashboard-layout.doctis-v5 .bmi-info-box { padding:10px 12px; color:#526b8d; background:#f5f8ff; border:1px solid #dfe8f4; font-size:13px; }
+.dashboard-layout.doctis-v5 .health-form > .save-btn { margin-top:15px; }
+
+/* =========================================================
+   CARE PLAN
+   ========================================================= */
+.dashboard-layout.doctis-v5 .care-plan-page { padding:20px; }
+.dashboard-layout.doctis-v5 .care-plan-header { display:flex; align-items:center; justify-content:space-between; gap:18px; padding-bottom:16px; border-bottom:1px solid #e9eef6; }
+.dashboard-layout.doctis-v5 .care-plan-header > div:first-child { display:flex; align-items:center; gap:11px; }
+.dashboard-layout.doctis-v5 .care-plan-header h2 { margin:0; color:#1c3153; font-size:20px; }
+.dashboard-layout.doctis-v5 .care-plan-header p { margin:4px 0 0; color:#62748d; font-size:13px; line-height:1.5; }
+.dashboard-layout.doctis-v5 .nutrition-summary-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:9px; margin-top:14px; }
+.dashboard-layout.doctis-v5 .nutrition-summary-item { min-width:0; padding:10px; border:1px solid #e2eaf4; border-radius:11px; background:#f9fbff; }
+.dashboard-layout.doctis-v5 .nutrition-summary-item .label { display:block; color:#7b8da6; font-size: 13px; font-weight:800; }
+.dashboard-layout.doctis-v5 .nutrition-summary-item .value { display:block; margin-top:4px; color:#203a66; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:800; }
+.dashboard-layout.doctis-v5 .nutrition-missing-alert { display:flex; gap:9px; padding:10px 12px; color:#a16f1b; background:#fff9eb; border:1px solid #f5dfaa; font-size:13px; }
+.dashboard-layout.doctis-v5 .nutrition-missing-alert svg { color:#e1a026; }
+.dashboard-layout.doctis-v5 .nutrition-missing-alert strong,
+.dashboard-layout.doctis-v5 .nutrition-missing-alert span { display:block; }
+.dashboard-layout.doctis-v5 .nutrition-ai-note { padding:10px 12px; color:#60799b; background:#f3f7ff; border:1px solid #dce7f5; font-size:13px; line-height:1.5; }
+.dashboard-layout.doctis-v5 .care-week-scroll { overflow-x:auto; margin-top:15px; padding-bottom:4px; }
+.dashboard-layout.doctis-v5 .care-week-grid { min-width:1120px; display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:8px; }
+.dashboard-layout.doctis-v5 .care-week-column { min-width:0; border:1px solid #e1e9f3; border-radius:12px; background:#f9fbff; overflow:hidden; }
+.dashboard-layout.doctis-v5 .care-week-column.active { border-color:#bcd2f7; box-shadow:0 7px 20px rgba(55,119,242,.08); }
+.dashboard-layout.doctis-v5 .care-week-day { width:100%; padding:10px; border:0; border-bottom:1px solid #e6edf6; background:#fff; color:#314967; text-align:left; cursor:pointer; }
+.dashboard-layout.doctis-v5 .care-week-day strong { display:block; font-size:13px; }
+.dashboard-layout.doctis-v5 .care-week-day span { display:block; margin-top:3px; color:#6c7e97; font-size: 13px; }
+.dashboard-layout.doctis-v5 .care-week-items { padding:7px; }
+.dashboard-layout.doctis-v5 .care-mini-card { width:100%; display:grid; grid-template-columns:34px 24px minmax(0,1fr); gap:5px; align-items:start; margin-bottom:5px; padding:6px; border:1px solid #e5ecf5; border-radius:8px; background:#fff; color:#334d73; text-align:left; cursor:pointer; }
+.dashboard-layout.doctis-v5 .care-mini-card.completed { opacity:.62; }
+.dashboard-layout.doctis-v5 .care-mini-time { color:#5b78a0; font-size: 13px; font-weight:800; }
+.dashboard-layout.doctis-v5 .care-mini-icon { width:22px; height:22px; display:grid; place-items:center; border-radius:6px; background:#edf4ff; font-size:12px; }
+.dashboard-layout.doctis-v5 .care-mini-title { grid-column:2/-1; color:#334d73; font-size:13px; font-weight:800; }
+.dashboard-layout.doctis-v5 .care-mini-desc { grid-column:2/-1; color:#65778f; font-size: 13px; line-height:1.4; }
+.dashboard-layout.doctis-v5 .care-day-detail { margin-top:15px; padding:14px; border:1px solid #e2eaf4; border-radius:14px; background:#fbfdff; }
+.dashboard-layout.doctis-v5 .care-day-title { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:9px; }
+.dashboard-layout.doctis-v5 .care-day-title strong { display:block; color:#263b60; font-size:14px; }
+.dashboard-layout.doctis-v5 .care-day-title span { display:block; margin-top:3px; color:#65778f; font-size: 13px; }
+.dashboard-layout.doctis-v5 .care-source-badge { flex:0 0 auto; padding:6px 8px; border-radius:99px; color:#3977f2; background:#edf4ff; font-size: 13px; font-weight:800; }
+.dashboard-layout.doctis-v5 .care-row { display:grid; grid-template-columns:48px 29px minmax(0,1fr) auto; gap:9px; align-items:center; padding:9px; margin-top:6px; border:1px solid #e4ebf4; border-radius:10px; background:#fff; }
+.dashboard-layout.doctis-v5 .care-row.completed { opacity:.62; }
+.dashboard-layout.doctis-v5 .care-time { color:#58769e; font-size:13px; font-weight:800; }
+.dashboard-layout.doctis-v5 .care-type-icon { width:29px; height:29px; display:grid; place-items:center; border-radius:8px; background:#edf4ff; font-size:14px; }
+.dashboard-layout.doctis-v5 .care-title-line { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.dashboard-layout.doctis-v5 .care-content h4 { margin:0; color:#263b60; font-size:13px; }
+.dashboard-layout.doctis-v5 .care-content p { margin:3px 0 0; color:#72839d; font-size: 13px; line-height:1.45; }
+.dashboard-layout.doctis-v5 .care-content small { display:block; margin-top:3px; color:#7f91aa; font-size: 13px; }
+.dashboard-layout.doctis-v5 .care-type-label { padding:3px 5px; border-radius:99px; color:#6e82a0; background:#f2f5fa; font-size: 13px; font-weight:800; }
+.dashboard-layout.doctis-v5 .care-row-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:5px; }
+.dashboard-layout.doctis-v5 .care-reminder-btn,
+.dashboard-layout.doctis-v5 .care-done-btn { min-height:28px; padding:0 7px; border:1px solid #dfe7f2; border-radius:8px; background:#fff; color:#5c7598; font-size: 13px; font-weight:800; cursor:pointer; }
+.dashboard-layout.doctis-v5 .care-reminder-btn:hover,
+.dashboard-layout.doctis-v5 .care-done-btn:hover { border-color:#bcd1ef; color:#3977f2; }
+.dashboard-layout.doctis-v5 .care-reminder-btn.sent { color:#159b72; background:#eafaf4; border-color:#ccefe2; }
+.dashboard-layout.doctis-v5 .prescription-panel { margin-top:13px; padding:14px; border:1px solid #e1e9f3; border-radius:14px; background:#fff; }
+.dashboard-layout.doctis-v5 .prescription-panel-header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:9px; }
+.dashboard-layout.doctis-v5 .prescription-panel-header h3 { margin:0; color:#2c4568; font-size:14px; }
+.dashboard-layout.doctis-v5 .prescription-panel-header p { margin:3px 0 0; color:#67798f; font-size: 13px; }
+.dashboard-layout.doctis-v5 .prescription-panel-header > span { padding:5px 7px; border-radius:99px; color:#159b72; background:#eafaf4; font-size: 13px; font-weight:800; }
+.dashboard-layout.doctis-v5 .prescription-card { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px; margin-top:6px; border:1px solid #e6edf5; border-radius:9px; background:#f9fbff; }
+.dashboard-layout.doctis-v5 .prescription-card strong { display:block; color:#344b69; font-size:13px; }
+.dashboard-layout.doctis-v5 .prescription-card span { display:block; margin-top:3px; color:#8495ab; font-size: 13px; }
+.dashboard-layout.doctis-v5 .prescription-status { padding:5px 7px; border-radius:99px; color:#159b72; background:#eafaf4; font-size: 13px; font-weight:800; }
+.dashboard-layout.doctis-v5 .prescription-empty,
+.dashboard-layout.doctis-v5 .care-plan-empty { padding:24px; text-align:center; color:#67798f; font-size:13px; line-height:1.55; }
+.dashboard-layout.doctis-v5 .care-plan-empty h3 { margin:8px 0 4px; color:#405777; font-size:14px; }
+.dashboard-layout.doctis-v5 .care-plan-empty p { max-width:640px; margin:0 auto 12px; }
+.dashboard-layout.doctis-v5 .empty-chat-icon { font-size:30px; }
+
+/* =========================================================
+   CHAT
+   ========================================================= */
+.dashboard-layout.doctis-v5 .doctor-chat-container { min-height:620px; display:grid; grid-template-columns:310px minmax(0,1fr); overflow:hidden; }
+.dashboard-layout.doctis-v5 .doctor-list-panel { min-width:0; border-right:1px solid #e7edf6; }
+.dashboard-layout.doctis-v5 .doctor-list-header { display:flex; align-items:center; justify-content:space-between; padding:16px; }
+.dashboard-layout.doctis-v5 .doctor-list-header h2 { margin:0; color:#2d4565; font-size:17px; }
+.dashboard-layout.doctis-v5 .doctor-list-header p { margin:3px 0 0; color:#6c7e97; font-size:13px; }
+.dashboard-layout.doctis-v5 .doctor-count { min-width:22px; padding:5px 6px; border-radius:99px; color:#3977f2; background:#edf4ff; font-size: 13px; font-weight:800; text-align:center; }
+.dashboard-layout.doctis-v5 .doctor-search { display:flex; align-items:center; gap:7px; margin:0 13px 10px; padding:9px; border:1px solid #e1e8f3; border-radius:9px; background:#f7f9fd; color:#7890ae; }
+.dashboard-layout.doctis-v5 .doctor-search input { width:100%; border:0; outline:0; background:transparent; color:#334a69; font-size:13px; }
+.dashboard-layout.doctis-v5 .doctor-list { max-height:490px; overflow:auto; padding:0 7px 10px; }
+.dashboard-layout.doctis-v5 .doctor-item { width:100%; display:flex; align-items:center; gap:9px; padding:9px; border:0; border-radius:10px; background:transparent; text-align:left; cursor:pointer; }
+.dashboard-layout.doctis-v5 .doctor-item:hover { background:#f5f8fe; }
+.dashboard-layout.doctis-v5 .doctor-item.selected { background:linear-gradient(110deg,#e9f1ff,#f1f6ff); }
+.dashboard-layout.doctis-v5 .doctor-avatar { position:relative; width:37px; height:37px; display:grid; place-items:center; flex:0 0 37px; overflow:hidden; border-radius:50%; color:#4778de; background:#eef3fc; }
+.dashboard-layout.doctis-v5 .doctor-avatar img { width:100%; height:100%; object-fit:cover; }
+.dashboard-layout.doctis-v5 .doctor-online-dot { position:absolute; right:1px; bottom:1px; width:8px; height:8px; border:2px solid #fff; border-radius:50%; background:#27bf8a; }
+.dashboard-layout.doctis-v5 .doctor-info { min-width:0; }
+.dashboard-layout.doctis-v5 .doctor-info h4 { margin:0; color:#344b69; font-size:13px; }
+.dashboard-layout.doctis-v5 .doctor-info p { margin:3px 0 0; color:#65778f; font-size: 13px; }
+.dashboard-layout.doctis-v5 .doctor-info small { display:block; margin-top:2px; color:#9aa8ba; font-size: 13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dashboard-layout.doctis-v5 .doctor-chat-page { width:min(1420px,100%); margin:18px auto 0; }
+.dashboard-layout.doctis-v5 .doctor-chat-container .chat-panel,
+.dashboard-layout.doctis-v5 .doctor-chat-container .doctor-chat-panel { min-width:0; display:flex; flex-direction:column; background:#fbfcff; }
+.dashboard-layout.doctis-v5 .doctor-chat-container .chat-header,
+.dashboard-layout.doctis-v5 .doctor-chat-container .doctor-chat-header { padding:13px 15px; border-bottom:1px solid #e7edf6; background:#fff; }
+.dashboard-layout.doctis-v5 .doctor-chat-container .chat-body,
+.dashboard-layout.doctis-v5 .doctor-chat-container .doctor-chat-body { flex:1; min-height:0; overflow:auto; padding:15px; }
+
+/* Existing AI chat */
+.dashboard-layout.doctis-v5 .chat-wrapper { width:min(920px,100%); min-height:560px; margin:18px auto 0; overflow:hidden; border-radius:20px; }
+.dashboard-layout.doctis-v5 .chat-header { padding:14px 16px; border-bottom:1px solid #e6edf5; color:#2a4162; background:#fff; font-size:15px; font-weight:800; }
+.dashboard-layout.doctis-v5 .chat-body { min-height:430px; max-height:58vh; overflow:auto; padding:16px; background:linear-gradient(#fbfdff,#f7faff); }
+.dashboard-layout.doctis-v5 .chat-message { width:fit-content; max-width:76%; margin-bottom:9px; padding:9px 11px; border-radius:13px; color:#3c4f6c; background:#edf2f8; font-size:13px; line-height:1.55; }
+.dashboard-layout.doctis-v5 .chat-message.user { margin-left:auto; color:#fff; background:linear-gradient(135deg,#5a91ff,#3977ef); border-bottom-right-radius:4px; }
+.dashboard-layout.doctis-v5 .chat-input-box { display:flex; gap:8px; padding:10px; border-top:1px solid #e6edf5; background:#fff; }
+.dashboard-layout.doctis-v5 .chat-input-box input { flex:1; min-height:44px; padding:10px 13px; border:1px solid #dfe7f2; border-radius:10px; font-size:13px; }
+.dashboard-layout.doctis-v5 .chat-input-box button { width:76px; border:0; border-radius:9px; color:#fff; background:#3977ef; font-size:13px; font-weight:800; cursor:pointer; }
+
+/* =========================================================
+   GENERIC BUTTON SAFETY — prevents browser-default controls
+   ========================================================= */
+.dashboard-layout.doctis-v5 button { appearance:none; -webkit-appearance:none; }
+.dashboard-layout.doctis-v5 button:disabled { opacity:.55; cursor:not-allowed; transform:none !important; }
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+@keyframes doctisPulse { 0%,100%{transform:scale(.96);opacity:.55} 50%{transform:scale(1.04);opacity:1} }
+@keyframes doctisFadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+@keyframes doctisFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
+.dashboard-layout.doctis-v5 .v5-welcome-hero,
+.dashboard-layout.doctis-v5 .v5-quick-section,
+.dashboard-layout.doctis-v5 .v5-diabetes-section { animation:doctisFadeUp .45s ease both; }
+.dashboard-layout.doctis-v5 .v5-quick-section { animation-delay:.06s; }
+.dashboard-layout.doctis-v5 .v5-diabetes-section { animation-delay:.12s; }
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 1180px) {
+  .dashboard-layout.doctis-v5 .v5-primary-nav button:nth-child(n+5) { display:none; }
+  .dashboard-layout.doctis-v5 .v5-quick-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .dashboard-layout.doctis-v5 .modern-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .dashboard-layout.doctis-v5 .nutrition-summary-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+@media (max-width: 900px) {
+  .dashboard-layout.doctis-v5 .v5-welcome-hero { grid-template-columns:minmax(0,1fr) 210px; }
+  .dashboard-layout.doctis-v5 .v5-quick-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .dashboard-layout.doctis-v5 .modern-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .dashboard-layout.doctis-v5 .analysis-grid { grid-template-columns:1fr; }
+  .dashboard-layout.doctis-v5 .profile-form-grid { grid-template-columns:1fr; }
+  .dashboard-layout.doctis-v5 .health-form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .dashboard-layout.doctis-v5 .nutrition-summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .dashboard-layout.doctis-v5 .doctor-chat-container { grid-template-columns:260px minmax(0,1fr); }
+}
+@media (max-width: 760px) {
+  .dashboard-layout.doctis-v5 .v5-topbar { min-height:64px; padding:8px 14px; gap:10px; }
+  .dashboard-layout.doctis-v5 .v5-primary-nav { display:none; }
+  .dashboard-layout.doctis-v5 .v5-account span,
+  .dashboard-layout.doctis-v5 .v5-account svg:last-child { display:none; }
+  .dashboard-layout.doctis-v5 .v5-menu-toggle { display:grid; }
+  .dashboard-layout.doctis-v5 > .dashboard { padding:0 14px 45px; }
+  .dashboard-layout.doctis-v5 .v5-welcome-hero { grid-template-columns:1fr; min-height:0; margin-top:16px; padding:25px 20px; }
+  .dashboard-layout.doctis-v5 .v5-hero-copy h1 { font-size:30px; }
+  .dashboard-layout.doctis-v5 .v5-hero-art { min-height:155px; }
+  .dashboard-layout.doctis-v5 .v5-hero-note { right:4%; top:3%; max-width:60%; white-space:normal; }
+  .dashboard-layout.doctis-v5 .v5-quick-grid { grid-template-columns:1fr 1fr; }
+  .dashboard-layout.doctis-v5 .v5-diabetes-grid { grid-template-columns:1fr; }
+  .dashboard-layout.doctis-v5 .modern-grid { grid-template-columns:1fr 1fr; }
+  .dashboard-layout.doctis-v5 .nutrition-summary-grid { grid-template-columns:1fr 1fr; }
+  .dashboard-layout.doctis-v5 .doctor-chat-container { grid-template-columns:1fr; min-height:650px; }
+  .dashboard-layout.doctis-v5 .doctor-list-panel { max-height:270px; border-right:0; border-bottom:1px solid #e7edf6; }
+  .dashboard-layout.doctis-v5 .doctor-list { max-height:180px; }
+  .dashboard-layout.doctis-v5 .care-week-grid { min-width:0; grid-template-columns:1fr; }
+  .dashboard-layout.doctis-v5 .care-row { grid-template-columns:48px 29px minmax(0,1fr); }
+  .dashboard-layout.doctis-v5 .care-row-actions { grid-column:1/-1; justify-content:flex-end; }
+  .dashboard-layout.doctis-v5 .v5-section-heading { align-items:flex-start; flex-direction:column; }
+  .dashboard-layout.doctis-v5 .latest-data-notice { align-items:flex-start; }
+  .dashboard-layout.doctis-v5 .latest-data-notice time { display:none; }
+}
+@media (max-width: 480px) {
+  .dashboard-layout.doctis-v5 .v5-brand small { display:none; }
+  .dashboard-layout.doctis-v5 .v5-brand strong { font-size:17px; }
+  .dashboard-layout.doctis-v5 .v5-quick-grid,
+  .dashboard-layout.doctis-v5 .modern-grid,
+  .dashboard-layout.doctis-v5 .nutrition-summary-grid,
+  .dashboard-layout.doctis-v5 .health-form-grid { grid-template-columns:1fr 1fr; }
+  .dashboard-layout.doctis-v5 .v5-quick-card { min-height:92px; padding:11px; grid-template-columns:35px minmax(0,1fr); }
+  .dashboard-layout.doctis-v5 .v5-quick-icon { width:35px; height:35px; }
+  .dashboard-layout.doctis-v5 .v5-quick-card > b { display:none; }
+  .dashboard-layout.doctis-v5 .v5-quick-card strong { font-size:13px; }
+  .dashboard-layout.doctis-v5 .v5-quick-card small { font-size: 13px; }
+  .dashboard-layout.doctis-v5 .modern-card { min-height:118px; padding:12px; }
+  .dashboard-layout.doctis-v5 .card-value { font-size:21px; }
+  .dashboard-layout.doctis-v5 .modern-card.warning .card-value { font-size:18px; }
+  .dashboard-layout.doctis-v5 .care-plan-page,
+  .dashboard-layout.doctis-v5 .profile-card,
+  .dashboard-layout.doctis-v5 .health-form,
+  .dashboard-layout.doctis-v5 .ai-analysis-box { padding:15px; }
+  .dashboard-layout.doctis-v5 .care-plan-header { align-items:flex-start; flex-direction:column; }
+  .dashboard-layout.doctis-v5 .generate-plan-btn { width:100%; }
+}
+/* ================================================================
+   DOCTIS 5.0 / CARE PLAN V6
+   Premium daily wellness redesign
+   ================================================================ */
+.dashboard-layout.doctis-v5 .care-plan-v6 {
+  --cp-ink:#132a4a;
+  --cp-text:#5f7392;
+  --cp-muted:#8fa0b7;
+  --cp-line:#e3ebf5;
+  --cp-bg:#f6f9fd;
+  --cp-blue:#3977f2;
+  --cp-cyan:#20c6e6;
+  --cp-purple:#7865ee;
+  --cp-green:#16ad83;
+  --cp-orange:#f39a42;
+  --cp-coral:#ec718c;
+  position:relative;
+  width:100%;
+  max-width:1500px;
+  margin:0 auto;
+  padding:24px;
+  color:var(--cp-ink);
+  font-family:"Be Vietnam Pro",Inter,system-ui,sans-serif;
+}
+.dashboard-layout.doctis-v5 .care-plan-v6 * { box-sizing:border-box; }
+.dashboard-layout.doctis-v5 .care-hero-v6 {
+  position:relative; display:flex; align-items:center; justify-content:space-between; gap:28px;
+  min-height:190px; padding:30px 32px; overflow:hidden; border:1px solid rgba(255,255,255,.85);
+  border-radius:30px; background:linear-gradient(135deg,#ffffff 0%,#f3f8ff 52%,#eef8ff 100%);
+  box-shadow:0 22px 60px rgba(37,76,126,.12), inset 0 1px 0 #fff;
+}
+.dashboard-layout.doctis-v5 .care-hero-v6::after { content:""; position:absolute; inset:auto 10% -65px 32%; height:150px; background:rgba(65,134,255,.13); filter:blur(45px); border-radius:50%; pointer-events:none; }
+.dashboard-layout.doctis-v5 .care-hero-glow { position:absolute; border-radius:50%; filter:blur(3px); pointer-events:none; }
+.dashboard-layout.doctis-v5 .care-hero-glow-a { width:210px;height:210px;right:-70px;top:-85px;background:rgba(32,198,230,.17); }
+.dashboard-layout.doctis-v5 .care-hero-glow-b { width:170px;height:170px;left:42%;bottom:-110px;background:rgba(120,101,238,.12); }
+.dashboard-layout.doctis-v5 .care-hero-main { position:relative; z-index:1; display:flex; align-items:center; gap:20px; min-width:0; }
+.dashboard-layout.doctis-v5 .care-hero-icon { width:68px;height:68px; flex:0 0 68px; display:grid;place-items:center;border-radius:21px;color:#fff;font-size:27px;background:linear-gradient(145deg,#3977f2,#655fe9);box-shadow:0 16px 30px rgba(57,119,242,.28); }
+.dashboard-layout.doctis-v5 .care-kicker,.dashboard-layout.doctis-v5 .care-section-kicker { display:block; margin-bottom:6px; color:#6380a6; font-size:11px; letter-spacing:.16em; font-weight:900; }
+.dashboard-layout.doctis-v5 .care-hero-v6 h2 { margin:0; color:#102a4d; font-size:clamp(25px,2.4vw,36px); line-height:1.15; letter-spacing:-.035em; font-weight:900; }
+.dashboard-layout.doctis-v5 .care-hero-v6 p { max-width:760px; margin:10px 0 0; color:#6f829e; font-size:14px; line-height:1.7; }
+.dashboard-layout.doctis-v5 .care-hero-tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:15px; }
+.dashboard-layout.doctis-v5 .care-hero-tags span { padding:7px 10px; border:1px solid #dfe9f5; border-radius:999px; background:rgba(255,255,255,.82); color:#587193; font-size:11px; font-weight:800; box-shadow:0 5px 14px rgba(47,82,122,.05); }
+.dashboard-layout.doctis-v5 .care-generate-v6 { position:relative; z-index:2; flex:0 0 auto; display:flex; align-items:center; gap:15px; min-height:52px; padding:0 17px 0 20px; border:0; border-radius:16px; color:#fff; background:linear-gradient(135deg,#3977f2,#695ee9); box-shadow:0 15px 28px rgba(57,119,242,.27); font-size:13px; font-weight:900; cursor:pointer; transition:.25s ease; }
+.dashboard-layout.doctis-v5 .care-generate-v6 b { display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.17);font-size:16px; }
+.dashboard-layout.doctis-v5 .care-generate-v6:hover { transform:translateY(-3px); box-shadow:0 20px 34px rgba(57,119,242,.32); }
+.dashboard-layout.doctis-v5 .care-generate-v6:disabled { opacity:.55; transform:none; cursor:not-allowed; }
+
+.dashboard-layout.doctis-v5 .care-health-strip-v6 { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin:16px 0; }
+.dashboard-layout.doctis-v5 .care-health-card { position:relative; min-width:0; display:flex; align-items:center; gap:11px; min-height:82px; padding:13px 14px; border:1px solid var(--cp-line); border-radius:18px; background:#fff; box-shadow:0 9px 25px rgba(43,75,117,.06); overflow:hidden; transition:.25s ease; }
+.dashboard-layout.doctis-v5 .care-health-card::after { content:""; position:absolute; width:70px;height:70px;right:-28px;bottom:-38px;border-radius:50%;background:#edf5ff; }
+.dashboard-layout.doctis-v5 .care-health-card:hover { transform:translateY(-3px); box-shadow:0 14px 30px rgba(43,75,117,.1); }
+.dashboard-layout.doctis-v5 .care-health-icon { width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border-radius:12px;background:#eff5ff;font-size:17px; }
+.dashboard-layout.doctis-v5 .care-health-card div { min-width:0; position:relative;z-index:1; }
+.dashboard-layout.doctis-v5 .care-health-card small { display:block; color:#8799b1; font-size:10px; font-weight:800; letter-spacing:.03em; }
+.dashboard-layout.doctis-v5 .care-health-card strong { display:block; max-width:170px; overflow:hidden;text-overflow:ellipsis;white-space:nowrap; margin-top:3px; color:#233e63; font-size:15px; font-weight:900; }
+.dashboard-layout.doctis-v5 .care-health-card strong i { font-style:normal; font-size:9px; color:#8091aa; font-weight:800; }
+.dashboard-layout.doctis-v5 .care-health-card em { position:absolute;right:10px;top:9px;color:#a2afc0;font-size:9px;font-style:normal;font-weight:800; }
+.dashboard-layout.doctis-v5 .care-health-card.glucose .care-health-icon { background:#fff1f4; }.dashboard-layout.doctis-v5 .care-health-card.pressure .care-health-icon { background:#fff1f1; }.dashboard-layout.doctis-v5 .care-health-card.allergy .care-health-icon { background:#eefaf6; }.dashboard-layout.doctis-v5 .care-health-card.chronic .care-health-icon { background:#f3efff; }
+
+.dashboard-layout.doctis-v5 .care-alert-v6 { display:flex; align-items:center; gap:13px; margin:13px 0; padding:13px 16px; border-radius:16px; border:1px solid #e4eaf3; background:#fff; box-shadow:0 8px 22px rgba(44,74,112,.05); }
+.dashboard-layout.doctis-v5 .care-alert-v6 .care-alert-icon { width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:#fff5e7;color:#d88a1e; }
+.dashboard-layout.doctis-v5 .care-alert-v6.info .care-alert-icon { background:#eef5ff;color:#3977f2; }
+.dashboard-layout.doctis-v5 .care-alert-v6 strong { display:block;color:#344d70;font-size:12px;font-weight:900; }.dashboard-layout.doctis-v5 .care-alert-v6 p { margin:2px 0 0;color:#8494aa;font-size:11px; }
+.dashboard-layout.doctis-v5 .care-alert-v6 button { margin-left:auto;border:1px solid #dce6f3;background:#fff;border-radius:10px;padding:8px 11px;color:#3977f2;font-size:11px;font-weight:900;cursor:pointer; }
+
+.dashboard-layout.doctis-v5 .care-week-shell-v6 { margin-top:20px; padding:22px; border:1px solid var(--cp-line); border-radius:25px; background:linear-gradient(180deg,#ffffff,#fbfdff); box-shadow:0 16px 42px rgba(40,75,116,.07); }
+.dashboard-layout.doctis-v5 .care-section-head-v6,.dashboard-layout.doctis-v5 .care-detail-head-v6 { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; }
+.dashboard-layout.doctis-v5 .care-section-head-v6 h3,.dashboard-layout.doctis-v5 .care-detail-head-v6 h3 { margin:0;color:#193556;font-size:20px;letter-spacing:-.02em;font-weight:900; }
+.dashboard-layout.doctis-v5 .care-section-head-v6 p,.dashboard-layout.doctis-v5 .care-detail-head-v6 p { margin:5px 0 0;color:#8192aa;font-size:11px;line-height:1.6; }
+.dashboard-layout.doctis-v5 .care-week-progress-v6 { min-width:145px;text-align:right; padding:10px 13px;border:1px solid #e2eaf4;border-radius:14px;background:#f7faff; }
+.dashboard-layout.doctis-v5 .care-week-progress-v6 span { display:block;color:#90a0b4;font-size:9px;font-weight:900;letter-spacing:.08em; }.dashboard-layout.doctis-v5 .care-week-progress-v6 strong { display:block;margin-top:2px;color:#3977f2;font-size:17px;font-weight:900; }
+.dashboard-layout.doctis-v5 .care-week-grid-v6 { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:10px; margin-top:18px; overflow-x:auto; padding-bottom:4px; }
+.dashboard-layout.doctis-v5 .care-day-card-v6 { min-width:150px; border:1px solid #e2eaf4;border-radius:18px;background:#f8faff;overflow:hidden;transition:.25s ease; }
+.dashboard-layout.doctis-v5 .care-day-card-v6:hover { transform:translateY(-4px); box-shadow:0 15px 28px rgba(46,82,125,.1); }.dashboard-layout.doctis-v5 .care-day-card-v6.active { border-color:#7ba6ff; box-shadow:0 15px 30px rgba(57,119,242,.15); background:#f8fbff; }
+.dashboard-layout.doctis-v5 .care-day-card-head { width:100%;display:flex;align-items:center;gap:8px;padding:13px 10px 10px;border:0;background:transparent;text-align:left;cursor:pointer; }
+.dashboard-layout.doctis-v5 .care-day-number { width:29px;height:29px;display:grid;place-items:center;border-radius:9px;background:#eaf1ff;color:#3977f2;font-size:10px;font-weight:900; }.dashboard-layout.doctis-v5 .care-day-card-v6.active .care-day-number { background:linear-gradient(135deg,#3977f2,#735fe8);color:#fff; }
+.dashboard-layout.doctis-v5 .care-day-name { min-width:0;flex:1; }.dashboard-layout.doctis-v5 .care-day-name b { display:block;color:#2a4568;font-size:11px;font-weight:900; }.dashboard-layout.doctis-v5 .care-day-name small { display:block;margin-top:2px;color:#93a1b4;font-size:9px; }.dashboard-layout.doctis-v5 .care-day-percent { color:#3977f2;font-size:10px;font-weight:900; }
+.dashboard-layout.doctis-v5 .care-day-progress { height:3px;margin:0 10px 9px;border-radius:99px;background:#e6edf6;overflow:hidden; }.dashboard-layout.doctis-v5 .care-day-progress span { display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#3977f2,#20c6e6);transition:width .4s ease; }
+.dashboard-layout.doctis-v5 .care-day-items-v6 { padding:0 7px 8px; }.dashboard-layout.doctis-v5 .care-item-v6 { position:relative;width:100%;display:grid;grid-template-columns:34px 27px minmax(0,1fr) 16px;gap:5px;align-items:center;min-height:56px;margin:5px 0;padding:7px 6px;border:1px solid #e5ecf5;border-radius:12px;background:#fff;text-align:left;cursor:pointer;transition:.2s ease; }
+.dashboard-layout.doctis-v5 .care-item-v6:hover { border-color:#c8d9f1; transform:translateX(2px); }.dashboard-layout.doctis-v5 .care-item-v6.completed { opacity:.58; }.dashboard-layout.doctis-v5 .care-item-v6.completed .care-item-copy-v6 b { text-decoration:line-through; }
+.dashboard-layout.doctis-v5 .care-item-time-v6 { align-self:start;color:#5d78a0;font-size:9px;font-weight:900;padding-top:3px; }.dashboard-layout.doctis-v5 .care-item-icon-v6 { width:27px;height:27px;display:grid;place-items:center;border-radius:8px;background:#eef4ff;font-size:12px; }.dashboard-layout.doctis-v5 .care-item-v6.meal .care-item-icon-v6 { background:#fff4e8; }.dashboard-layout.doctis-v5 .care-item-v6.medication .care-item-icon-v6 { background:#fff0f3; }.dashboard-layout.doctis-v5 .care-item-v6.exercise .care-item-icon-v6 { background:#eafaf5; }
+.dashboard-layout.doctis-v5 .care-item-copy-v6 { min-width:0; }.dashboard-layout.doctis-v5 .care-item-copy-v6 b { display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2d4667;font-size:10px;font-weight:900; }.dashboard-layout.doctis-v5 .care-item-copy-v6 small { display:block;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px;color:#8292a9;font-size:9px;line-height:1.35; }.dashboard-layout.doctis-v5 .care-item-check-v6 { width:16px;height:16px;display:grid;place-items:center;border-radius:50%;border:1px solid #dbe5f1;color:#fff;font-size:9px;font-weight:900; }.dashboard-layout.doctis-v5 .care-item-v6.completed .care-item-check-v6 { border-color:#16ad83;background:#16ad83; }
+
+.dashboard-layout.doctis-v5 .care-empty-v6 { margin-top:20px;padding:46px 24px;text-align:center;border:1px dashed #cfdceb;border-radius:24px;background:linear-gradient(180deg,#fbfdff,#f5f9ff); }.dashboard-layout.doctis-v5 .care-empty-orb { width:64px;height:64px;display:grid;place-items:center;margin:0 auto 15px;border-radius:20px;color:#fff;font-size:24px;background:linear-gradient(135deg,#3977f2,#7865ee);box-shadow:0 16px 28px rgba(57,119,242,.2);animation:doctisCareFloat 3s ease-in-out infinite; }.dashboard-layout.doctis-v5 .care-empty-v6 h3 { margin:0;color:#203b5d;font-size:20px;font-weight:900; }.dashboard-layout.doctis-v5 .care-empty-v6 p { max-width:600px;margin:8px auto 18px;color:#8191a8;font-size:12px;line-height:1.7; }
+
+.dashboard-layout.doctis-v5 .care-loading-v6 { display:flex;align-items:center;gap:18px;margin-top:20px;padding:25px;border:1px solid #dfe9f5;border-radius:22px;background:#fff;box-shadow:0 12px 30px rgba(45,78,118,.07); }.dashboard-layout.doctis-v5 .care-loading-v6 strong { color:#264566;font-size:14px; }.dashboard-layout.doctis-v5 .care-loading-v6 p { margin:4px 0 0;color:#8798af;font-size:11px; }.dashboard-layout.doctis-v5 .care-loading-orbit { width:50px;height:50px;display:grid;place-items:center;border-radius:50%;background:conic-gradient(#3977f2,#20c6e6,#7865ee,#3977f2);animation:doctisCareSpin 1.4s linear infinite; }.dashboard-layout.doctis-v5 .care-loading-orbit::before { content:"";position:absolute;width:42px;height:42px;border-radius:50%;background:#fff; }.dashboard-layout.doctis-v5 .care-loading-orbit span { position:relative;z-index:1;color:#3977f2; }
+
+.dashboard-layout.doctis-v5 .care-detail-shell-v6 { margin-top:20px;padding:22px;border:1px solid #e1e9f3;border-radius:25px;background:#fff;box-shadow:0 15px 38px rgba(42,76,116,.07); }.dashboard-layout.doctis-v5 .care-detail-head-v6 { align-items:center;padding-bottom:15px;border-bottom:1px solid #edf1f6; }.dashboard-layout.doctis-v5 .care-source-v6 { padding:9px 12px;border:1px solid #dfe8f4;border-radius:999px;background:#f6f9fd;color:#637b9d;font-size:10px;font-weight:900;white-space:nowrap; }.dashboard-layout.doctis-v5 .care-detail-list-v6 { margin-top:12px;display:grid;gap:8px; }.dashboard-layout.doctis-v5 .care-detail-row-v6 { display:grid;grid-template-columns:62px 40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;border:1px solid #e5ecf4;border-radius:15px;background:#fbfdff;transition:.2s ease; }.dashboard-layout.doctis-v5 .care-detail-row-v6:hover { border-color:#cadcf2;box-shadow:0 7px 18px rgba(52,84,124,.06); }.dashboard-layout.doctis-v5 .care-detail-row-v6.completed { opacity:.62; }.dashboard-layout.doctis-v5 .care-detail-row-v6.completed h4 { text-decoration:line-through; }
+.dashboard-layout.doctis-v5 .care-detail-time-v6 { color:#4e709d;font-size:12px;font-weight:900; }.dashboard-layout.doctis-v5 .care-detail-icon-v6 { width:40px;height:40px;display:grid;place-items:center;border-radius:13px;background:#edf4ff;font-size:17px; }.dashboard-layout.doctis-v5 .care-detail-row-v6.meal .care-detail-icon-v6 { background:#fff2e5; }.dashboard-layout.doctis-v5 .care-detail-row-v6.medication .care-detail-icon-v6 { background:#fff0f3; }.dashboard-layout.doctis-v5 .care-detail-row-v6.exercise .care-detail-icon-v6 { background:#eafaf5; }
+.dashboard-layout.doctis-v5 .care-detail-content-v6 { min-width:0; }.dashboard-layout.doctis-v5 .care-detail-title-v6 { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }.dashboard-layout.doctis-v5 .care-detail-title-v6 h4 { margin:0;color:#294463;font-size:12px;font-weight:900; }.dashboard-layout.doctis-v5 .care-detail-title-v6 span { padding:4px 7px;border-radius:999px;background:#eef3f9;color:#6d82a0;font-size:9px;font-weight:900; }.dashboard-layout.doctis-v5 .care-detail-content-v6 p { margin:4px 0 0;color:#7c8da5;font-size:10px;line-height:1.5; }.dashboard-layout.doctis-v5 .care-detail-content-v6 small { display:block;margin-top:4px;color:#16a27b;font-size:9px;font-weight:800; }
+.dashboard-layout.doctis-v5 .care-detail-actions-v6 { display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap; }.dashboard-layout.doctis-v5 .care-detail-actions-v6 .care-reminder-btn,.dashboard-layout.doctis-v5 .care-detail-actions-v6 .care-done-btn { min-height:32px;padding:0 9px;border-radius:9px;font-size:9px;font-weight:900; }.dashboard-layout.doctis-v5 .care-detail-actions-v6 .care-reminder-btn svg { margin-right:3px; }
+
+.dashboard-layout.doctis-v5 .prescription-panel-v6 { margin-top:20px;padding:21px;border:1px solid #e1e9f3;border-radius:22px;background:#fff;box-shadow:0 13px 34px rgba(42,76,116,.06); }.dashboard-layout.doctis-v5 .prescription-panel-v6 .prescription-panel-header { margin-bottom:12px; }.dashboard-layout.doctis-v5 .prescription-panel-v6 .prescription-panel-header h3 { margin:2px 0 0;color:#233f61;font-size:17px;font-weight:900; }.dashboard-layout.doctis-v5 .prescription-panel-v6 .prescription-panel-header p { margin:4px 0 0;color:#8494aa;font-size:10px; }.dashboard-layout.doctis-v5 .prescription-panel-v6 .prescription-panel-header > span { padding:7px 10px;color:#159b72;background:#eafaf4;border:1px solid #cdeee1;border-radius:999px;font-size:9px;font-weight:900;white-space:nowrap; }
+.dashboard-layout.doctis-v5 .prescription-card-v6 { display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:11px;padding:11px 12px;margin-top:7px;border:1px solid #e4ebf4;border-radius:14px;background:#f9fbfe; }.dashboard-layout.doctis-v5 .prescription-med-icon { width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:#fff0f3;font-size:17px; }.dashboard-layout.doctis-v5 .prescription-card-v6 strong { display:block;color:#334d6e;font-size:11px; }.dashboard-layout.doctis-v5 .prescription-card-v6 span { display:block;margin-top:3px;color:#8998ad;font-size:9px; }.dashboard-layout.doctis-v5 .prescription-card-v6 .prescription-status { padding:6px 8px;color:#159b72;background:#eafaf4;border-radius:999px;font-size:9px;font-weight:900; }.dashboard-layout.doctis-v5 .prescription-empty-v6 { display:flex;align-items:center;justify-content:center;gap:12px;padding:20px;border:1px dashed #d5e0ed;border-radius:14px;background:#f9fbfe;text-align:left; }.dashboard-layout.doctis-v5 .prescription-empty-v6 > span { font-size:24px; }.dashboard-layout.doctis-v5 .prescription-empty-v6 strong { color:#45607f;font-size:11px; }.dashboard-layout.doctis-v5 .prescription-empty-v6 p { margin:3px 0 0;color:#8999ae;font-size:9px; }
+
+@keyframes doctisCareFloat { 0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)} }
+@keyframes doctisCareSpin { to{transform:rotate(360deg)} }
+
+@media (max-width:1200px) {
+  .dashboard-layout.doctis-v5 .care-health-strip-v6 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .dashboard-layout.doctis-v5 .care-week-grid-v6 { grid-template-columns:repeat(4,minmax(160px,1fr)); overflow-x:auto; }
+}
+@media (max-width:820px) {
+  .dashboard-layout.doctis-v5 .care-plan-v6 { padding:14px; }
+  .dashboard-layout.doctis-v5 .care-hero-v6 { align-items:flex-start;flex-direction:column;padding:24px; }.dashboard-layout.doctis-v5 .care-generate-v6 { width:100%;justify-content:space-between; }
+  .dashboard-layout.doctis-v5 .care-health-strip-v6 { grid-template-columns:repeat(2,minmax(0,1fr)); }.dashboard-layout.doctis-v5 .care-section-head-v6,.dashboard-layout.doctis-v5 .care-detail-head-v6 { align-items:flex-start;flex-direction:column; }.dashboard-layout.doctis-v5 .care-week-progress-v6 { width:100%;text-align:left; }
+  .dashboard-layout.doctis-v5 .care-week-grid-v6 { grid-template-columns:repeat(7,170px); overflow-x:auto; }
+  .dashboard-layout.doctis-v5 .care-detail-row-v6 { grid-template-columns:52px 38px minmax(0,1fr); }.dashboard-layout.doctis-v5 .care-detail-actions-v6 { grid-column:1/-1;justify-content:flex-start;padding-left:90px; }
+}
+@media (max-width:520px) {
+  .dashboard-layout.doctis-v5 .care-health-strip-v6 { grid-template-columns:1fr; }.dashboard-layout.doctis-v5 .care-health-card { min-height:74px; }.dashboard-layout.doctis-v5 .care-hero-v6 h2 { font-size:25px; }.dashboard-layout.doctis-v5 .care-hero-main { align-items:flex-start; }.dashboard-layout.doctis-v5 .care-hero-icon { width:52px;height:52px;flex-basis:52px;border-radius:16px; }.dashboard-layout.doctis-v5 .care-detail-actions-v6 { padding-left:0; }
+}
+
+/* DOCTIS 5.0 — CARE PLAN COLOR BOOST
+   Dán file này CUỐI dashboard-modern.css
+*/
+.dashboard-layout.doctis-v5 .care-plan-page{
+  position:relative;overflow:hidden;
+  background:radial-gradient(circle at 100% 0%,rgba(91,108,255,.10),transparent 28%),radial-gradient(circle at 0% 100%,rgba(32,198,230,.08),transparent 25%),#fff;
+  border-color:#d8e4f5;
+}
+.dashboard-layout.doctis-v5 .care-plan-header{
+  padding:18px 20px 20px;border-bottom:1px solid #e4ebf7;
+  background:linear-gradient(100deg,#f8fbff,#fff 55%,#f5f7ff);
+}
+.dashboard-layout.doctis-v5 .care-plan-header h2{color:#17396f;font-size:23px;font-weight:850}
+.dashboard-layout.doctis-v5 .care-plan-header h2:before{
+  content:"✦";display:inline-grid;place-items:center;width:34px;height:34px;margin-right:9px;
+  border-radius:11px;color:#fff;background:linear-gradient(135deg,#3977f2,#725ce8);
+  box-shadow:0 8px 18px rgba(57,119,242,.22);font-size:17px;vertical-align:-5px;
+}
+.dashboard-layout.doctis-v5 .nutrition-summary-grid{gap:12px;margin:16px 0 18px}
+.dashboard-layout.doctis-v5 .nutrition-summary-item{
+  position:relative;min-height:74px;padding:13px 14px;overflow:hidden;
+  border:1px solid #dce7f5;border-radius:15px;background:#fff;
+  box-shadow:0 6px 18px rgba(42,79,132,.055);transition:.22s;
+}
+.dashboard-layout.doctis-v5 .nutrition-summary-item:hover{transform:translateY(-3px);box-shadow:0 12px 25px rgba(42,79,132,.11)}
+.dashboard-layout.doctis-v5 .nutrition-summary-item:after{
+  content:"";position:absolute;width:70px;height:70px;right:-28px;bottom:-38px;border-radius:50%;background:currentColor;opacity:.06;
+}
+.dashboard-layout.doctis-v5 .nutrition-summary-item:nth-child(1){color:#7359d9;border-top:3px solid #8068ee;background:linear-gradient(145deg,#fff,#f7f4ff)}
+.dashboard-layout.doctis-v5 .nutrition-summary-item:nth-child(2){color:#078ca6;border-top:3px solid #20c6e6;background:linear-gradient(145deg,#fff,#effcff)}
+.dashboard-layout.doctis-v5 .nutrition-summary-item:nth-child(3){color:#3471dc;border-top:3px solid #3977f2;background:linear-gradient(145deg,#fff,#f1f6ff)}
+.dashboard-layout.doctis-v5 .nutrition-summary-item:nth-child(4){color:#dc6a45;border-top:3px solid #ff8a5b;background:linear-gradient(145deg,#fff,#fff5f0)}
+.dashboard-layout.doctis-v5 .nutrition-summary-item:nth-child(5){color:#14956f;border-top:3px solid #20b987;background:linear-gradient(145deg,#fff,#effbf7)}
+.dashboard-layout.doctis-v5 .nutrition-summary-item .value{color:#1e3965;font-size:15px}
+
+/* 7 ngày */
+.dashboard-layout.doctis-v5 .care-week-grid{gap:10px;min-width:1180px}
+.dashboard-layout.doctis-v5 .care-week-column{
+  --day-color:#3977f2;--day-soft:#edf4ff;position:relative;overflow:hidden;
+  border:1px solid #dce6f4;border-radius:17px;background:#f7faff;
+  box-shadow:0 8px 22px rgba(38,77,130,.055);transition:.22s;
+}
+.dashboard-layout.doctis-v5 .care-week-column:nth-child(1){--day-color:#3977f2;--day-soft:#edf4ff}
+.dashboard-layout.doctis-v5 .care-week-column:nth-child(2){--day-color:#20a9c7;--day-soft:#eafafd}
+.dashboard-layout.doctis-v5 .care-week-column:nth-child(3){--day-color:#8068ee;--day-soft:#f2efff}
+.dashboard-layout.doctis-v5 .care-week-column:nth-child(4){--day-color:#e58b28;--day-soft:#fff5e7}
+.dashboard-layout.doctis-v5 .care-week-column:nth-child(5){--day-color:#e96f86;--day-soft:#fff0f4}
+.dashboard-layout.doctis-v5 .care-week-column:nth-child(6){--day-color:#19a97c;--day-soft:#eafaf5}
+.dashboard-layout.doctis-v5 .care-week-column:nth-child(7){--day-color:#5e78db;--day-soft:#eef1ff}
+.dashboard-layout.doctis-v5 .care-week-column:hover{transform:translateY(-3px);box-shadow:0 15px 30px rgba(38,77,130,.10)}
+.dashboard-layout.doctis-v5 .care-week-column.active{
+  border:2px solid var(--day-color);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--day-color) 10%,transparent),0 18px 35px color-mix(in srgb,var(--day-color) 17%,transparent);
+}
+.dashboard-layout.doctis-v5 .care-week-day{
+  position:relative;padding:13px 12px 12px;border-bottom:1px solid #e3eaf5;
+  background:linear-gradient(145deg,#fff,var(--day-soft));
+}
+.dashboard-layout.doctis-v5 .care-week-day:before{content:"";position:absolute;left:0;top:0;width:100%;height:4px;background:var(--day-color)}
+.dashboard-layout.doctis-v5 .care-week-day strong{color:var(--day-color);font-size:15px;font-weight:850}
+.dashboard-layout.doctis-v5 .care-week-day span{margin-top:5px;color:#70839f;font-size:11px;font-weight:700}
+
+/* loại hoạt động */
+.dashboard-layout.doctis-v5 .care-mini-card{
+  min-height:74px;margin-bottom:7px;padding:8px;border:1px solid #e1e9f4;
+  border-left:4px solid transparent;border-radius:12px;background:#fff;
+  box-shadow:0 3px 10px rgba(39,77,128,.045);transition:.18s;
+}
+.dashboard-layout.doctis-v5 .care-mini-card:hover{transform:translateY(-2px);box-shadow:0 9px 18px rgba(39,77,128,.10)}
+.dashboard-layout.doctis-v5 .care-mini-card.meal{border-left-color:#f19a35;background:linear-gradient(135deg,#fff,#fff8ee)}
+.dashboard-layout.doctis-v5 .care-mini-card.medication{border-left-color:#e96b88;background:linear-gradient(135deg,#fff,#fff3f6)}
+.dashboard-layout.doctis-v5 .care-mini-card.exercise{border-left-color:#20b987;background:linear-gradient(135deg,#fff,#effbf7)}
+.dashboard-layout.doctis-v5 .care-mini-card.meal .care-mini-icon{background:#fff0d9;color:#db7b13}
+.dashboard-layout.doctis-v5 .care-mini-card.medication .care-mini-icon{background:#ffe8ef;color:#d94e72}
+.dashboard-layout.doctis-v5 .care-mini-card.exercise .care-mini-icon{background:#ddf8ed;color:#138e6a}
+.dashboard-layout.doctis-v5 .care-mini-time{color:#45658e;font-size:12px;font-weight:850}
+.dashboard-layout.doctis-v5 .care-mini-title{color:#203b65;font-size:12px;font-weight:850}
+.dashboard-layout.doctis-v5 .care-mini-desc{color:#71839d;font-size:11px;line-height:1.4}
+
+/* chi tiết */
+.dashboard-layout.doctis-v5 .care-day-detail{
+  position:relative;margin-top:20px;padding:19px;overflow:hidden;border:1px solid #dbe6f4;
+  border-radius:19px;background:radial-gradient(circle at 95% 5%,rgba(128,104,238,.09),transparent 24%),linear-gradient(135deg,#fff,#f8fbff);
+  box-shadow:0 12px 30px rgba(39,78,131,.07);
+}
+.dashboard-layout.doctis-v5 .care-day-title{padding-bottom:14px;border-bottom:1px solid #e3ebf6}
+.dashboard-layout.doctis-v5 .care-day-title strong{color:#173d76;font-size:20px;font-weight:850}
+.dashboard-layout.doctis-v5 .care-source-badge{color:#674fd0;background:linear-gradient(135deg,#f0edff,#eaf2ff);border:1px solid #ddd6ff}
+.dashboard-layout.doctis-v5 .care-row{
+  min-height:72px;margin-top:8px;padding:11px 12px;border:1px solid #dfe8f4;border-left:5px solid #3977f2;
+  border-radius:14px;background:#fff;box-shadow:0 4px 14px rgba(39,78,131,.045);transition:.2s;
+}
+.dashboard-layout.doctis-v5 .care-row:hover{transform:translateX(3px);box-shadow:0 10px 22px rgba(39,78,131,.09)}
+.dashboard-layout.doctis-v5 .care-row.meal{border-left-color:#f19a35;background:linear-gradient(90deg,#fffaf2 0%,#fff 30%)}
+.dashboard-layout.doctis-v5 .care-row.medication{border-left-color:#e96b88;background:linear-gradient(90deg,#fff5f7 0%,#fff 30%)}
+.dashboard-layout.doctis-v5 .care-row.exercise{border-left-color:#20b987;background:linear-gradient(90deg,#f0fbf7 0%,#fff 30%)}
+.dashboard-layout.doctis-v5 .care-row.meal .care-type-icon{color:#d87a13;background:#fff0d9}
+.dashboard-layout.doctis-v5 .care-row.medication .care-type-icon{color:#d64f72;background:#ffe7ee}
+.dashboard-layout.doctis-v5 .care-row.exercise .care-type-icon{color:#148e69;background:#dcf8ec}
+.dashboard-layout.doctis-v5 .care-time{color:#3769a4;font-size:14px;font-weight:900}
+.dashboard-layout.doctis-v5 .care-content h4{color:#1d3b69;font-size:14px;font-weight:850}
+.dashboard-layout.doctis-v5 .care-row.meal .care-type-label{color:#c87516;background:#fff0d8}
+.dashboard-layout.doctis-v5 .care-row.medication .care-type-label{color:#cc4f70;background:#ffe8ef}
+.dashboard-layout.doctis-v5 .care-row.exercise .care-type-label{color:#148a67;background:#e0f8ef}
+
+/* nút */
+.dashboard-layout.doctis-v5 .care-reminder-btn,.dashboard-layout.doctis-v5 .care-done-btn{
+  min-height:34px;padding:0 11px;border-radius:9px;font-size:11px;font-weight:850;transition:.18s;
+}
+.dashboard-layout.doctis-v5 .care-reminder-btn{color:#3977f2;background:#edf4ff;border-color:#d5e3fb}
+.dashboard-layout.doctis-v5 .care-reminder-btn:hover{color:#fff;background:#3977f2;border-color:#3977f2}
+.dashboard-layout.doctis-v5 .care-reminder-btn.sent{color:#138b68;background:#e5faf2;border-color:#c6efdf}
+.dashboard-layout.doctis-v5 .care-done-btn{color:#fff;background:linear-gradient(135deg,#3977f2,#665de7);border-color:transparent;box-shadow:0 5px 12px rgba(57,119,242,.18)}
+.dashboard-layout.doctis-v5 .care-done-btn:hover{transform:translateY(-1px);box-shadow:0 8px 17px rgba(57,119,242,.26)}
+
+/* đơn thuốc */
+.dashboard-layout.doctis-v5 .prescription-panel{
+  margin-top:18px;padding:18px;border:1px solid #f0d8df;border-radius:18px;
+  background:radial-gradient(circle at 100% 0%,rgba(233,111,134,.10),transparent 25%),linear-gradient(135deg,#fff,#fff7f9);
+  box-shadow:0 10px 28px rgba(150,67,89,.07);
+}
+.dashboard-layout.doctis-v5 .prescription-panel-header h3{color:#a43e59;font-size:17px;font-weight:850}
+.dashboard-layout.doctis-v5 .prescription-panel-header>span{color:#fff;background:linear-gradient(135deg,#e96f87,#d95372);box-shadow:0 6px 14px rgba(217,83,114,.20)}
+.dashboard-layout.doctis-v5 .prescription-card{border-color:#f1dfe4;background:#fff}
+.dashboard-layout.doctis-v5 .prescription-card strong{color:#9e4059}
+.dashboard-layout.doctis-v5 .prescription-status{color:#fff;background:#20b987}
+
+/* completed */
+.dashboard-layout.doctis-v5 .care-mini-card.completed,.dashboard-layout.doctis-v5 .care-row.completed{opacity:.62;filter:saturate(.65)}
+.dashboard-layout.doctis-v5 .care-mini-card.completed:after{
+  content:"✓";position:absolute;top:7px;right:7px;width:19px;height:19px;display:grid;place-items:center;
+  border-radius:50%;color:#fff;background:#20b987;font-size:11px;font-weight:900;
+}
+
+
+/* =========================================================
+   DOCTIS MESSENGER — ATTACHMENT V3
+   Doctor side: preview image + open + download
+   ========================================================= */
+
+.messenger-v2 .message-image-attachment {
+  width: min(340px, 100%);
+  margin-top: 8px;
+  overflow: hidden;
+  border: 1px solid #dce7f5;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(38, 69, 108, .07);
+}
+
+.messenger-v2 .message-image-preview-link {
+  display: block;
+  line-height: 0;
+  background: #edf3fb;
+}
+
+.messenger-v2 .message-image-attachment img {
+  display: block;
+  width: 100%;
+  max-height: 330px;
+  object-fit: cover;
+  cursor: zoom-in;
+  transition: transform .28s ease, filter .28s ease;
+}
+
+.messenger-v2 .message-image-preview-link:hover img {
+  transform: scale(1.018);
+  filter: brightness(.97);
+}
+
+.messenger-v2 .message-attachment-meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+}
+
+.messenger-v2 .message-attachment-name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  color: #314b6d;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.messenger-v2 .message-attachment-name svg {
+  flex: 0 0 auto;
+  color: #3977f2;
+}
+
+.messenger-v2 .message-attachment-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messenger-v2 .message-attachment-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.messenger-v2 .attachment-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 27px;
+  padding: 0 8px;
+  border: 1px solid #d8e3f0;
+  border-radius: 8px;
+  color: #3d5d86;
+  background: #f7faff;
+  font-size: 9px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.messenger-v2 .attachment-action-btn:hover {
+  color: #3977f2;
+  border-color: #b9d0f3;
+  background: #edf4ff;
+  transform: translateY(-1px);
+}
+
+.messenger-v2 .attachment-action-btn.download {
+  border-color: #cfe0ff;
+  color: #3977f2;
+  background: #edf4ff;
+}
+
+.messenger-v2 .message-file-attachment {
+  width: min(390px, 100%);
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 11px;
+  border: 1px solid #dce7f5;
+  border-radius: 14px;
+  background: #f8fbff;
+  box-shadow: 0 7px 18px rgba(38,69,108,.055);
+}
+
+.messenger-v2 .message-file-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: #3977f2;
+  background: #eaf2ff;
+}
+
+.messenger-v2 .message-file-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.messenger-v2 .message-file-info strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #29415f;
+  font-size: 11px;
+}
+
+.messenger-v2 .message-file-info small {
+  display: block;
+  margin-top: 3px;
+  color: #8a9ab0;
+  font-size: 9px;
+}
+
+.messenger-v2 .message-row.mine .message-image-attachment,
+.messenger-v2 .message-row.mine .message-file-attachment {
+  border-color: rgba(255,255,255,.3);
+}
+
+/* =========================================================
+   DOCTOR ↔ PATIENT CHAT — PATIENT SIDE ATTACHMENTS
+   ========================================================= */
+
+.doctor-message-attachment {
+  width: min(330px, 100%);
+  margin-top: 7px;
+  overflow: hidden;
+  border: 1px solid #dce7f5;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(38,69,108,.065);
+}
+
+.doctor-message-image {
+  display: block;
+  line-height: 0;
+  background: #edf3fb;
+}
+
+.doctor-message-image img {
+  display: block;
+  width: 100%;
+  max-height: 310px;
+  object-fit: cover;
+  cursor: zoom-in;
+  transition: transform .28s ease, filter .28s ease;
+}
+
+.doctor-message-image:hover img {
+  transform: scale(1.018);
+  filter: brightness(.97);
+}
+
+.doctor-attachment-info {
+  padding: 9px 10px;
+}
+
+.doctor-attachment-name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #314b6d;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.doctor-attachment-name svg {
+  flex: 0 0 auto;
+  color: #3977f2;
+}
+
+.doctor-attachment-name span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doctor-attachment-meta {
+  margin-top: 3px;
+  color: #8a9ab0;
+  font-size: 9px;
+}
+
+.doctor-attachment-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.doctor-file-open,
+.doctor-file-download {
+  min-height: 29px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid #d8e3f0;
+  border-radius: 8px;
+  color: #3d5d86;
+  background: #f7faff;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.doctor-file-open:hover,
+.doctor-file-download:hover {
+  color: #3977f2;
+  border-color: #b9d0f3;
+  background: #edf4ff;
+  transform: translateY(-1px);
+}
+
+.doctor-file-download {
+  border-color: #cfe0ff;
+  color: #3977f2;
+  background: #edf4ff;
+}
+
+.doctor-message-file-fallback {
+  width: min(390px, 100%);
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+}
+
+.doctor-file-icon {
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  color: #3977f2;
+  background: #eaf2ff;
+}
+
+.doctor-file-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.doctor-file-info strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #29415f;
+  font-size: 11px;
+}
+
+.doctor-file-info small {
+  display: block;
+  margin-top: 3px;
+  color: #8a9ab0;
+  font-size: 9px;
+}
+
+@media (max-width: 650px) {
+  .messenger-v2 .message-image-attachment,
+  .messenger-v2 .message-file-attachment,
+  .doctor-message-attachment,
+  .doctor-message-file-fallback {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .messenger-v2 .message-attachment-meta {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .messenger-v2 .message-attachment-actions {
+    width: 100%;
+  }
+
+  .doctor-attachment-actions {
+    flex-wrap: wrap;
+  }
+}
+
+/* FIX: nút Đăng xuất trước đây không có style riêng (bị thiếu trong danh
+   sách selector), nên hiển thị như button mặc định của trình duyệt. */
+.dashboard-layout.doctis-v5 .v5-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #ffd9de;
+  border-radius: 11px;
+  background: #fff5f6;
+  color: #e2536a;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .2s ease;
+}
+.dashboard-layout.doctis-v5 .v5-logout-btn svg {
+  font-size: 15px;
+  color: #e2536a;
+}
+.dashboard-layout.doctis-v5 .v5-logout-btn span {
+  white-space: nowrap;
+}
+.dashboard-layout.doctis-v5 .v5-logout-btn:hover {
+  background: #ffe3e6;
+  border-color: #ffb9c3;
+  color: #c73953;
+  transform: translateY(-1px);
+}
+
+/* FIX: nút 3 gạch (mở menu đầy đủ) trước đây chỉ hiện khi màn hình
+   <= 760px, nên trên desktop không có cách nào vào "Trò chuyện với bác sĩ",
+   "Biểu đồ & lịch sử", "AI phân tích" — 3 mục chỉ nằm trong drawer đó.
+   Giờ luôn hiển thị nút này ở mọi kích thước màn hình. */
+.dashboard-layout.doctis-v5 .v5-menu-toggle {
+  display: grid;
+}
+
+/* =========================================================
+   FIX: DRAWER MENU (mở từ nút 3 gạch) — trước đây không có
+   style nào nên hiển thị list ngang thô của trình duyệt.
+   Giờ là panel trượt dọc từ trái, mỗi mục 1 hàng, có hiệu ứng.
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 .v5-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  background: rgba(15, 30, 55, .42);
+  backdrop-filter: blur(2px);
+  animation: doctisDrawerFade .18s ease;
+}
+
+.dashboard-layout.doctis-v5 .v5-drawer {
+  display: flex;
+  flex-direction: column;
+  width: min(300px, 84vw);
+  height: 100%;
+  overflow-y: auto;
+  padding: 18px 14px 20px;
+  background: #fff;
+  box-shadow: 18px 0 50px rgba(20, 45, 90, .18);
+  animation: doctisDrawerSlide .22s ease;
+}
+
+.dashboard-layout.doctis-v5 .v5-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 16px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #e7edf6;
+}
+
+.dashboard-layout.doctis-v5 .v5-drawer-head strong {
+  color: var(--doctis-title, #122542);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -.4px;
+}
+
+.dashboard-layout.doctis-v5 .v5-drawer-head button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e2eaf4;
+  border-radius: 10px;
+  background: #f7faff;
+  color: #6c7e97;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.dashboard-layout.doctis-v5 .v5-drawer-head button:hover {
+  border-color: #ffd7bd;
+  background: #fff1e8;
+  color: #e0601f;
+}
+
+.dashboard-layout.doctis-v5 .v5-drawer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.dashboard-layout.doctis-v5 .v5-drawer-list button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: #45597c;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.dashboard-layout.doctis-v5 .v5-drawer-list button svg {
+  flex: 0 0 auto;
+  color: #7186a5;
+  font-size: 16px;
+}
+
+.dashboard-layout.doctis-v5 .v5-drawer-list button:hover {
+  background: #f2f6ff;
+  color: #3977f2;
+}
+.dashboard-layout.doctis-v5 .v5-drawer-list button:hover svg { color: #3977f2; }
+
+.dashboard-layout.doctis-v5 .v5-drawer-list button.active {
+  color: #fff;
+  background: linear-gradient(135deg, #4388f7, #3470e8);
+  border-color: #3977f2;
+  box-shadow: 0 8px 18px rgba(55,119,242,.2);
+}
+.dashboard-layout.doctis-v5 .v5-drawer-list button.active svg { color: #fff; }
+
+.dashboard-layout.doctis-v5 .v5-drawer-logout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 0 12px;
+  border: 1px solid #ffd9de;
+  border-radius: 12px;
+  background: #fff5f6;
+  color: #e2536a;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.dashboard-layout.doctis-v5 .v5-drawer-logout svg { font-size: 15px; }
+
+.dashboard-layout.doctis-v5 .v5-drawer-logout:hover {
+  background: #ffe3e6;
+  border-color: #ffb9c3;
+  color: #c73953;
+}
+
+@keyframes doctisDrawerFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes doctisDrawerSlide {
+  from { transform: translateX(-16px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* =========================================================
+   DOCTIS — ĐỒNG BỘ FONT TOÀN BỘ DASHBOARD
+   Font chuẩn: Be Vietnam Pro
+   Giống ô "AI phân tích"
+   ========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap");
+
+/* Toàn bộ Dashboard */
+.dashboard-layout.doctis-v5,
+.dashboard-layout.doctis-v5 *,
+.dashboard-layout.doctis-v5 *::before,
+.dashboard-layout.doctis-v5 *::after {
+  font-family:
+    "Be Vietnam Pro",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Arial,
+    sans-serif !important;
+}
+
+/* Header */
+.dashboard-layout.doctis-v5 h1,
+.dashboard-layout.doctis-v5 h2,
+.dashboard-layout.doctis-v5 h3,
+.dashboard-layout.doctis-v5 h4,
+.dashboard-layout.doctis-v5 h5,
+.dashboard-layout.doctis-v5 h6 {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+
+/* Toàn bộ text */
+.dashboard-layout.doctis-v5 p,
+.dashboard-layout.doctis-v5 span,
+.dashboard-layout.doctis-v5 strong,
+.dashboard-layout.doctis-v5 small,
+.dashboard-layout.doctis-v5 label,
+.dashboard-layout.doctis-v5 div,
+.dashboard-layout.doctis-v5 li,
+.dashboard-layout.doctis-v5 a,
+.dashboard-layout.doctis-v5 button,
+.dashboard-layout.doctis-v5 input,
+.dashboard-layout.doctis-v5 textarea,
+.dashboard-layout.doctis-v5 select,
+.dashboard-layout.doctis-v5 option,
+.dashboard-layout.doctis-v5 table,
+.dashboard-layout.doctis-v5 th,
+.dashboard-layout.doctis-v5 td {
+  font-family:
+    "Be Vietnam Pro",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Arial,
+    sans-serif !important;
+}
+
+/* =========================================================
+   Ô TRUY CẬP NHANH
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 .v5-quick-card strong {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  letter-spacing: -0.2px;
+}
+
+.dashboard-layout.doctis-v5 .v5-quick-card small {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+}
+
+/* =========================================================
+   TIÊU ĐỀ "BẠN MUỐN LÀM GÌ HÔM NAY?"
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 .v5-section-heading h2 {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.6px !important;
+}
+
+/* =========================================================
+   EYEBROW
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 .v5-eyebrow {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.7px !important;
+}
+
+/* =========================================================
+   NGÀY THÁNG
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 .v5-date-pill {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 .v5-hero h1,
+.dashboard-layout.doctis-v5 .v5-hero-title,
+.dashboard-layout.doctis-v5 .v5-hero-copy h1 {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-weight: 800 !important;
+  letter-spacing: -0.8px !important;
+}
+
+/* =========================================================
+   MENU / NAVIGATION
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 .v5-nav-item,
+.dashboard-layout.doctis-v5 .v5-nav-item span,
+.dashboard-layout.doctis-v5 .v5-nav-item strong {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-weight: 600 !important;
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 input,
+.dashboard-layout.doctis-v5 textarea,
+.dashboard-layout.doctis-v5 select {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+.dashboard-layout.doctis-v5 input::placeholder,
+.dashboard-layout.doctis-v5 textarea::placeholder {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-weight: 400 !important;
+}
+
+/* =========================================================
+   BUTTON
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 button {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-weight: 600 !important;
+}
+
+/* =========================================================
+   CARD / PROFILE / HEALTH / AI
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 .modern-card,
+.dashboard-layout.doctis-v5 .health-card,
+.dashboard-layout.doctis-v5 .ai-card,
+.dashboard-layout.doctis-v5 .profile-card,
+.dashboard-layout.doctis-v5 .care-card,
+.dashboard-layout.doctis-v5 .prescription-card {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+}
+
+/* Tiêu đề bên trong card */
+.dashboard-layout.doctis-v5 .modern-card h3,
+.dashboard-layout.doctis-v5 .health-card h3,
+.dashboard-layout.doctis-v5 .ai-card h3,
+.dashboard-layout.doctis-v5 .profile-card h3,
+.dashboard-layout.doctis-v5 .care-card h3,
+.dashboard-layout.doctis-v5 .prescription-card h3 {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-weight: 700 !important;
+}
+
+/* =========================================================
+   KIẾN THỨC SỨC KHỎE
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 .v5-knowledge-heading h2,
+.dashboard-layout.doctis-v5 .v5-diabetes-section h2 {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-weight: 700 !important;
+  letter-spacing: -0.5px !important;
+}
+
+.dashboard-layout.doctis-v5 .v5-knowledge-body h3,
+.dashboard-layout.doctis-v5 .v5-diabetes-body h3 {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-weight: 700 !important;
+}
+
+/* =========================================================
+   BẢNG
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 table,
+.dashboard-layout.doctis-v5 th,
+.dashboard-layout.doctis-v5 td {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+}
+
+.dashboard-layout.doctis-v5 th {
+  font-weight: 700 !important;
+}
+
+.dashboard-layout.doctis-v5 td {
+  font-weight: 500 !important;
+}
+
+/* =========================================================
+   SỐ LIỆU
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 .metric-value,
+.dashboard-layout.doctis-v5 .health-value,
+.dashboard-layout.doctis-v5 .stat-value {
+  font-family:
+    "Be Vietnam Pro",
+    sans-serif !important;
+
+  font-weight: 800 !important;
+}
+
+/* =========================================================
+   FONT SMOOTHING
+   ========================================================= */
+
+.dashboard-layout.doctis-v5 {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}

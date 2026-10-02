@@ -1,0 +1,15 @@
+node_modules/
+**/node_modules/
+frontend/build/
+backend/.env
+**/.env.local
+**/.env.production
+.env
+.env.*
+!.env.example
+*.log
+.vercel/
+/frontend-git-backup/
+AI/Data.xlsx
+AI/TestData.xlsx
+AI/health_model.pkl
