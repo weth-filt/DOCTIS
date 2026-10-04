@@ -332,18 +332,6 @@ const normalizeText = (value) => {
     .replace(/[\u0300-\u036f]/g, "");
 };
 
-//KIỂM TRA DỊ ỨNG
-
-const hasAllergy = (profile, keywordList) => {
-  const allergyText = normalizeText(
-    profile?.allergies || profile?.allergy || ""
-  );
-
-  return keywordList.some((keyword) =>
-    allergyText.includes(normalizeText(keyword))
-  );
-};
-
 // LOẠI BỎ MÓN CÓ THỂ LIÊN QUAN DỊ ỨNG
 
 const removeAllergyFoods = (meal, profile) => {
