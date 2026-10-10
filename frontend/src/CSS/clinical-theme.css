@@ -854,8 +854,18 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   background: rgba(255,255,255,.98) !important;
   box-shadow: 0 -5px 18px rgba(27,69,82,.035) !important;
 }
-.dashboard-layout.doctis-v5 .doctor-chat-input { gap: 9px !important; }
+.dashboard-layout.doctis-v5 .doctor-chat-input {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  grid-template-columns: 42px minmax(0, 1fr) 42px !important;
+  gap: 9px !important;
+}
 .dashboard-layout.doctis-v5 .doctor-chat-input textarea {
+  width: auto !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  grid-column: 2 !important;
   min-height: 46px !important;
   padding: 12px 15px !important;
   border-color: #dce7e8 !important;
@@ -870,6 +880,7 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
 }
 .dashboard-layout.doctis-v5 .doctor-attach-btn,
 .dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child { border-radius: 11px !important; }
+.dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child { grid-column: 3 !important; justify-self: end !important; }
 .dashboard-layout.doctis-v5 .doctor-attach-btn { color: #52717a !important; background: #eff5f5 !important; }
 .dashboard-layout.doctis-v5 .doctor-attach-btn:hover { color: #087b83 !important; background: #e3f2f1 !important; }
 .dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child {
