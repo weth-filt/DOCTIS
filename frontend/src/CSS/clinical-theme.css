@@ -735,3 +735,167 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
 @media (prefers-reduced-motion: reduce) {
   .dashboard-layout.doctis-v5 .modern-card::before { transition: none !important; }
 }
+
+/* Doctor chat: calm clinical workspace with a little motion and depth. */
+.dashboard-layout.doctis-v5 .doctor-chat-page {
+  width: min(1480px, calc(100vw - 56px)) !important;
+  margin: 18px auto !important;
+  animation: rx-chat-page-in .48s cubic-bezier(.2,.75,.25,1) both;
+}
+.dashboard-layout.doctis-v5 .doctor-chat-container {
+  grid-template-columns: 310px minmax(0, 1fr) !important;
+  border: 1px solid #d7e5e9 !important;
+  border-radius: 18px !important;
+  box-shadow: 0 20px 55px rgba(25,64,80,.11), 0 3px 12px rgba(25,64,80,.045) !important;
+}
+.dashboard-layout.doctis-v5 .doctor-list-panel {
+  border-right-color: #e1eaec !important;
+  background: linear-gradient(165deg,#f6fbfb 0%,#f1f7f8 100%) !important;
+}
+.dashboard-layout.doctis-v5 .doctor-list-header { padding: 22px 20px 16px !important; }
+.dashboard-layout.doctis-v5 .doctor-list-header h2 { color: #173b4b !important; letter-spacing: -.035em; }
+.dashboard-layout.doctis-v5 .doctor-list-header p { color: #718892 !important; }
+.dashboard-layout.doctis-v5 .doctor-count {
+  border-radius: 10px !important;
+  background: #087b83 !important;
+  box-shadow: 0 7px 16px rgba(8,123,131,.18) !important;
+}
+.dashboard-layout.doctis-v5 .doctor-search {
+  min-height: 44px !important;
+  border-color: #dbe7e8 !important;
+  border-radius: 11px !important;
+  box-shadow: 0 3px 10px rgba(25,64,80,.035) !important;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease !important;
+}
+.dashboard-layout.doctis-v5 .doctor-search:focus-within {
+  border-color: #58a9ad !important;
+  box-shadow: 0 0 0 3px rgba(38,156,160,.1) !important;
+  transform: translateY(-1px);
+}
+.dashboard-layout.doctis-v5 .doctor-list { padding: 4px 10px 18px !important; }
+.dashboard-layout.doctis-v5 .doctor-item {
+  min-height: 68px !important;
+  margin: 5px 0 !important;
+  border-radius: 12px !important;
+  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease !important;
+}
+.dashboard-layout.doctis-v5 .doctor-item:hover { background: #fff !important; transform: translateX(3px) !important; }
+.dashboard-layout.doctis-v5 .doctor-item.selected {
+  border-color: #b9dddd !important;
+  background: linear-gradient(110deg,#e7f5f4,#f8fbfb) !important;
+  box-shadow: 0 7px 18px rgba(18,109,116,.08) !important;
+}
+.dashboard-layout.doctis-v5 .doctor-item.selected::before {
+  top: 12px !important; bottom: 12px !important; width: 3px !important;
+  background: #14898e !important;
+}
+.dashboard-layout.doctis-v5 .doctor-avatar {
+  box-shadow: inset 0 0 0 2px #fff, 0 4px 12px rgba(25,64,80,.11) !important;
+  transition: transform .25s ease !important;
+}
+.dashboard-layout.doctis-v5 .doctor-item:hover .doctor-avatar { transform: scale(1.055); }
+.dashboard-layout.doctis-v5 .doctor-info h4 { color: #1d4050 !important; }
+.dashboard-layout.doctis-v5 .doctor-info p { color: #748992 !important; }
+.dashboard-layout.doctis-v5 .doctor-chat-header {
+  min-height: 76px !important;
+  padding: 13px 22px !important;
+  border-bottom-color: #e3ecee !important;
+  background: rgba(255,255,255,.97) !important;
+}
+.dashboard-layout.doctis-v5 .selected-doctor-avatar {
+  border-radius: 13px !important;
+  color: #087b83 !important;
+  background: linear-gradient(145deg,#e0f3f1,#edf8f7) !important;
+  box-shadow: inset 0 0 0 1px #d2eae8, 0 5px 14px rgba(20,111,116,.08) !important;
+}
+.dashboard-layout.doctis-v5 .doctor-chat-header h3 { color: #173b4b !important; letter-spacing: -.025em; }
+.dashboard-layout.doctis-v5 .doctor-chat-header p { color: #70858d !important; }
+.dashboard-layout.doctis-v5 .doctor-chat-header p svg {
+  color: #149c76 !important;
+  filter: drop-shadow(0 0 4px rgba(20,156,118,.25));
+  animation: rx-chat-online 2.2s ease-in-out infinite;
+}
+.dashboard-layout.doctis-v5 .doctor-chat-body {
+  position: relative !important;
+  padding: 28px clamp(18px,4vw,52px) 24px !important;
+  background-color: #f4f8f8 !important;
+  background-image:
+    radial-gradient(ellipse at 50% -18%,rgba(58,164,165,.12),transparent 47%),
+    radial-gradient(circle,rgba(34,102,112,.055) .75px,transparent .85px),
+    linear-gradient(180deg,#f7fafa 0%,#f0f6f6 100%) !important;
+  background-size: auto, 22px 22px, auto !important;
+}
+.dashboard-layout.doctis-v5 .doctor-message { margin-bottom: 16px !important; animation: rx-chat-message-in .34s cubic-bezier(.18,.78,.25,1) both !important; }
+.dashboard-layout.doctis-v5 .doctor-message:nth-child(2) { animation-delay: .06s !important; }
+.dashboard-layout.doctis-v5 .doctor-message:nth-child(3) { animation-delay: .12s !important; }
+.dashboard-layout.doctis-v5 .doctor-message:nth-child(4) { animation-delay: .18s !important; }
+.dashboard-layout.doctis-v5 .message-bubble {
+  padding: 12px 15px 9px !important;
+  border: 1px solid #e0e9ea !important;
+  border-radius: 15px 15px 15px 4px !important;
+  color: #294955 !important;
+  background: rgba(255,255,255,.96) !important;
+  box-shadow: 0 5px 16px rgba(27,69,82,.065) !important;
+  transition: transform .18s ease, box-shadow .18s ease !important;
+}
+.dashboard-layout.doctis-v5 .doctor-message.patient .message-bubble {
+  border: 1px solid #087b83 !important;
+  border-radius: 15px 15px 4px 15px !important;
+  color: #fff !important;
+  background: linear-gradient(145deg,#138e91,#08747d) !important;
+  box-shadow: 0 7px 17px rgba(8,123,131,.18) !important;
+}
+.dashboard-layout.doctis-v5 .doctor-message:hover .message-bubble { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(27,69,82,.1) !important; }
+.dashboard-layout.doctis-v5 .doctor-message.patient:hover .message-bubble { box-shadow: 0 9px 22px rgba(8,123,131,.23) !important; }
+.dashboard-layout.doctis-v5 .message-time { color: #91a3a8 !important; }
+.dashboard-layout.doctis-v5 .doctor-chat-composer {
+  padding: 11px 16px 13px !important;
+  border-top-color: #e1ebec !important;
+  background: rgba(255,255,255,.98) !important;
+  box-shadow: 0 -5px 18px rgba(27,69,82,.035) !important;
+}
+.dashboard-layout.doctis-v5 .doctor-chat-input { gap: 9px !important; }
+.dashboard-layout.doctis-v5 .doctor-chat-input textarea {
+  min-height: 46px !important;
+  padding: 12px 15px !important;
+  border-color: #dce7e8 !important;
+  border-radius: 12px !important;
+  color: #294955 !important;
+  background: #f7fafa !important;
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease !important;
+}
+.dashboard-layout.doctis-v5 .doctor-chat-input textarea:focus {
+  border-color: #56a9ad !important;
+  box-shadow: 0 0 0 3px rgba(38,156,160,.1) !important;
+}
+.dashboard-layout.doctis-v5 .doctor-attach-btn,
+.dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child { border-radius: 11px !important; }
+.dashboard-layout.doctis-v5 .doctor-attach-btn { color: #52717a !important; background: #eff5f5 !important; }
+.dashboard-layout.doctis-v5 .doctor-attach-btn:hover { color: #087b83 !important; background: #e3f2f1 !important; }
+.dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child {
+  background: linear-gradient(145deg,#15969a,#08747d) !important;
+  box-shadow: 0 6px 15px rgba(8,123,131,.2) !important;
+}
+.dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child:hover:not(:disabled) { box-shadow: 0 9px 19px rgba(8,123,131,.27) !important; }
+.dashboard-layout.doctis-v5 .doctor-attachment-preview { border-radius: 11px !important; background: #f4f9f9 !important; }
+@keyframes rx-chat-page-in { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes rx-chat-message-in { from { opacity: 0; transform: translateY(7px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes rx-chat-online { 0%,100% { opacity: 1; } 50% { opacity: .58; } }
+@media (max-width: 900px) {
+  .dashboard-layout.doctis-v5 .doctor-chat-page { width: calc(100vw - 32px) !important; }
+  .dashboard-layout.doctis-v5 .doctor-chat-container { grid-template-columns: 270px minmax(0,1fr) !important; }
+}
+@media (max-width: 700px) {
+  .dashboard-layout.doctis-v5 .doctor-chat-page { width: 100% !important; }
+  .dashboard-layout.doctis-v5 .doctor-chat-container { grid-template-columns: 1fr !important; }
+  .dashboard-layout.doctis-v5 .doctor-chat-body { background-size: auto, 18px 18px, auto !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-layout.doctis-v5 .doctor-chat-page,
+  .dashboard-layout.doctis-v5 .doctor-chat-header p svg,
+  .dashboard-layout.doctis-v5 .doctor-message { animation: none !important; }
+  .dashboard-layout.doctis-v5 .doctor-item,
+  .dashboard-layout.doctis-v5 .doctor-avatar,
+  .dashboard-layout.doctis-v5 .message-bubble,
+  .dashboard-layout.doctis-v5 .doctor-chat-input textarea { transition: none !important; }
+}
