@@ -1621,7 +1621,7 @@ export default function Dashboard() {
           <button className="v5-notification" onClick={() => setMenu("advices")} title="Thông báo"><FaBell />{advices.length > 0 && <span>{advices.length}</span>}</button>
           <button className="v5-account" onClick={() => setMenu("profile")} title="Tài khoản"><FaUserCircle /><span>{profile.fullName || user?.fullName || user?.username || "Tài khoản"}</span><FaChevronDown /></button>
           <button className="v5-logout-btn" onClick={logout} title="Đăng xuất"><FaSignOutAlt /><span>Đăng xuất</span></button>
-          <button className="v5-menu-toggle" onClick={() => setMobileMenuOpen((v) => !v)} aria-label="Mở menu"><FaBars /></button>
+          <button className="v5-menu-toggle" onClick={() => setMobileMenuOpen((v) => !v)} aria-label="Mở menu" aria-expanded={mobileMenuOpen} title="Mở danh mục"><FaBars /></button>
         </div>
       </header>
       {mobileMenuOpen && (
@@ -1640,11 +1640,27 @@ export default function Dashboard() {
         {menu === "dashboard" && (
           <section className="v5-welcome-hero">
             <div className="v5-hero-copy">
-              <h1>DOCTIS xin chào,<br /><strong>{profile.fullName || user?.fullName || user?.username || "Bạn"}</strong> 👋</h1>
+              <span className="v5-hero-kicker">BẢNG ĐIỀU KHIỂN SỨC KHỎE CÁ NHÂN</span>
+              <h1>Xin chào,<br /><strong>{profile.fullName || user?.fullName || user?.username || "Bạn"}</strong></h1>
               <p>Chúng tôi có thể giúp gì cho bạn hôm nay? Theo dõi chỉ số, hiểu sức khỏe và xây dựng kế hoạch chăm sóc phù hợp mỗi ngày.</p>
               <div className="v5-hero-actions"><button onClick={() => setMenu("health")}><FaPlusCircle /> Cập nhật sức khỏe</button><button className="ghost" onClick={() => setMenu("ai")}><FaRobot /> Hỏi DOCTIS AI</button></div>
             </div>
-            <div className="v5-hero-art"><span className="v5-sticker sticker-one">🩺</span><span className="v5-sticker sticker-two">💙</span><div className="v5-hero-orb"><FaHeartbeat /></div><div className="v5-hero-note">● Theo dõi sức khỏe mỗi ngày</div></div>
+            <div className="v5-hero-art">
+              <section className="v5-vitals-card" aria-label="Chỉ số sức khỏe gần nhất">
+                <div className="v5-vitals-head">
+                  <div><span>GHI NHẬN GẦN NHẤT</span><strong>{latest?.createdAt ? formatDate(latest.createdAt) : "Chưa có dữ liệu"}</strong></div>
+                  <i className={latest?.createdAt ? "is-recorded" : ""} aria-label={latest?.createdAt ? "Đã ghi nhận" : "Chưa ghi nhận"} />
+                </div>
+                <div className="v5-vitals-metrics">
+                  <div><span>Đường huyết</span><strong>{Number(latest?.glucose) > 0 ? latest.glucose : "—"}<small>{Number(latest?.glucose) > 0 ? "mg/dL" : ""}</small></strong></div>
+                  <div><span>Huyết áp</span><strong>{latest?.systolic && latest?.diastolic ? `${latest.systolic}/${latest.diastolic}` : "—"}<small>{latest?.systolic && latest?.diastolic ? "mmHg" : ""}</small></strong></div>
+                </div>
+                <svg className="v5-pulse-line" viewBox="0 0 360 46" role="img" aria-label="Đồ họa nhịp theo dõi sức khỏe">
+                  <path d="M0 25h82l13-1 9-12 13 25 13-34 15 32 12-10h24l10-1 10-12 13 24 13-35 15 34 11-9h97" />
+                </svg>
+                <p>{latest?.createdAt ? "Số liệu được lấy từ lần cập nhật sức khỏe gần nhất." : "Cập nhật chỉ số để bắt đầu theo dõi sức khỏe."}</p>
+              </section>
+            </div>
           </section>
         )}
         {menu === "dashboard" && (
