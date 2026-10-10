@@ -739,7 +739,8 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
 /* Doctor chat: calm clinical workspace with a little motion and depth. */
 .dashboard-layout.doctis-v5 .doctor-chat-page {
   width: min(1480px, calc(100vw - 56px)) !important;
-  margin: 18px auto !important;
+  height: auto !important;
+  margin: 18px auto 14px !important;
   animation: rx-chat-page-in .48s cubic-bezier(.2,.75,.25,1) both;
 }
 .dashboard-layout.doctis-v5 .doctor-chat-container {
@@ -849,6 +850,9 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
 .dashboard-layout.doctis-v5 .doctor-message.patient:hover .message-bubble { box-shadow: 0 9px 22px rgba(8,123,131,.23) !important; }
 .dashboard-layout.doctis-v5 .message-time { color: #91a3a8 !important; }
 .dashboard-layout.doctis-v5 .doctor-chat-composer {
+  width: auto !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
   padding: 11px 16px 13px !important;
   border-top-color: #e1ebec !important;
   background: rgba(255,255,255,.98) !important;
@@ -858,14 +862,15 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   width: 100% !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
-  grid-template-columns: 42px minmax(0, 1fr) 42px !important;
+  display: flex !important;
   gap: 9px !important;
 }
 .dashboard-layout.doctis-v5 .doctor-chat-input textarea {
-  width: auto !important;
+  flex: 1 1 0% !important;
+  width: 0 !important;
   min-width: 0 !important;
+  max-width: 100% !important;
   box-sizing: border-box !important;
-  grid-column: 2 !important;
   min-height: 46px !important;
   padding: 12px 15px !important;
   border-color: #dce7e8 !important;
@@ -880,7 +885,9 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
 }
 .dashboard-layout.doctis-v5 .doctor-attach-btn,
 .dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child { border-radius: 11px !important; }
-.dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child { grid-column: 3 !important; justify-self: end !important; }
+.dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child { flex: 0 0 42px !important; }
+.dashboard-layout.doctis-v5 .doctor-chat-input > input[type="file"] { display: none !important; }
+.dashboard-layout.doctis-v5 .doctor-attach-btn { flex: 0 0 42px !important; }
 .dashboard-layout.doctis-v5 .doctor-attach-btn { color: #52717a !important; background: #eff5f5 !important; }
 .dashboard-layout.doctis-v5 .doctor-attach-btn:hover { color: #087b83 !important; background: #e3f2f1 !important; }
 .dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child {
@@ -900,6 +907,9 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   .dashboard-layout.doctis-v5 .doctor-chat-page { width: 100% !important; }
   .dashboard-layout.doctis-v5 .doctor-chat-container { grid-template-columns: 1fr !important; }
   .dashboard-layout.doctis-v5 .doctor-chat-body { background-size: auto, 18px 18px, auto !important; }
+  .dashboard-layout.doctis-v5 .doctor-chat-input { gap: 7px !important; }
+  .dashboard-layout.doctis-v5 .doctor-attach-btn,
+  .dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child { flex-basis: 38px !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   .dashboard-layout.doctis-v5 .doctor-chat-page,
