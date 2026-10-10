@@ -33,11 +33,11 @@ def predict():
         # ================= AI ANALYSIS =================
 
         recommendation = ""
-        risk = "Thấp"
+        risk = "Ổn định"
 
-        if glucose > 180:
+        if glucose > 180 or bmi >= 30:
 
-            risk = "Cao"
+            risk = "Nguy hiểm"
 
             recommendation = """
 - Đường huyết đang cao
@@ -56,6 +56,16 @@ def predict():
 - Uống sữa hoặc ăn bánh ngọt
 - Nghỉ ngơi ngay
 - Kiểm tra lại glucose
+"""
+
+        elif glucose > 126 or bmi >= 25:
+
+            risk = "Cao"
+
+            recommendation = """
+- Một số chỉ số cao hơn ngưỡng theo dõi
+- Trao đổi với nhân viên y tế để được đánh giá phù hợp
+- Theo dõi lại các chỉ số theo hướng dẫn
 """
 
         else:

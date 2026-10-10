@@ -45,6 +45,7 @@ import {
 } from "recharts";
 
 import API from "../../services/api";
+import getRiskAssessment from "../../utils/riskAssessment";
 
 const authConfig = () => {
   const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -65,34 +66,7 @@ const riskClass = (risk = "") => {
 };
 
 const riskLabel = (health) => {
-  if (!health) return "Chưa có dữ liệu";
-  if (health.risk) return health.risk;
-
-  const glucose = Number(health.glucose);
-  const bmi = Number(health.bmi);
-  const hr = Number(health.heartRate);
-  const sys = Number(health.systolic);
-  const dia = Number(health.diastolic);
-
-  if (
-    glucose > 180 ||
-    glucose < 70 ||
-    bmi >= 30 ||
-    hr > 120 ||
-    hr < 50 ||
-    sys > 160 ||
-    dia > 100
-  ) return "Nguy hiểm";
-
-  if (
-    glucose > 126 ||
-    bmi >= 25 ||
-    hr > 100 ||
-    sys > 140 ||
-    dia > 90
-  ) return "Cao";
-
-  return "Ổn định";
+  return getRiskAssessment(health);
 };
 
 const formatDate = (value) => {
@@ -101,6 +75,14 @@ const formatDate = (value) => {
   return Number.isNaN(date.getTime())
     ? "—"
     : date.toLocaleString("vi-VN");
+};
+
+const formatTime = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? ""
+    : date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
 };
 
 const getPatientName = (patient) =>
@@ -131,6 +113,7 @@ export default function DoctorDashboard() {
     note: "",
     type: "Tái khám"
   });
+  const [appointmentActionId, setAppointmentActionId] = useState("");
   const [reminderSendingId, setReminderSendingId] = useState("");
 
   // Messaging
@@ -158,6 +141,10 @@ export default function DoctorDashboard() {
 
   // Care plan
   const [carePlan, setCarePlan] = useState(null);
+  const [carePlanEditorOpen, setCarePlanEditorOpen] = useState(false);
+  const [carePlanDaysJson, setCarePlanDaysJson] = useState("[]");
+  const [carePlanNote, setCarePlanNote] = useState("");
+  const [carePlanSaving, setCarePlanSaving] = useState(false);
 
   const logout = () => {
     localStorage.clear();
@@ -208,6 +195,7 @@ export default function DoctorDashboard() {
     setPatientLoading(true);
     setCarePlan(null);
     setPrescriptions([]);
+    setCarePlanEditorOpen(false);
 
     try {
       const [healthRes, careRes, prescriptionRes] = await Promise.allSettled([
@@ -231,9 +219,18 @@ export default function DoctorDashboard() {
       });
 
       if (careRes.status === "fulfilled") setCarePlan(careRes.value.data);
+      else setCarePlan(null);
       if (prescriptionRes.status === "fulfilled") {
         setPrescriptions(safeArray(prescriptionRes.value.data));
       }
+      const plan = careRes.status === "fulfilled" ? careRes.value.data : null;
+      setCarePlanDaysJson(JSON.stringify(plan?.days || Array.from({ length: 7 }, (_, dayIndex) => ({
+        dayIndex,
+        label: `Ngày ${dayIndex + 1}`,
+        status: "draft",
+        items: [],
+      })), null, 2));
+      setCarePlanNote(plan?.doctorNote || "");
     } catch (err) {
       console.error("OPEN PATIENT ERROR =", err);
     } finally {
@@ -245,6 +242,36 @@ export default function DoctorDashboard() {
     setSelectedPatient(null);
     setCarePlan(null);
     setPrescriptions([]);
+    setCarePlanEditorOpen(false);
+  };
+
+  const saveCarePlan = async (status) => {
+    if (!selectedPatient?._id) return;
+    let days;
+    try {
+      days = JSON.parse(carePlanDaysJson);
+      if (!Array.isArray(days)) throw new Error("Danh sách ngày phải là một mảng JSON.");
+    } catch (err) {
+      alert(`JSON kế hoạch không hợp lệ: ${err.message}`);
+      return;
+    }
+
+    setCarePlanSaving(true);
+    try {
+      const res = await API.post("/care-plans/doctor", {
+        patientId: selectedPatient._id,
+        days,
+        status,
+        doctorNote: carePlanNote,
+      }, authConfig());
+      setCarePlan(res.data);
+      setCarePlanEditorOpen(false);
+      alert(status === "confirmed" ? "Đã chốt kế hoạch cho bệnh nhân." : "Đã lưu bản nháp kế hoạch.");
+    } catch (err) {
+      alert(err.response?.data?.msg || "Không thể lưu kế hoạch chăm sóc.");
+    } finally {
+      setCarePlanSaving(false);
+    }
   };
 
   const sendAdvice = async (patientId) => {
@@ -319,6 +346,19 @@ export default function DoctorDashboard() {
       setSelectedPatient(null);
     } catch (err) {
       alert(err.response?.data?.msg || "Tạo lịch hẹn thất bại.");
+    }
+  };
+
+  const updateAppointmentStatus = async (appointment, status) => {
+    setAppointmentActionId(appointment._id);
+    try {
+      const action = status === "approved" ? "approve" : "complete";
+      await API.put(`/appointments/${action}/${appointment._id}`, {}, authConfig());
+      await fetchAppointments();
+    } catch (err) {
+      alert(err.response?.data?.msg || "Không thể cập nhật lịch hẹn.");
+    } finally {
+      setAppointmentActionId("");
     }
   };
 
@@ -842,6 +882,7 @@ export default function DoctorDashboard() {
     ],
     [
       "Bệnh nền",
+      selectedPatient?.chronicDiseases ||
       selectedPatient?.underlyingDiseases ||
       selectedPatient?.underlyingDisease ||
       selectedPatient?.diseases ||
@@ -995,6 +1036,25 @@ export default function DoctorDashboard() {
                 <p>Có dữ liệu sức khỏe</p>
                 <span className="card-caption">Theo dõi liên tục</span>
               </div>
+            </section>
+
+            <section className="patient-table doctor-appointment-list">
+              <div className="table-top">
+                <div><h2>Lịch hẹn</h2><p>Duyệt lịch đang chờ và cập nhật lịch đã khám.</p></div>
+              </div>
+              {appointments.length ? appointments.map((appointment) => (
+                <article className="mini-patient" key={appointment._id}>
+                  <div className="mini-patient-info">
+                    <strong>{appointment.patientId?.fullName || appointment.patientId?.username || "Bệnh nhân"}</strong>
+                    <span>{formatDate(appointment.appointmentDate)} · {formatTime(appointment.appointmentDate)} · {appointment.type || "Tái khám"}</span>
+                    <span>Trạng thái: {appointment.status}</span>
+                  </div>
+                  <div className="mini-actions">
+                    {appointment.status === "pending" && <button className="view-btn" disabled={appointmentActionId === appointment._id} onClick={() => updateAppointmentStatus(appointment, "approved")}>Duyệt</button>}
+                    {appointment.status === "approved" && <button className="view-btn" disabled={appointmentActionId === appointment._id} onClick={() => updateAppointmentStatus(appointment, "completed")}>Hoàn tất</button>}
+                  </div>
+                </article>
+              )) : <div className="empty-state">Chưa có lịch hẹn.</div>}
             </section>
 
             <section className="dashboard-split">
@@ -1768,6 +1828,25 @@ export default function DoctorDashboard() {
                       </span>
                     )}
                   </div>
+
+                  <div className="care-plan-editor-actions">
+                    <button type="button" className="soft-btn" onClick={() => setCarePlanEditorOpen((open) => !open)}>
+                      {carePlanEditorOpen ? "Đóng trình sửa" : carePlan ? "Sửa kế hoạch" : "Tạo kế hoạch"}
+                    </button>
+                  </div>
+                  {carePlanEditorOpen && (
+                    <div className="care-plan-editor">
+                      <label htmlFor="care-plan-days-json">Các ngày và hoạt động (JSON theo cấu trúc ngày/kế hoạch)</label>
+                      <small>Mỗi hoạt động cần có id, type, time, title; description có thể để trống. Ví dụ: {`{"id":"breakfast-1","type":"MEAL","time":"07:00","title":"Ăn sáng","description":"Theo hướng dẫn"}`}</small>
+                      <textarea id="care-plan-days-json" rows={14} value={carePlanDaysJson} onChange={(event) => setCarePlanDaysJson(event.target.value)} spellCheck="false" />
+                      <label htmlFor="care-plan-doctor-note">Ghi chú bác sĩ</label>
+                      <textarea id="care-plan-doctor-note" rows={3} value={carePlanNote} onChange={(event) => setCarePlanNote(event.target.value)} />
+                      <div className="care-plan-editor-actions">
+                        <button type="button" className="soft-btn" disabled={carePlanSaving} onClick={() => saveCarePlan("draft")}>{carePlanSaving ? "Đang lưu..." : "Lưu nháp"}</button>
+                        <button type="button" className="view-btn" disabled={carePlanSaving} onClick={() => saveCarePlan("confirmed")}>{carePlanSaving ? "Đang lưu..." : "Chốt cho bệnh nhân"}</button>
+                      </div>
+                    </div>
+                  )}
 
                   {!carePlan ? (
                     <div className="empty-inline">

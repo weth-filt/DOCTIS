@@ -1,6 +1,7 @@
 const axios = require("axios");
 const Health = require("../models/Health");
 const Advice = require("../models/Advice");
+const getRisk = require("../utils/riskAssessment");
 
 // =====================================================
 // AI SERVICE URL
@@ -150,7 +151,13 @@ exports.addHealth = async (req, res) => {
     // =================================================
     let aiPrediction = "Không xác định";
 
-    let aiRisk = "Không xác định";
+    let aiRisk = getRisk({
+      glucose: glucoseNumber,
+      bmi: roundedBMI,
+      systolic: systolicNumber,
+      diastolic: diastolicNumber,
+      heartRate: heartRateNumber,
+    });
 
     let aiRecommendation =
       "Dữ liệu đã được lưu. " +
@@ -192,11 +199,6 @@ exports.addHealth = async (req, res) => {
       if (ai.data) {
         aiPrediction =
           ai.data.prediction ??
-          "Không xác định";
-
-        aiRisk =
-          ai.data.riskLevel ??
-          ai.data.risk ??
           "Không xác định";
 
         aiRecommendation =

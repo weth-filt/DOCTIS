@@ -84,6 +84,7 @@ export default function Forgot() {
         "/auth/reset",
         {
           email: form.email,
+          otp: form.otp,
           password: form.password,
           confirmPassword: form.confirmPassword
         }

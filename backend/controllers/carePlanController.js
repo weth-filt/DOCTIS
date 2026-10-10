@@ -122,6 +122,12 @@ exports.saveDoctorCarePlan = async (req, res) => {
         ? "confirmed"
         : "draft";
 
+    if (finalStatus === "confirmed" && !days.some((day) => Array.isArray(day?.items) && day.items.length > 0)) {
+      return res.status(400).json({
+        msg: "Hãy thêm ít nhất một hoạt động trước khi chốt kế hoạch.",
+      });
+    }
+
     const plan =
       await CarePlan.findOneAndUpdate(
         {
@@ -168,6 +174,9 @@ exports.saveDoctorCarePlan = async (req, res) => {
 // ======================================================
 exports.getMyConfirmedCarePlan = async (req, res) => {
   try {
+    if (req.user?.role !== "user") {
+      return res.status(403).json({ msg: "Chỉ bệnh nhân mới xem được kế hoạch của tài khoản này." });
+    }
     const plan = await CarePlan.findOne({
       patientId: req.user.id,
       status: "confirmed",

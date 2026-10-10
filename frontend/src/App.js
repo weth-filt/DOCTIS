@@ -1,5 +1,6 @@
 import {
   BrowserRouter,
+  Navigate,
   Routes,
   Route,
 } from "react-router-dom";
@@ -11,7 +12,6 @@ import {
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import Forgot from "./pages/Auth/Forgot";
-import Reset from "./pages/Auth/Reset";
 
 /* =========================================================
    DASHBOARDS
@@ -55,6 +55,7 @@ import "./CSS/health-clarity.css";
 */
 
 import "./CSS/admin.css";
+import "./CSS/clinical-theme.css";
 
 
 function App() {
@@ -83,7 +84,7 @@ function App() {
 
         <Route
           path="/reset/:token"
-          element={<Reset />}
+          element={<Navigate to="/forgot" replace />}
         />
 
 

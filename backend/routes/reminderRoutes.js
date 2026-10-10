@@ -16,8 +16,10 @@ router.get("/my", auth, async (req, res) => {
 
 router.post("/create", auth, async (req, res) => {
   try {
-    const { title, description, time } = req.body;
+    const { title, description, time, source, activityType, dayLabel, scheduleDate } = req.body;
     if (!title || !time) return res.status(400).json({ msg: "Thiếu title hoặc time." });
+    if (!/^\d{2}:\d{2}$/.test(String(time))) return res.status(400).json({ msg: "time phải có dạng HH:mm." });
+    if (scheduleDate && !/^\d{4}-\d{2}-\d{2}$/.test(String(scheduleDate))) return res.status(400).json({ msg: "scheduleDate phải có dạng YYYY-MM-DD." });
 
     const reminder = await Reminder.create({
       userId: req.user.id,
@@ -25,7 +27,10 @@ router.post("/create", auth, async (req, res) => {
       description,
       time,
       enabled: true,
-      source: "USER",
+      source: source === "CARE_PLAN" ? "CARE_PLAN" : "USER",
+      activityType: activityType || "HEALTH",
+      dayLabel: dayLabel || "",
+      scheduleDate: scheduleDate || null,
     });
 
     res.status(201).json(reminder);

@@ -16,6 +16,7 @@ const reminderSchema = new mongoose.Schema(
     source: { type: String, default: "USER" },
     activityType: { type: String, default: "HEALTH" },
     dayLabel: { type: String, default: "" },
+    scheduleDate: { type: String, default: null, match: /^\d{4}-\d{2}-\d{2}$/ },
     createdByDoctorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

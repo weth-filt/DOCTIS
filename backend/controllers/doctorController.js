@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Health = require("../models/Health");
 const Advice = require("../models/Advice");
+const getRisk = require("../utils/riskAssessment");
 
 const {
   requireAssignedDoctor,
@@ -30,42 +31,6 @@ const doctorOnly = (req, res) => {
 | RISK
 |--------------------------------------------------------------------------
 */
-
-const getRisk = (health) => {
-  if (!health) {
-    return "Chưa có dữ liệu";
-  }
-
-  const glucose = Number(health.glucose);
-  const bmi = Number(health.bmi);
-  const hr = Number(health.heartRate);
-  const sys = Number(health.systolic);
-  const dia = Number(health.diastolic);
-
-  if (
-    glucose > 180 ||
-    glucose < 70 ||
-    bmi >= 30 ||
-    hr > 120 ||
-    hr < 50 ||
-    sys > 160 ||
-    dia > 100
-  ) {
-    return "Nguy hiểm";
-  }
-
-  if (
-    glucose > 126 ||
-    bmi >= 25 ||
-    hr > 100 ||
-    sys > 140 ||
-    dia > 90
-  ) {
-    return "Cao";
-  }
-
-  return "Ổn định";
-};
 
 /*
 |--------------------------------------------------------------------------
@@ -144,9 +109,7 @@ exports.getPatients = async (req, res) => {
         | Nếu database cũ chưa có risk thì tính lại
         */
 
-        if (latestHealth && !latestHealth.risk) {
-          latestHealth.risk = getRisk(latestHealth);
-        }
+        if (latestHealth) latestHealth.risk = getRisk(latestHealth);
 
         return {
           ...patient,
@@ -239,9 +202,7 @@ exports.getPatientHealth = async (req, res) => {
     */
 
     history.forEach((item) => {
-      if (!item.risk) {
-        item.risk = getRisk(item);
-      }
+      item.risk = getRisk(item);
     });
 
     return res.json(history);
@@ -306,11 +267,7 @@ exports.getAIRisk = async (req, res) => {
     | Nếu record chưa có risk thì tính tại đây
     */
 
-    const calculatedRisk =
-      latest.risk &&
-      latest.risk !== "Không xác định"
-        ? latest.risk
-        : getRisk(latest);
+    const calculatedRisk = getRisk(latest);
 
     latest.risk = calculatedRisk;
 

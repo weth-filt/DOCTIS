@@ -31,6 +31,9 @@ router.put(
   appointment.cancelAppointment
 );
 
+router.put("/approve/:id", auth, appointment.approveAppointment);
+router.put("/complete/:id", auth, appointment.completeAppointment);
+
 router.post(
   "/remind/:id",
   auth,

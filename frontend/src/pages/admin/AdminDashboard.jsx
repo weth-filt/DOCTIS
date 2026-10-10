@@ -78,7 +78,7 @@ export default function AdminDashboard() {
   const doctors = useMemo(() => users.filter(x => x.role?.trim() === "doctor"), [users]);
   const patients = useMemo(() => users.filter(x => x.role?.trim() === "user"), [users]);
   const admins = useMemo(() => users.filter(x => x.role?.trim() === "admin"), [users]);
-  const unassignedCount = useMemo(() => assignPatients.filter(x => !x.currentDoctor).length, [assignPatients]);
+  const unassignedCount = useMemo(() => assignPatients.filter(x => !x.assignedDoctor).length, [assignPatients]);
   const assignedCount = Math.max(assignPatients.length - unassignedCount, 0);
 
   const filteredUsers = useMemo(() => {
@@ -90,10 +90,10 @@ export default function AdminDashboard() {
   const filteredAssignments = useMemo(() => {
     const q = assignmentSearch.trim().toLowerCase();
     if (!q) return assignPatients;
-    return assignPatients.filter(p => [p.fullName,p.username,p.email,displayName(p.currentDoctor)].filter(Boolean).some(v => String(v).toLowerCase().includes(q)));
+    return assignPatients.filter(p => [p.fullName,p.username,p.email,displayName(p.assignedDoctor)].filter(Boolean).some(v => String(v).toLowerCase().includes(q)));
   }, [assignPatients, assignmentSearch]);
 
-  const chosenDoctor = patient => pendingChoice[patient._id] ?? patient.currentDoctor?._id ?? "";
+  const chosenDoctor = patient => pendingChoice[patient._id] ?? patient.assignedDoctorId ?? patient.assignedDoctor?._id ?? "";
 
   const changeRole = async (id, role) => {
     try {
@@ -146,7 +146,7 @@ export default function AdminDashboard() {
   const saveAssignment = async patient => {
     const doctorId = chosenDoctor(patient);
     if (!doctorId) return alert("Vui lòng chọn bác sĩ.");
-    if (patient.currentDoctor && String(patient.currentDoctor._id) === String(doctorId)) return alert("Bệnh nhân đã thuộc bác sĩ này.");
+    if (patient.assignedDoctor && String(patient.assignedDoctor._id) === String(doctorId)) return alert("Bệnh nhân đã thuộc bác sĩ này.");
     const reason = window.prompt("Lý do phân công / đổi bác sĩ (có thể để trống):", "");
     if (reason === null) return;
     setSavingPatientId(patient._id);
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
   };
 
   const removeAssignment = async patient => {
-    if (!patient.currentDoctor) return;
+    if (!patient.assignedDoctor) return;
     const reason = window.prompt("Lý do gỡ bác sĩ phụ trách (có thể để trống):", "");
     if (reason === null) return;
     setSavingPatientId(patient._id);
@@ -277,10 +277,10 @@ export default function AdminDashboard() {
                       return <tr key={patient._id}>
                         <td><button type="button" className="patient-cell" onClick={() => setSelectedPatient(patient)}><span className="patient-avatar">{(displayName(patient)[0] || "P").toUpperCase()}</span><span><strong>{displayName(patient)}</strong><small>@{patient.username || "patient"}</small></span></button></td>
                         <td><span className="muted-cell">{patient.email || "—"}</span><small className="table-sub">{patient.phone || "Chưa có SĐT"}</small></td>
-                        <td>{patient.currentDoctor ? <div className="current-doctor"><span className="doctor-dot"><FaUserMd /></span><span><strong>{displayName(patient.currentDoctor)}</strong><small>Bác sĩ phụ trách</small></span></div> : <span className="status-pill waiting"><i /> Chưa phân công</span>}</td>
+                        <td>{patient.assignedDoctor ? <div className="current-doctor"><span className="doctor-dot"><FaUserMd /></span><span><strong>{displayName(patient.assignedDoctor)}</strong><small>Bác sĩ phụ trách</small></span></div> : <span className="status-pill waiting"><i /> Chưa phân công</span>}</td>
                         <td><select className="doctor-select" value={chosen} onChange={e => setPendingChoice(prev => ({...prev,[patient._id]:e.target.value}))} disabled={saving}><option value="">-- Chọn bác sĩ --</option>{assignDoctors.map(d => <option key={d._id} value={d._id}>{displayName(d)} — {d.patientCount || 0} BN</option>)}</select></td>
-                        <td><span className={`status-pill ${patient.currentDoctor ? "assigned" : "waiting"}`}><i />{patient.currentDoctor ? "Đang quản lý" : "Đang chờ"}</span></td>
-                        <td><div className="table-actions"><button type="button" className="action-primary" disabled={saving || !chosen} onClick={() => saveAssignment(patient)}>{saving ? "..." : patient.currentDoctor ? "Đổi BS" : "Giao BS"}</button>{patient.currentDoctor && <button type="button" className="action-danger" disabled={saving} onClick={() => removeAssignment(patient)} title="Gỡ bác sĩ"><FaUserTimes /></button>}</div></td>
+                        <td><span className={`status-pill ${patient.assignedDoctor ? "assigned" : "waiting"}`}><i />{patient.assignedDoctor ? "Đang quản lý" : "Đang chờ"}</span></td>
+                        <td><div className="table-actions"><button type="button" className="action-primary" disabled={saving || !chosen} onClick={() => saveAssignment(patient)}>{saving ? "..." : patient.assignedDoctor ? "Đổi BS" : "Giao BS"}</button>{patient.assignedDoctor && <button type="button" className="action-danger" disabled={saving} onClick={() => removeAssignment(patient)} title="Gỡ bác sĩ"><FaUserTimes /></button>}</div></td>
                       </tr>;
                     })}
                   </tbody></table></div>}
@@ -308,7 +308,7 @@ export default function AdminDashboard() {
             <button type="button" className="modal-close" onClick={() => setSelectedPatient(null)}><FaTimes /></button>
             <span className="admin-eyebrow small"><i /> PATIENT PROFILE</span>
             <div className="modal-patient-head"><div className="modal-patient-avatar">{(displayName(selectedPatient)[0] || "P").toUpperCase()}</div><div><h2>{displayName(selectedPatient)}</h2><p>{selectedPatient.email || "Chưa có email"}</p></div></div>
-            <div className="modal-detail-grid"><div><span>Username</span><strong>{selectedPatient.username || "—"}</strong></div><div><span>Số điện thoại</span><strong>{selectedPatient.phone || "—"}</strong></div><div><span>Bác sĩ hiện tại</span><strong>{selectedPatient.currentDoctor ? displayName(selectedPatient.currentDoctor) : "Chưa phân công"}</strong></div><div><span>Ngày phân công</span><strong>{selectedPatient.assignedAt ? new Date(selectedPatient.assignedAt).toLocaleDateString("vi-VN") : "—"}</strong></div></div>
+            <div className="modal-detail-grid"><div><span>Username</span><strong>{selectedPatient.username || "—"}</strong></div><div><span>Số điện thoại</span><strong>{selectedPatient.phone || "—"}</strong></div><div><span>Bác sĩ hiện tại</span><strong>{selectedPatient.assignedDoctor ? displayName(selectedPatient.assignedDoctor) : "Chưa phân công"}</strong></div><div><span>Ngày phân công</span><strong>{selectedPatient.assignedAt ? new Date(selectedPatient.assignedAt).toLocaleDateString("vi-VN") : "—"}</strong></div></div>
             <div className="modal-note"><FaShieldAlt /><p>Lịch sử phân công được lưu ở backend. Việc đổi bác sĩ không xóa bản ghi cũ.</p></div>
           </motion.aside>
         </motion.div>}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import generateHealthAnalysis from "../../utils/AIAnalysis";
 import generateNutritionPlan from "../../utils/generateNutritionPlan";
+import getRiskAssessment from "../../utils/riskAssessment";
 
 import {
   FaHeartbeat,
@@ -266,10 +267,22 @@ export default function Dashboard() {
 
   // Kế hoạch chăm sóc hằng ngày
   const [careWeek, setCareWeek] = useState([]);
+  const [doctorCarePlan, setDoctorCarePlan] = useState(null);
 
   // Nhắc qua email cho từng hoạt động trong kế hoạch chăm sóc.
   const [reminderSendingId, setReminderSendingId] = useState("");
   const [emailRemindedIds, setEmailRemindedIds] = useState(() => new Set());
+
+  useEffect(() => {
+    let active = true;
+    API.get("/care-plans/my")
+      .then((res) => { if (active) setDoctorCarePlan(res.data || null); })
+      .catch((err) => {
+        if (active && err.response?.status !== 404) console.error("GET CONFIRMED CARE PLAN ERROR =", err);
+        if (active) setDoctorCarePlan(null);
+      });
+    return () => { active = false; };
+  }, []);
 
   // Đơn thuốc: chỉ hiển thị đơn đã được xác nhận/kích hoạt.
   // Backend Doctor Page có thể cung cấp dữ liệu qua /prescriptions/my.
@@ -620,21 +633,13 @@ export default function Dashboard() {
   const calculatedBMI = calculateBMI();
 
   const risk = useMemo(() => {
-    const glucose = Number(latest?.glucose || 0);
-
-    if (!glucose) {
-      return { label: "Chưa có dữ liệu", className: "risk-safe" };
-    }
-
-    if (glucose >= 240) {
-      return { label: "Nguy hiểm", className: "risk-danger" };
-    }
-
-    if (glucose >= 140) {
-      return { label: "Cần chú ý", className: "risk-medium" };
-    }
-
-    return { label: "Ổn định", className: "risk-safe" };
+    const label = getRiskAssessment(latest);
+    return {
+      label,
+      className: label === "Nguy hiểm"
+        ? "risk-danger"
+        : label === "Cao" ? "risk-medium" : "risk-safe",
+    };
   }, [latest]);
 
   const analysisData = useMemo(() => {
@@ -857,7 +862,7 @@ export default function Dashboard() {
     );
   };
 
-  const handleEmailReminder = async (day, item) => {
+  const handleEmailReminder = async (day, item, dayIndex = activeDay) => {
     const activityId = `${day?.label || "day"}-${item?.id || item?.time}`;
     const email = String(profile?.email || user?.email || "").trim();
 
@@ -876,15 +881,18 @@ export default function Dashboard() {
     setReminderSendingId(activityId);
 
     try {
+      const scheduledDate = new Date();
+      scheduledDate.setHours(0, 0, 0, 0);
+      scheduledDate.setDate(scheduledDate.getDate() + Number(dayIndex || 0));
+      const scheduleDate = [scheduledDate.getFullYear(), String(scheduledDate.getMonth() + 1).padStart(2, "0"), String(scheduledDate.getDate()).padStart(2, "0")].join("-");
       await API.post("/reminders/create", {
         title: `${item.title || item.label || "Hoạt động chăm sóc"} — ${day?.label || "Kế hoạch chăm sóc"}`,
         description: item.text || item.description || "Nhắc nhở trong kế hoạch chăm sóc hằng ngày.",
         time: item.time,
-        email,
-        sendEmail: true,
         source: "CARE_PLAN",
         activityType: item.kind === "medication" ? "MEDICATION" : item.kind === "exercise" ? "EXERCISE" : "MEAL",
         dayLabel: day?.label || "",
+        scheduleDate,
       });
 
       setEmailRemindedIds((prev) => {
@@ -2735,6 +2743,31 @@ export default function Dashboard() {
               </div>
             </section>
 
+            <section className="care-week-shell-v6 doctor-approved-plan">
+              <div className="care-section-head-v6">
+                <div><span className="care-section-kicker">KẾ HOẠCH BÁC SĨ</span><h3>Kế hoạch chăm sóc đã chốt</h3></div>
+                <span>{doctorCarePlan ? "Đã đồng bộ" : "Chưa có kế hoạch"}</span>
+              </div>
+              {doctorCarePlan ? (
+                <>
+                  {doctorCarePlan.doctorNote && <p>{doctorCarePlan.doctorNote}</p>}
+                  <div className="care-week">
+                    {(Array.isArray(doctorCarePlan.days) ? doctorCarePlan.days : []).map((day) => (
+                      <div className="care-day" key={`${day.dayIndex}-${day.label}`}>
+                        <div className="care-day-head"><span>Ngày {Number(day.dayIndex) + 1}</span><strong>{day.label}</strong></div>
+                        {(Array.isArray(day.items) ? day.items : []).map((item) => (
+                          <div className="care-item" key={item.id || `${day.dayIndex}-${item.time}-${item.title}`}>
+                            <span className="care-time">{item.time}</span>
+                            <div><strong>{item.title}</strong>{item.description && <p>{item.description}</p>}<small>{item.type || "NOTE"}</small></div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : <p>Bác sĩ chưa chốt kế hoạch chăm sóc cho bạn.</p>}
+            </section>
+
             {nutritionMissingFields.length > 0 && (
               <div className="care-alert-v6 warning">
                 <span className="care-alert-icon"><FaExclamationTriangle /></span>
@@ -2861,7 +2894,7 @@ export default function Dashboard() {
                           {item.source === "DOCTOR" && <small>👨‍⚕️ Theo đơn bác sĩ</small>}
                         </div>
                         <div className="care-detail-actions-v6">
-                          <button type="button" className={`care-reminder-btn ${sent ? "sent" : ""}`} onClick={() => handleEmailReminder(careWeek[activeDay], item)} disabled={reminderSendingId === reminderId}>
+                          <button type="button" className={`care-reminder-btn ${sent ? "sent" : ""}`} onClick={() => handleEmailReminder(careWeek[activeDay], item, activeDay)} disabled={reminderSendingId === reminderId}>
                             <FaBell /> {reminderSendingId === reminderId ? "Đang tạo..." : sent ? "Đã bật email" : "Nhắc email"}
                           </button>
                           <button type="button" className="care-done-btn" onClick={() => toggleCareActivity(activeDay, item.id)}>{item.done ? "✓ Đã xong" : "Đánh dấu xong"}</button>

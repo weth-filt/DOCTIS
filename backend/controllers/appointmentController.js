@@ -234,6 +234,10 @@ exports.cancelAppointment =
         });
       }
 
+      if (!["pending", "approved"].includes(appointment.status)) {
+        return res.status(400).json({ msg: "Lịch này không còn ở trạng thái có thể hủy." });
+      }
+
       appointment.status =
         "cancelled";
 
@@ -253,6 +257,44 @@ exports.cancelAppointment =
       });
     }
   };
+
+const updateAppointmentStatus = async (req, res, status) => {
+  try {
+    if (!requireDoctor(req, res)) return;
+
+    const appointment = await Appointment.findOne({
+      _id: req.params.id,
+      doctorId: req.user.id,
+    });
+
+    if (!appointment) {
+      return res.status(404).json({ msg: "Không tìm thấy lịch hẹn." });
+    }
+
+    const allowedFrom = status === "approved" ? "pending" : "approved";
+    if (appointment.status !== allowedFrom) {
+      return res.status(400).json({
+        msg: status === "approved"
+          ? "Chỉ có thể duyệt lịch đang chờ."
+          : "Chỉ có thể hoàn tất lịch đã duyệt.",
+      });
+    }
+
+    if (status === "completed" && appointment.appointmentDate > new Date()) {
+      return res.status(400).json({ msg: "Chưa thể hoàn tất lịch hẹn trong tương lai." });
+    }
+
+    appointment.status = status;
+    await appointment.save();
+    return res.json({ msg: status === "approved" ? "Đã duyệt lịch hẹn." : "Đã đánh dấu hoàn thành.", appointment });
+  } catch (err) {
+    console.error("UPDATE APPOINTMENT STATUS ERROR =", err);
+    return res.status(500).json({ msg: err.message || "Không thể cập nhật lịch hẹn." });
+  }
+};
+
+exports.approveAppointment = (req, res) => updateAppointmentStatus(req, res, "approved");
+exports.completeAppointment = (req, res) => updateAppointmentStatus(req, res, "completed");
 
 // ========================================
 // SEND APPOINTMENT REMINDER
