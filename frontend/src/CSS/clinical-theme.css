@@ -871,6 +871,7 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   min-width: 0 !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
+  padding-right: 58px !important;
   min-height: 46px !important;
   padding: 12px 15px !important;
   border-color: #dce7e8 !important;
@@ -885,7 +886,13 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
 }
 .dashboard-layout.doctis-v5 .doctor-attach-btn,
 .dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child { border-radius: 11px !important; }
-.dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child { flex: 0 0 42px !important; }
+.dashboard-layout.doctis-v5 .doctor-chat-input > button:last-child {
+  position: absolute !important;
+  right: 16px !important;
+  bottom: 13px !important;
+  z-index: 4 !important;
+  flex: 0 0 42px !important;
+}
 .dashboard-layout.doctis-v5 .doctor-chat-input > input[type="file"] { display: none !important; }
 .dashboard-layout.doctis-v5 .doctor-attach-btn { flex: 0 0 42px !important; }
 .dashboard-layout.doctis-v5 .doctor-attach-btn { color: #52717a !important; background: #eff5f5 !important; }
