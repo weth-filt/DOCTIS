@@ -927,3 +927,126 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   .dashboard-layout.doctis-v5 .message-bubble,
   .dashboard-layout.doctis-v5 .doctor-chat-input textarea { transition: none !important; }
 }
+
+/* Type 2 diabetes assistant */
+.dashboard-layout.doctis-v5 .chat-wrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: min(680px, calc(100vh - 250px)) !important;
+  border: 1px solid #d8e6e8 !important;
+  border-radius: 17px !important;
+  background: #fff !important;
+  box-shadow: 0 18px 48px rgba(25,64,80,.09) !important;
+  animation: rx-chat-page-in .42s ease both;
+}
+.dashboard-layout.doctis-v5 .chat-header {
+  min-height: 76px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 13px 18px !important;
+  border-bottom: 1px solid #e3ecee !important;
+  color: #173b4b !important;
+  background: linear-gradient(110deg,#fff 0%,#f5fbfa 100%) !important;
+  font-size: 14px !important;
+}
+.dashboard-layout.doctis-v5 .chat-assistant-mark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(145deg,#15969a,#08747d);
+  box-shadow: 0 6px 15px rgba(8,123,131,.18);
+  font-size: 22px;
+  font-weight: 700;
+}
+.dashboard-layout.doctis-v5 .chat-assistant-heading { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
+.dashboard-layout.doctis-v5 .chat-assistant-heading strong { color: #173b4b; font-size: 14px; }
+.dashboard-layout.doctis-v5 .chat-assistant-heading span { color: #72878f; font-size: 11px; font-weight: 500; }
+.dashboard-layout.doctis-v5 .chat-assistant-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid #dcece8;
+  border-radius: 99px;
+  color: #54776f;
+  background: #f5fbf8;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.dashboard-layout.doctis-v5 .chat-assistant-status i { width: 7px; height: 7px; border-radius: 50%; background: #31a77c; box-shadow: 0 0 0 3px rgba(49,167,124,.1); }
+.dashboard-layout.doctis-v5 .chat-body {
+  flex: 1 1 auto !important;
+  min-height: 330px !important;
+  padding: 22px !important;
+  background:
+    radial-gradient(ellipse at 50% 0,rgba(52,158,159,.06),transparent 52%),
+    #f8fbfb !important;
+}
+.dashboard-layout.doctis-v5 .chat-message {
+  max-width: min(82%, 760px) !important;
+  padding: 12px 15px !important;
+  border: 1px solid #e2ebec !important;
+  border-radius: 14px 14px 14px 4px !important;
+  color: #31505b !important;
+  background: #fff !important;
+  box-shadow: 0 4px 14px rgba(25,64,80,.045) !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  line-height: 1.65 !important;
+  animation: rx-chat-message-in .26s ease both;
+}
+.dashboard-layout.doctis-v5 .chat-message.user {
+  border-color: #087b83 !important;
+  border-radius: 14px 14px 4px 14px !important;
+  color: #fff !important;
+  background: linear-gradient(145deg,#168f93,#08747d) !important;
+}
+.dashboard-layout.doctis-v5 .chat-message.error {
+  border-color: #f0d9bd !important;
+  color: #765329 !important;
+  background: #fffaf2 !important;
+}
+.dashboard-layout.doctis-v5 .chat-assistant-sources {
+  padding: 7px 14px;
+  border-top: 1px solid #edf2f2;
+  color: #7a8d94;
+  background: #fbfdfd;
+  font-size: 10px;
+}
+.dashboard-layout.doctis-v5 .chat-assistant-sources a { color: #087b83; text-decoration: underline; text-underline-offset: 2px; }
+.dashboard-layout.doctis-v5 .chat-input-box {
+  align-items: center !important;
+  padding: 10px 12px !important;
+  border-top: 1px solid #e3ecee !important;
+  background: #fff !important;
+}
+.dashboard-layout.doctis-v5 .chat-input-box input {
+  min-width: 0 !important;
+  border-color: #dce7e8 !important;
+  border-radius: 11px !important;
+  background: #f8fbfb !important;
+}
+.dashboard-layout.doctis-v5 .chat-input-box input:focus { border-color: #56a9ad !important; box-shadow: 0 0 0 3px rgba(38,156,160,.1) !important; }
+.dashboard-layout.doctis-v5 .chat-input-box button {
+  flex: 0 0 82px !important;
+  border-radius: 11px !important;
+  background: linear-gradient(145deg,#15969a,#08747d) !important;
+}
+@media (max-width: 650px) {
+  .dashboard-layout.doctis-v5 .chat-wrapper { min-height: min(680px, calc(100vh - 210px)) !important; }
+  .dashboard-layout.doctis-v5 .chat-header { padding: 11px 13px !important; }
+  .dashboard-layout.doctis-v5 .chat-assistant-status { display: none; }
+  .dashboard-layout.doctis-v5 .chat-body { min-height: 280px !important; padding: 14px !important; }
+  .dashboard-layout.doctis-v5 .chat-message { max-width: 92% !important; }
+  .dashboard-layout.doctis-v5 .chat-assistant-sources { line-height: 1.6; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-layout.doctis-v5 .chat-wrapper,
+  .dashboard-layout.doctis-v5 .chat-message { animation: none !important; }
+}

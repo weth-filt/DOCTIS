@@ -22,7 +22,8 @@ GitHub chỉ lưu mã nguồn; không lưu file `.env`, dữ liệu database hay
    - `MONGO_URI`: connection string của MongoDB Atlas.
    - `JWT_SECRET`: chuỗi bí mật dài, ngẫu nhiên, riêng cho môi trường trực tuyến.
    - `ALLOWED_ORIGINS`: để trống trong lần triển khai đầu; cập nhật thành URL web Vercel ở bước sau.
-   - Các biến email/AI chỉ thêm nếu muốn bật tính năng đó: `EMAIL_USER`, `EMAIL_PASS`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, `AI_SERVICE_URL`.
+   - Để bật trợ lý AI trên Vercel, thêm `GEMINI_API_KEY` (lấy trong Google AI Studio) và tùy chọn `GEMINI_MODEL=gemini-3.6-flash`. Chỉ lưu khóa trong Environment Variables của project backend; không đưa khóa vào frontend, GitHub hoặc chat.
+   - Các biến email chỉ cần thêm nếu muốn bật tính năng email: `EMAIL_USER`, `EMAIL_PASS`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`.
 4. Deploy. Mở `https://<api-project>.vercel.app/api/health` để xem API có phản hồi. Nếu báo chưa cấu hình MongoDB, kiểm tra `MONGO_URI` trong Project Settings → Environment Variables rồi redeploy.
 
 ## Triển khai giao diện
@@ -39,5 +40,5 @@ URL web này là link chia sẻ cho bệnh nhân/bác sĩ. Mọi người dùng 
 
 - Máy cá nhân có thể tắt sau khi chuyển sang Atlas và Vercel; website/API vẫn được host trực tuyến. Dữ liệu chỉ được lưu trên Atlas sau khi cấu hình connection string Atlas.
 - Vercel Function giới hạn request body ở 4.5 MB; cấu hình triển khai giới hạn JSON ở 4 MB. Ảnh/tệp lớn cần chuyển sang object storage/direct upload.
-- Backend hiện dùng Ollama cục bộ và cron chạy mỗi phút trong tiến trình Node. Các tác vụ đó không tự hoạt động như vậy trên Vercel; AI cần dịch vụ inference trực tuyến, còn lịch nhắc email cần cron/worker bên ngoài hoặc cấu hình gói phù hợp.
+- AI cục bộ qua Ollama chỉ dùng khi chạy backend trên máy phát triển; trên Vercel, trợ lý cần `GEMINI_API_KEY` và phải redeploy backend sau khi thêm khóa. Cron chạy mỗi phút trong tiến trình Node cũng không tự hoạt động như vậy trên Vercel; lịch nhắc email cần cron/worker bên ngoài hoặc cấu hình gói phù hợp.
 - Dịch vụ miễn phí có giới hạn tài nguyên và phù hợp demo/đồ án. Với dữ liệu sức khỏe thật, cần kiểm tra kỹ bảo mật, sao lưu, quyền truy cập và quy định áp dụng trước khi mời người dùng thật.

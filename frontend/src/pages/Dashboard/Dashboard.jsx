@@ -233,7 +233,7 @@ export default function Dashboard() {
     {
       sender: "ai",
       text:
-        "Xin chào 👋 Tôi là AI Health Assistant. Hãy hỏi tôi về sức khỏe của bạn.",
+        "Xin chào 👋 Mình là trợ lý sức khỏe DOCTIS, tập trung vào đái tháo đường type 2. Bạn có thể hỏi về theo dõi đường huyết, ăn uống, vận động, thuốc và biến chứng. Mình cung cấp thông tin tham khảo, không thay thế chẩn đoán hay hướng dẫn điều trị từ bác sĩ.",
     },
   ]);
   const [chatInput, setChatInput] = useState("");
@@ -1194,25 +1194,28 @@ export default function Dashboard() {
       text: userText,
     };
 
-    const nextMessages = [...messages, userMsg];
-
-    setMessages(nextMessages);
+    setMessages((prev) => [...prev, userMsg]);
     setChatInput("");
     setLoading(true);
 
     try {
-      const history = nextMessages.map((msg) => ({
-        role: msg.sender === "user" ? "user" : "assistant",
-        content: msg.text,
-      }));
+      // Send only turns that existed before this question. The API adds the
+      // current question itself, so including userMsg here would duplicate it.
+      const history = messages
+        .filter((msg) => !msg.isError && (msg.sender === "user" || msg.sender === "ai"))
+        .slice(-10)
+        .map((msg) => ({
+          role: msg.sender === "user" ? "user" : "assistant",
+          content: msg.text,
+        }));
 
       const res = await API.post("/ai/analyze", {
-        glucose: latest?.glucose || 0,
-        bmi: latest?.bmi || calculatedBMI || 0,
+        glucose: latest?.glucose ?? 0,
+        bmi: latest?.bmi ?? calculatedBMI ?? 0,
         bloodPressure: latest?.systolic
           ? `${latest.systolic}/${latest.diastolic}`
-          : "120/80",
-        heartRate: latest?.heartRate || 0,
+          : "",
+        heartRate: latest?.heartRate ?? 0,
         message: userText,
         history,
       });
@@ -1233,7 +1236,10 @@ export default function Dashboard() {
         ...prev,
         {
           sender: "ai",
-          text: "AI hiện đang bận. Vui lòng thử lại sau.",
+          text:
+            err.response?.data?.msg ||
+            "Chưa kết nối được trợ lý AI. Vui lòng thử lại sau.",
+          isError: true,
         },
       ]);
     } finally {
@@ -2651,7 +2657,14 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="chat-header">🤖 AI Health Assistant</div>
+            <div className="chat-header">
+              <div className="chat-assistant-mark" aria-hidden="true">✚</div>
+              <div className="chat-assistant-heading">
+                <strong>Trợ lý sức khỏe DOCTIS</strong>
+                <span>Kiến thức và chăm sóc đái tháo đường type 2</span>
+              </div>
+              <span className="chat-assistant-status"><i /> Kiến thức type 2</span>
+            </div>
 
             <div className="chat-body">
               {messages.map((msg, i) => (
@@ -2660,7 +2673,7 @@ export default function Dashboard() {
                   className={
                     msg.sender === "user"
                       ? "chat-message user"
-                      : "chat-message ai"
+                      : `chat-message ai${msg.isError ? " error" : ""}`
                   }
                 >
                   {msg.text}
@@ -2676,10 +2689,19 @@ export default function Dashboard() {
               <div ref={chatEndRef} />
             </div>
 
+            <div className="chat-assistant-sources">
+              Tham khảo: {" "}
+              <a href="https://www.niddk.nih.gov/health-information/diabetes/overview/managing-diabetes/" target="_blank" rel="noreferrer">NIDDK</a>
+              {" · "}
+              <a href="https://diabetes.org/living-with-diabetes/hypoglycemia-low-blood-glucose/symptoms-treatment" target="_blank" rel="noreferrer">Hiệp hội Đái tháo đường Hoa Kỳ</a>
+            </div>
+
             <div className="chat-input-box">
               <input
                 type="text"
-                placeholder="Hỏi về sức khỏe của bạn..."
+                placeholder="Hỏi về đường huyết, bữa ăn, vận động, thuốc..."
+                maxLength={1200}
+                aria-label="Nhập câu hỏi về đái tháo đường type 2"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={handleKeyDown}
