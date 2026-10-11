@@ -209,6 +209,61 @@ export default function DoctorDashboard() {
     if (activeMenu === "messages") fetchMessagePatients();
   }, [activeMenu, fetchMessagePatients]);
 
+  // Vercel chạy API dạng serverless, nên dùng polling khi màn hình chat đang mở
+  // để nhận tin nhắn mới mà không cần tải lại trang.
+  useEffect(() => {
+    if (activeMenu !== "messages" || !selectedChat?._id) return;
+
+    let stopped = false;
+    let inFlight = false;
+    const patientId = String(selectedChat._id);
+
+    const refreshConversation = async () => {
+      if (stopped || inFlight || document.visibilityState === "hidden") return;
+      inFlight = true;
+      try {
+        const res = await API.get(`/messages/patient/${patientId}`, authConfig());
+        if (stopped) return;
+        const incoming = safeArray(res.data);
+        setMessages((previous) => {
+          const previousById = new Map(previous.map((message) => [String(message?._id), message]));
+          const serverIds = new Set(incoming.map((message) => String(message?._id)));
+          const pending = previous.filter((message) => String(message?._id || "").startsWith("temp-") && !serverIds.has(String(message._id)));
+          return [
+            ...incoming.map((message) => {
+              const old = previousById.get(String(message?._id));
+              return old?.attachment && !message?.attachment ? { ...message, attachment: old.attachment } : message;
+            }),
+            ...pending,
+          ];
+        });
+        setMessagePatients((previous) => previous.map((patient) =>
+          String(patient._id) === patientId ? { ...patient, unread: 0 } : patient
+        ));
+      } catch (err) {
+        // Giữ nguyên nội dung đang xem nếu mạng tạm thời gián đoạn.
+        console.warn("REFRESH CHAT ERROR =", err?.message || err);
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    refreshConversation();
+    const interval = window.setInterval(refreshConversation, 2000);
+    return () => {
+      stopped = true;
+      window.clearInterval(interval);
+    };
+  }, [activeMenu, selectedChat?._id]);
+
+  useEffect(() => {
+    if (activeMenu !== "messages") return;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState !== "hidden") fetchMessagePatients();
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [activeMenu, fetchMessagePatients]);
+
   const openPatient = async (patient) => {
     setSelectedPatient(patient);
     setPatientLoading(true);
