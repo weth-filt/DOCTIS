@@ -1050,3 +1050,247 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   .dashboard-layout.doctis-v5 .chat-wrapper,
   .dashboard-layout.doctis-v5 .chat-message { animation: none !important; }
 }
+
+/* Physician workspace: a distinctive clinical command surface. */
+.doctor-layout {
+  --doc-ink: #173748 !important;
+  --doc-title: #153447 !important;
+  --doc-text: #587481 !important;
+  --doc-muted: #91a5ad !important;
+  --doc-line: #dce9eb !important;
+  --doc-blue: #138b98 !important;
+  --doc-purple: #7067dc !important;
+  --doc-green: #168c72 !important;
+  --doc-red: #d25d69 !important;
+  position: relative !important;
+  background:
+    radial-gradient(ellipse at 92% 0,rgba(44,172,180,.11),transparent 30%),
+    radial-gradient(ellipse at 60% 55%,rgba(96,115,215,.045),transparent 45%),
+    #f1f6f7 !important;
+}
+.doctor-sidebar {
+  width: 268px !important;
+  padding: 24px 17px !important;
+  color: #e4f0f2 !important;
+  background:
+    radial-gradient(ellipse at 15% 0,rgba(49,187,188,.16),transparent 35%),
+    linear-gradient(180deg,#102b3a 0%,#143747 57%,#102b3a 100%) !important;
+  border-right: 1px solid rgba(186,226,226,.12) !important;
+  box-shadow: 10px 0 34px rgba(18,54,67,.10) !important;
+}
+.doctor-sidebar::before {
+  display: block !important;
+  opacity: .55;
+  background: radial-gradient(circle,rgba(45,194,189,.2),transparent 70%) !important;
+}
+.doctor-logo {
+  margin: 0 2px 24px !important;
+  padding: 6px 7px 22px !important;
+  border-bottom-color: rgba(205,231,235,.14) !important;
+}
+.doctor-logo svg {
+  width: 46px !important;
+  height: 46px !important;
+  color: #fff !important;
+  background: linear-gradient(145deg,#41d0c4,#1786a0 74%,#5968c9) !important;
+  box-shadow: 0 9px 24px rgba(42,182,185,.22) !important;
+}
+.doctor-logo h2 { color: #f4fbfc !important; font-size: 18px !important; letter-spacing: -.04em !important; }
+.doctor-logo span { color: #9bb9c1 !important; letter-spacing: .12em !important; }
+.doctor-menu {
+  min-height: 52px !important;
+  margin: 5px 0 !important;
+  padding: 13px 14px !important;
+  border: 1px solid transparent !important;
+  border-radius: 13px !important;
+  color: #b4cbd0 !important;
+  font-size: 13px !important;
+  transition: transform .22s ease,background .22s ease,border-color .22s ease,color .22s ease !important;
+}
+.doctor-menu svg { color: #81a7ae !important; }
+.doctor-menu:hover {
+  transform: translateX(3px) !important;
+  color: #f2ffff !important;
+  background: rgba(255,255,255,.07) !important;
+  box-shadow: none !important;
+}
+.doctor-menu:hover svg { color: #63ddd3 !important; }
+.doctor-menu.active {
+  color: #fff !important;
+  border-color: rgba(107,223,215,.16) !important;
+  background: linear-gradient(105deg,rgba(37,166,167,.34),rgba(46,109,150,.2)) !important;
+  box-shadow: inset 3px 0 #5fddd2,0 8px 20px rgba(5,24,34,.12) !important;
+}
+.doctor-menu.active svg { color: #7be4db !important; }
+.doctor-menu.active::after { background: linear-gradient(90deg,transparent,rgba(129,241,233,.15),transparent) !important; }
+.doctor-menu .menu-badge { color: #fff !important; background: #cb6470 !important; }
+.doctor-menu.active .menu-badge { color: #173748 !important; background: #c3f1e9 !important; }
+.doctor-menu.logout {
+  margin-top: auto !important;
+  color: #f1c5c5 !important;
+  border-color: rgba(241,197,197,.13) !important;
+  background: rgba(185,75,83,.1) !important;
+}
+.doctor-menu.logout:hover { background: rgba(185,75,83,.2) !important; }
+.doctor-main {
+  width: calc(100% - 268px) !important;
+  margin-left: 268px !important;
+  padding: 30px clamp(22px,3.2vw,48px) 60px !important;
+}
+.doctor-main:not(.doctor-main-messages)::before {
+  display: block !important;
+  opacity: .55;
+}
+.doctor-header {
+  min-height: 184px !important;
+  margin-bottom: 25px !important;
+  padding: 30px clamp(24px,3vw,40px) !important;
+  border: 1px solid rgba(114,204,208,.25) !important;
+  border-radius: 19px 19px 19px 5px !important;
+  background:
+    radial-gradient(circle at 90% 44%,rgba(56,202,196,.2),transparent 26%),
+    linear-gradient(112deg,#143649 0%,#194b5b 62%,#176678 100%) !important;
+  box-shadow: 0 18px 40px rgba(21,64,79,.15) !important;
+  animation: doc-enter .56s cubic-bezier(.2,.75,.25,1) both;
+}
+.doctor-header > div:first-child { z-index: 2; }
+.doctor-header::before {
+  top: auto !important;
+  right: 8% !important;
+  bottom: -210px !important;
+  width: 380px !important;
+  height: 380px !important;
+  border: 1px solid rgba(112,230,224,.18) !important;
+  box-shadow: 0 0 0 22px rgba(112,230,224,.045),0 0 0 48px rgba(112,230,224,.027) !important;
+}
+.doctor-header::after {
+  top: 28px !important;
+  right: 37% !important;
+  width: 44px !important;
+  height: 44px !important;
+  border: 1px solid rgba(133,232,226,.26) !important;
+  box-shadow: 0 0 0 9px rgba(133,232,226,.045) !important;
+}
+.doctor-header:hover { transform: translateY(-2px) !important; border-color: rgba(111,223,218,.42) !important; box-shadow: 0 22px 46px rgba(21,64,79,.19) !important; }
+.doctor-header .eyebrow {
+  color: #9be9e2 !important;
+  border-color: rgba(155,233,226,.2) !important;
+  background: rgba(8,32,45,.23) !important;
+  letter-spacing: .14em !important;
+}
+.doctor-header .pulse-dot { background: #79e6bd !important; box-shadow: 0 0 0 4px rgba(121,230,189,.12) !important; }
+.doctor-header h1 { color: #f3fbfc !important; font-size: clamp(28px,3vw,39px) !important; letter-spacing: -.045em !important; }
+.doctor-header p { max-width: 620px !important; color: #bfd6dc !important; line-height: 1.75 !important; }
+.doctor-profile {
+  z-index: 2 !important;
+  padding: 11px 14px !important;
+  border: 1px solid rgba(220,244,244,.16) !important;
+  border-radius: 15px !important;
+  background: rgba(238,252,252,.09) !important;
+  box-shadow: 0 10px 25px rgba(6,30,43,.11) !important;
+  backdrop-filter: blur(10px) !important;
+}
+.doctor-profile:hover { transform: translateY(-2px) !important; border-color: rgba(220,244,244,.3) !important; }
+.doctor-avatar { color: #123c4b !important; background: linear-gradient(145deg,#c4f5e9,#88d8dc) !important; box-shadow: 0 0 0 4px rgba(255,255,255,.09),0 8px 18px rgba(7,29,42,.16) !important; }
+.doctor-profile h4 { color: #f4fbfc !important; }
+.doctor-profile span { color: #c0d9de !important; }
+.doctor-grid { gap: 15px !important; margin-bottom: 22px !important; }
+.doctor-card {
+  min-height: 170px !important;
+  padding: 20px 21px !important;
+  border-radius: 15px 15px 15px 4px !important;
+  border-color: #dce8ea !important;
+  background: linear-gradient(145deg,#fff,#f9fcfc) !important;
+  box-shadow: 0 8px 22px rgba(24,68,82,.055) !important;
+  animation: doc-enter .52s cubic-bezier(.2,.75,.25,1) both;
+}
+.doctor-card:nth-child(2) { animation-delay: .07s; }
+.doctor-card:nth-child(3) { animation-delay: .14s; }
+.doctor-card:nth-child(4) { animation-delay: .21s; }
+.doctor-card::after { width: 118px !important; height: 118px !important; right: -48px !important; bottom: -54px !important; opacity: .07 !important; }
+.doctor-card:hover { transform: translateY(-5px) !important; border-color: #b8d7da !important; box-shadow: 0 17px 33px rgba(24,68,82,.1) !important; }
+.doctor-card .card-icon { border-radius: 12px !important; }
+.doctor-card h2 { font-size: 34px !important; letter-spacing: -.05em !important; }
+.doctor-card p { color: #476574 !important; font-size: 12px !important; }
+.doctor-card .card-caption { color: #8ba0a7 !important; }
+.doctor-appointment-list,
+.doctor-main .patient-table,
+.doctor-main .insight-panel {
+  border: 1px solid #dce8ea !important;
+  border-radius: 17px !important;
+  background: rgba(255,255,255,.96) !important;
+  box-shadow: 0 9px 25px rgba(24,68,82,.055) !important;
+}
+.doctor-main .patient-table:hover,
+.doctor-main .patient-monitor-box:hover,
+.doctor-main .appointment-box:hover { transform: translateY(-2px); border-color: #c2dade !important; box-shadow: 0 15px 34px rgba(24,68,82,.085) !important; }
+.doctor-main .table-top h2 { color: #173d4d !important; font-size: 17px !important; letter-spacing: -.025em !important; }
+.doctor-main .table-top h2::after { background: linear-gradient(90deg,#30bbb1,#5473ce) !important; }
+.doctor-main .mini-patient {
+  border-color: #e1ebec !important;
+  border-radius: 12px !important;
+  background: linear-gradient(100deg,#fff,#f9fcfc) !important;
+  transition: transform .2s ease,border-color .2s ease,box-shadow .2s ease !important;
+}
+.doctor-main .mini-patient:hover { transform: translateY(-2px) !important; border-color: #b9dadd !important; box-shadow: 0 9px 20px rgba(25,78,89,.08) !important; }
+.doctor-main .mini-avatar,
+.doctor-main .large-avatar { color: #fff !important; background: linear-gradient(145deg,#30b8ae,#237da2 75%,#596dd2) !important; box-shadow: 0 5px 14px rgba(35,126,151,.19) !important; }
+.doctor-main .mini-patient-info strong,
+.doctor-main .patient-profile-card h3 { color: #214451 !important; }
+.doctor-main .patient-profile-card {
+  border-color: #dce8ea !important;
+  border-radius: 15px 15px 15px 4px !important;
+  box-shadow: 0 7px 20px rgba(24,68,82,.045) !important;
+  transition: transform .22s ease,border-color .22s ease,box-shadow .22s ease !important;
+}
+.doctor-main .patient-profile-card:hover { transform: translateY(-4px) !important; border-color: #b6d8da !important; box-shadow: 0 14px 28px rgba(24,68,82,.09) !important; }
+.doctor-main .insight-panel {
+  background:
+    radial-gradient(circle at 100% 0,rgba(119,117,221,.12),transparent 33%),
+    linear-gradient(145deg,#fff,#f7fbfc) !important;
+}
+.doctor-main .insight-panel h2 { color: #173d4d !important; }
+.doctor-main .insight-panel .panel-kicker { color: #168c91 !important; letter-spacing: .12em !important; }
+.doctor-main .insight-list > div { border-color: #e2ebec !important; border-radius: 10px !important; background: rgba(255,255,255,.72) !important; }
+.doctor-main .risk { border-radius: 999px !important; }
+@keyframes doc-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 1100px) {
+  .doctor-sidebar { width: 235px !important; }
+  .doctor-main { width: calc(100% - 235px) !important; margin-left: 235px !important; }
+  .doctor-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
+@media (max-width: 760px) {
+  .doctor-sidebar { width: 72px !important; padding: 16px 8px !important; }
+  .doctor-sidebar .doctor-logo { justify-content: center !important; padding: 4px 0 17px !important; }
+  .doctor-sidebar .doctor-logo > div,
+  .doctor-sidebar .doctor-menu:not(.logout) { font-size: 0 !important; }
+  .doctor-sidebar .doctor-menu { justify-content: center !important; gap: 0 !important; padding: 12px 5px !important; }
+  .doctor-sidebar .doctor-menu svg { width: 20px !important; }
+  .doctor-sidebar .doctor-menu .menu-badge { position: absolute; top: 2px; right: 3px; min-width: 16px; height: 16px; font-size: 8px; }
+  .doctor-sidebar .doctor-menu.logout { font-size: 0 !important; justify-content: center !important; padding: 12px 5px !important; }
+  .doctor-main { width: calc(100% - 72px) !important; margin-left: 72px !important; padding: 18px 14px 40px !important; }
+  .doctor-header { min-height: 170px !important; align-items: flex-start !important; padding: 22px 18px !important; }
+  .doctor-header h1 { max-width: 70%; font-size: 27px !important; }
+  .doctor-header p { max-width: 72%; font-size: 12px !important; }
+  .doctor-profile { position: absolute !important; right: 14px !important; bottom: 14px !important; padding: 7px 9px !important; }
+  .doctor-profile .doctor-avatar { width: 32px !important; height: 32px !important; }
+  .doctor-profile h4 { font-size: 10px !important; }
+  .doctor-profile span { font-size: 9px !important; }
+  .dashboard-split { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 480px) {
+  .doctor-grid { gap: 9px !important; }
+  .doctor-card { min-height: 148px !important; padding: 14px !important; }
+  .doctor-header { display: block !important; min-height: 215px !important; }
+  .doctor-header h1 { max-width: 100%; }
+  .doctor-header p { max-width: 100%; padding-bottom: 50px; }
+  .doctor-profile { right: 12px !important; bottom: 10px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .doctor-layout *, .doctor-layout *::before, .doctor-layout *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

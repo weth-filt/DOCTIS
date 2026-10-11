@@ -973,7 +973,7 @@ export default function DoctorDashboard() {
           <div>
             <div className="eyebrow">
               <span className="pulse-dot" />
-              HEALTH MONITORING
+              DOCTIS · CLINICAL WORKSPACE
             </div>
             <h1>
               {activeMenu === "messages"
