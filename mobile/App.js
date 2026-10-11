@@ -587,6 +587,20 @@ function ProfileScreen({ profile, editing, setEditing, setProfile, onSave, busy,
 
 function MessagesScreen({ doctors, doctor, setDoctor, messages, user, value, setValue, onSend, busy, attachment, attachmentBusy, onChooseAttachment, onRemoveAttachment, onOpenAttachment, onComposerFocus }) {
   const currentUserId = String(user?._id || user?.id || '');
+  const messageListRef = useRef(null);
+  const stickToLatestMessage = useRef(true);
+
+  useEffect(() => {
+    if (!stickToLatestMessage.current) return;
+    requestAnimationFrame(() => messageListRef.current?.scrollToEnd({ animated: true }));
+  }, [messages]);
+
+  const handleMessageListScroll = (event) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const distanceFromBottom = contentSize.height - contentOffset.y - layoutMeasurement.height;
+    stickToLatestMessage.current = distanceFromBottom < 72;
+  };
+
   return <>
     <ScreenTitle eyebrow="KẾT NỐI CHĂM SÓC" title="Bác sĩ phụ trách" subtitle="Trao đổi và gửi hồ sơ trực tiếp cho bác sĩ đã được phân công." />
     {!asArray(doctors).length ? <Card><EmptyState text="Tài khoản của bạn chưa được phân công bác sĩ. Hãy liên hệ quản trị viên để được hỗ trợ." /></Card> : <>
@@ -600,7 +614,16 @@ function MessagesScreen({ doctors, doctor, setDoctor, messages, user, value, set
       </Card>
       <Card style={styles.messageHistoryCard}>
         <Text style={styles.cardTitle}>Tin nhắn</Text>
-        <View style={styles.messageList}>
+        <ScrollView
+          ref={messageListRef}
+          style={styles.messageList}
+          contentContainerStyle={styles.messageListContent}
+          onScroll={handleMessageListScroll}
+          scrollEventThrottle={16}
+          nestedScrollEnabled
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator
+        >
           {asArray(messages).length ? asArray(messages).map((item) => {
             const mine = String(item.senderId) === currentUserId;
             return <View key={item._id} style={[styles.messageBubble, mine && styles.messageMine]}>
@@ -609,9 +632,8 @@ function MessagesScreen({ doctors, doctor, setDoctor, messages, user, value, set
               <Text style={[styles.messageTime, mine && styles.messageMineText]}>{displayDate(item.createdAt)}</Text>
             </View>;
           }) : <EmptyState text="Chưa có tin nhắn. Bạn có thể bắt đầu trao đổi với bác sĩ." />}
-        </View>
-      </Card>
-      <Card style={styles.messageComposerCard}>
+        </ScrollView>
+
         <Text style={styles.cardTitle}>Gửi tin nhắn</Text>
         <TextInput style={styles.messageComposerInput} value={value} onChangeText={setValue} placeholder="Nhập nội dung tin nhắn..." placeholderTextColor="#91a4a8" onFocus={onComposerFocus} multiline={false} autoCorrect autoCapitalize="sentences" returnKeyType="send" onSubmitEditing={onSend} />
         {attachment ? <View style={styles.pendingAttachment}><Text numberOfLines={1} style={styles.pendingAttachmentName}>{attachment.type?.startsWith('image/') ? '▧ ' : '▤ '}{attachment.name}</Text><Pressable onPress={onRemoveAttachment}><Text style={styles.removeAttachment}>×</Text></Pressable></View> : null}
@@ -765,9 +787,9 @@ const styles = StyleSheet.create({
   doctorChoiceActive: { backgroundColor: '#f0f8f7', borderColor: '#aad7d3' },
   doctorAvatar: { width: 37, height: 37, borderRadius: 14, backgroundColor: '#e6edff', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   doctorAvatarText: { color: '#5570bc', fontWeight: '900' },
-  messageHistoryCard: { padding: 13 },
-  messageComposerCard: { padding: 13 },
-  messageList: { minHeight: 110, maxHeight: 350, marginTop: 9, marginBottom: 10, justifyContent: 'flex-end' },
+  messageHistoryCard: { height: 440, padding: 13, flexDirection: 'column' },
+  messageList: { flex: 1, minHeight: 0, marginTop: 9, marginBottom: 10 },
+  messageListContent: { flexGrow: 1, justifyContent: 'flex-end', paddingBottom: 2 },
   messageBubble: { alignSelf: 'flex-start', maxWidth: '85%', backgroundColor: '#eef4f5', borderRadius: 14, borderBottomLeftRadius: 4, paddingHorizontal: 11, paddingVertical: 9, marginVertical: 4 },
   messageMine: { alignSelf: 'flex-end', backgroundColor: '#087d83', borderBottomLeftRadius: 14, borderBottomRightRadius: 4 },
   messageText: { color: '#315261', fontSize: 11, lineHeight: 16 },
