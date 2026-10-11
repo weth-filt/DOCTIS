@@ -133,6 +133,10 @@ export default function App() {
   const [healthBusy, setHealthBusy] = useState(false);
   const [appointments, setAppointments] = useState([]);
   const [carePlan, setCarePlan] = useState(null);
+  const [careActiveDay, setCareActiveDay] = useState(0);
+  const [careDoneIds, setCareDoneIds] = useState([]);
+  const [careRemindedIds, setCareRemindedIds] = useState([]);
+  const [careReminderBusyId, setCareReminderBusyId] = useState('');
   const [prescriptions, setPrescriptions] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [doctor, setDoctor] = useState(null);
@@ -202,6 +206,69 @@ export default function App() {
     }
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    const planId = carePlan?._id;
+    if (!planId) {
+      setCareDoneIds([]);
+      setCareActiveDay(0);
+      return () => { active = false; };
+    }
+    SecureStore.getItemAsync(`doctis.care.done.${planId}`)
+      .then((value) => {
+        if (!active) return;
+        const saved = value ? JSON.parse(value) : [];
+        setCareDoneIds(Array.isArray(saved) ? saved : []);
+      })
+      .catch(() => { if (active) setCareDoneIds([]); });
+    setCareActiveDay(0);
+    setCareRemindedIds([]);
+    return () => { active = false; };
+  }, [carePlan?._id]);
+
+  const toggleCareActivity = (activityKey) => {
+    const planId = carePlan?._id;
+    if (!planId) return;
+    setCareDoneIds((previous) => {
+      const next = previous.includes(activityKey)
+        ? previous.filter((key) => key !== activityKey)
+        : [...previous, activityKey];
+      SecureStore.setItemAsync(`doctis.care.done.${planId}`, JSON.stringify(next)).catch(() => {});
+      return next;
+    });
+  };
+
+  const createCareReminder = async (day, item, dayIndex) => {
+    const activityKey = `${carePlan?._id}-${day?.dayIndex ?? dayIndex}-${item?.id || item?.time}`;
+    if (!item?.time || careReminderBusyId || careRemindedIds.includes(activityKey)) return;
+    setCareReminderBusyId(activityKey);
+    try {
+      const scheduledDate = new Date();
+      scheduledDate.setHours(0, 0, 0, 0);
+      scheduledDate.setDate(scheduledDate.getDate() + Number(day?.dayIndex ?? dayIndex));
+      const scheduleDate = [scheduledDate.getFullYear(), String(scheduledDate.getMonth() + 1).padStart(2, '0'), String(scheduledDate.getDate()).padStart(2, '0')].join('-');
+      await api('/reminders/create', {
+        token,
+        method: 'POST',
+        body: {
+          title: `${item.title || 'Hoạt động chăm sóc'} — ${day?.label || `Ngày ${dayIndex + 1}`}`,
+          description: item.description || 'Nhắc nhở trong kế hoạch chăm sóc.',
+          time: item.time,
+          source: 'CARE_PLAN',
+          activityType: item.type || 'HEALTH',
+          dayLabel: day?.label || '',
+          scheduleDate,
+        },
+      });
+      setCareRemindedIds((previous) => [...previous, activityKey]);
+      Alert.alert('Đã tạo nhắc nhở', `Đã bật nhắc cho ${item.time}. Email sẽ được gửi theo cấu hình của tài khoản.`);
+    } catch (err) {
+      Alert.alert('Chưa tạo được nhắc nhở', err.message || 'Vui lòng thử lại sau.');
+    } finally {
+      setCareReminderBusyId('');
+    }
+  };
 
   const signOut = useCallback(async () => {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
@@ -510,7 +577,7 @@ export default function App() {
 
   const renderScreen = () => {
     if (tab === 'health') return <HealthScreen health={health} history={history} form={healthForm} setForm={setHealthForm} onSave={submitHealth} busy={healthBusy} />;
-    if (tab === 'care') return <CareScreen carePlan={carePlan} prescriptions={prescriptions} />;
+    if (tab === 'care') return <CareScreen carePlan={carePlan} prescriptions={prescriptions} activeDay={careActiveDay} setActiveDay={setCareActiveDay} doneIds={careDoneIds} onToggleActivity={toggleCareActivity} remindedIds={careRemindedIds} reminderBusyId={careReminderBusyId} onCreateReminder={createCareReminder} />;
     if (tab === 'appointments') return <AppointmentsScreen appointments={appointments} onCancel={cancelAppointment} />;
     if (tab === 'profile') return <ProfileScreen profile={profile || user} editing={editingProfile} setEditing={setEditingProfile} setProfile={setProfile} onSave={saveProfile} busy={profileBusy} onSignOut={signOut} />;
     if (tab === 'ai') return <AIChatScreen messages={aiMessages} value={aiInput} setValue={setAiInput} onSend={sendAIMessage} busy={aiBusy} onBack={() => setTab('home')} />;
@@ -699,10 +766,86 @@ function AIChatScreen({ messages, value, setValue, onSend, busy, onBack }) {
   </>;
 }
 
-function CareScreen({ carePlan, prescriptions }) {
+function CareScreen({ carePlan, prescriptions, activeDay, setActiveDay, doneIds, onToggleActivity, remindedIds, reminderBusyId, onCreateReminder }) {
+  const days = asArray(carePlan?.days);
+  const selectedIndex = Math.min(Math.max(activeDay, 0), Math.max(days.length - 1, 0));
+  const selectedDay = days[selectedIndex];
+  const weekNames = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+  const dayName = (day, index) => /^ngày\s*\d+/i.test(day?.label || '') ? weekNames[index % 7] : (day?.label || weekNames[index % 7]);
+  const activitiesFor = (day) => asArray(day?.items).slice().sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')));
+  const totalActivities = days.reduce((sum, day) => sum + asArray(day.items).length, 0);
+  const completedActivities = days.reduce((sum, day, dayIndex) => sum + activitiesFor(day).filter((item) => doneIds.includes(`${carePlan?._id}-${day?.dayIndex ?? dayIndex}-${item.id || item.time}`)).length, 0);
+  const selectedActivities = activitiesFor(selectedDay);
+  const selectedDone = selectedActivities.filter((item) => doneIds.includes(`${carePlan?._id}-${selectedDay?.dayIndex ?? selectedIndex}-${item.id || item.time}`)).length;
+  const typeMeta = (type) => {
+    const key = String(type || '').toUpperCase();
+    if (key.includes('MEAL') || key.includes('FOOD')) return { icon: '◉', label: 'Ăn uống', tone: styles.careMealTone };
+    if (key.includes('EXERCISE') || key.includes('ACTIVITY')) return { icon: '↗', label: 'Vận động', tone: styles.careMoveTone };
+    if (key.includes('MEDIC')) return { icon: '✚', label: 'Thuốc', tone: styles.careMedicineTone };
+    return { icon: '＋', label: 'Chăm sóc', tone: styles.careOtherTone };
+  };
+  const renderActivity = (day, item, dayIndex, compact = false) => {
+    const key = `${carePlan?._id}-${day?.dayIndex ?? dayIndex}-${item.id || item.time}`;
+    const complete = doneIds.includes(key);
+    const reminded = remindedIds.includes(key);
+    const meta = typeMeta(item.type);
+    return <View key={key} style={[styles.careActivityRow, complete && styles.careActivityDone, compact && styles.careActivityCompact]}>
+      <Text style={styles.careActivityTime}>{item.time || '—'}</Text>
+      <View style={[styles.careActivityIcon, meta.tone]}><Text style={styles.careActivityIconText}>{meta.icon}</Text></View>
+      <View style={styles.careActivityCopy}>
+        <Text style={[styles.careActivityTitle, complete && styles.careActivityTitleDone]} numberOfLines={compact ? 1 : 2}>{item.title || meta.label}</Text>
+        {compact ? null : <><Text style={styles.careActivityType}>{meta.label}</Text>{item.description ? <Text style={styles.careActivityDescription}>{item.description}</Text> : null}</>}
+      </View>
+      {!compact && <View style={styles.careActivityActions}>
+        <Pressable style={[styles.careActionButton, reminded && styles.careReminderDone]} onPress={() => onCreateReminder(day, item, dayIndex)} disabled={reminded || reminderBusyId === key}>
+          {reminderBusyId === key ? <ActivityIndicator size="small" color="#3977f2" /> : <Text style={[styles.careActionText, reminded && styles.careReminderDoneText]}>{reminded ? 'Đã nhắc' : '♧ Nhắc email'}</Text>}
+        </Pressable>
+        <Pressable style={[styles.careDoneButton, complete && styles.careDoneButtonActive]} onPress={() => onToggleActivity(key)}>
+          <Text style={[styles.careDoneButtonText, complete && styles.careDoneButtonTextActive]}>{complete ? '✓ Đã xong' : 'Đánh dấu xong'}</Text>
+        </Pressable>
+      </View>}
+      {compact && <View style={[styles.careTinyCheck, complete && styles.careTinyCheckActive]}><Text style={styles.careTinyCheckText}>{complete ? '✓' : ''}</Text></View>}
+    </View>;
+  };
+
   return <>
-    <ScreenTitle eyebrow="ĐỒNG HÀNH ĐIỀU TRỊ" title="Kế hoạch chăm sóc" subtitle="Xem kế hoạch bác sĩ đã chốt và đơn thuốc hiện hành." />
-    <Card><Text style={styles.cardTitle}>Kế hoạch của bác sĩ</Text>{carePlan ? <><Text style={styles.cardSub}>Cập nhật {displayDate(carePlan.updatedAt)}</Text>{carePlan.doctorNote ? <View style={styles.doctorNote}><Text style={styles.doctorNoteLabel}>GHI CHÚ BÁC SĨ</Text><Text style={styles.bodyText}>{carePlan.doctorNote}</Text></View> : null}{asArray(carePlan.days).map((day, index) => <View key={`${day.dayIndex}-${index}`} style={styles.dayBlock}><View style={styles.dayHeading}><Text style={styles.dayTitle}>{day.label || `Ngày ${index + 1}`}</Text><Text style={styles.dayStatus}>{prettyStatus(day.status)}</Text></View>{asArray(day.items).length ? asArray(day.items).map((item, itemIndex) => <View key={item.id || itemIndex} style={styles.planItem}><Text style={styles.planTime}>{item.time || '—'}</Text><View style={styles.planItemContent}><Text style={styles.planItemTitle}>{item.title}</Text>{item.description ? <Text style={styles.bodyMuted}>{item.description}</Text> : null}<Text style={styles.planType}>{item.type || 'HOẠT ĐỘNG'}</Text></View></View>) : <Text style={styles.bodyMuted}>Chưa có hoạt động cho ngày này.</Text>}</View>)}</> : <EmptyState text="Bác sĩ chưa chốt kế hoạch chăm sóc cho bạn." />}</Card>
+    <ScreenTitle eyebrow="ĐỒNG HÀNH ĐIỀU TRỊ" title="Kế hoạch chăm sóc" subtitle="Theo dõi lịch tuần, xem hướng dẫn từng hoạt động và đánh dấu tiến độ hằng ngày." />
+    {carePlan ? <>
+      <Card style={styles.carePlanIntro}>
+        <View style={styles.carePlanIntroTop}>
+          <View style={styles.carePlanIntroIcon}><Text style={styles.carePlanIntroIconText}>✚</Text></View>
+          <View style={styles.carePlanIntroCopy}><Text style={styles.cardTitle}>Kế hoạch của bác sĩ</Text><Text style={styles.cardSub}>Cập nhật {displayDate(carePlan.updatedAt)}</Text></View>
+          <Text style={styles.careConfirmedPill}>● Đã chốt</Text>
+        </View>
+        {carePlan.doctorNote ? <View style={styles.careDoctorNote}><Text style={styles.careDoctorNoteLabel}>LƯU Ý TỪ BÁC SĨ</Text><Text style={styles.bodyText}>{carePlan.doctorNote}</Text></View> : null}
+      </Card>
+      {days.length ? <>
+        <Card style={styles.careWeekCard}>
+          <View style={styles.careSectionHeader}>
+            <View style={styles.careSectionHeading}><Text style={styles.careKicker}>LỊCH TUẦN</Text><Text style={styles.careSectionTitle}>Tuần chăm sóc của bạn</Text><Text style={styles.careSectionSub}>Chọn một ngày để xem chi tiết và cập nhật tiến độ.</Text></View>
+            <View style={styles.careProgressBadge}><Text style={styles.careProgressLabel}>TIẾN ĐỘ</Text><Text style={styles.careProgressValue}>{completedActivities}/{totalActivities}</Text></View>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.careWeekScroller}>
+            {days.map((day, index) => {
+              const items = activitiesFor(day);
+              const done = items.filter((item) => doneIds.includes(`${carePlan._id}-${day?.dayIndex ?? index}-${item.id || item.time}`)).length;
+              const percent = items.length ? Math.round(done / items.length * 100) : 0;
+              return <Pressable key={`${day.dayIndex}-${index}`} onPress={() => setActiveDay(index)} style={[styles.careDayCard, index === selectedIndex && styles.careDayCardActive]}>
+                <View style={styles.careDayCardHeader}><View style={[styles.careDayNumber, index === selectedIndex && styles.careDayNumberActive]}><Text style={[styles.careDayNumberText, index === selectedIndex && styles.careDayNumberTextActive]}>{String(index + 1).padStart(2, '0')}</Text></View><View style={styles.careDayCardTitleWrap}><Text style={styles.careDayCardTitle}>{dayName(day, index)}</Text><Text style={styles.careDayCount}>{done}/{items.length} việc</Text></View><Text style={styles.careDayPercent}>{percent}%</Text></View>
+                <View style={styles.careProgressTrack}><View style={[styles.careProgressFill, { width: `${percent}%` }]} /></View>
+                {items.slice(0, 4).map((item) => renderActivity(day, item, index, true))}
+                {!items.length && <Text style={styles.careNoActivities}>Chưa có hoạt động</Text>}
+              </Pressable>;
+            })}
+          </ScrollView>
+        </Card>
+        <Card style={styles.careDetailCard}>
+          <View style={styles.careDetailHeader}><View style={styles.careSectionHeading}><Text style={styles.careKicker}>CHI TIẾT NGÀY</Text><Text style={styles.careSectionTitle}>{dayName(selectedDay, selectedIndex)}</Text><Text style={styles.careSectionSub}>{selectedDone}/{selectedActivities.length} hoạt động hoàn thành</Text></View><View style={styles.careDayStatus}><Text style={styles.careDayStatusText}>✚ Kế hoạch bác sĩ</Text></View></View>
+          {selectedDay?.summary ? <Text style={styles.careDaySummary}>{selectedDay.summary}</Text> : null}
+          {selectedActivities.length ? selectedActivities.map((item) => renderActivity(selectedDay, item, selectedIndex)) : <EmptyState text="Chưa có hoạt động cho ngày này." />}
+        </Card>
+      </> : <Card><EmptyState text="Kế hoạch chưa có lịch theo ngày." /></Card>}
+    </> : <Card><Text style={styles.cardTitle}>Kế hoạch của bác sĩ</Text><EmptyState text="Bác sĩ chưa chốt kế hoạch chăm sóc cho bạn." /></Card>}
     <Card><Text style={styles.cardTitle}>Đơn thuốc đã chốt</Text>{asArray(prescriptions).length ? asArray(prescriptions).map((prescription) => <View key={prescription._id} style={styles.prescriptionCard}><View style={styles.cardHeading}><Text style={styles.planItemTitle}>{prescription.title || 'Đơn thuốc'}</Text><Text style={styles.dayStatus}>Đã chốt</Text></View><Text style={styles.cardSub}>{displayDate(prescription.confirmedAt || prescription.createdAt)}</Text>{prescription.note ? <Text style={styles.bodyMuted}>{prescription.note}</Text> : null}{asArray(prescription.medicines).map((medicine, index) => <View key={`${medicine.name}-${index}`} style={styles.medicineRow}><Text style={styles.medicineName}>{medicine.name}</Text><Text style={styles.bodyMuted}>{[medicine.dosage, medicine.frequency, asArray(medicine.times).join(', ')].filter(Boolean).join(' · ')}</Text></View>)}</View>) : <EmptyState text="Chưa có đơn thuốc đã chốt." />}</Card>
   </>;
 }
@@ -911,6 +1054,70 @@ const styles = StyleSheet.create({
   prescriptionCard: { borderTopWidth: 1, borderTopColor: '#edf1f2', paddingTop: 12, marginTop: 10 },
   medicineRow: { paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#f1f4f4', marginTop: 5 },
   medicineName: { color: '#315261', fontSize: 10, fontWeight: '900' },
+  carePlanIntro: { backgroundColor: '#f7fcfc', borderColor: '#dceeed' },
+  carePlanIntroTop: { flexDirection: 'row', alignItems: 'center' },
+  carePlanIntroIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#e5f6f3', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  carePlanIntroIconText: { color: '#078b8e', fontSize: 20, fontWeight: '900' },
+  carePlanIntroCopy: { flex: 1 },
+  careConfirmedPill: { color: '#13896b', backgroundColor: '#e8f8f1', overflow: 'hidden', paddingHorizontal: 9, paddingVertical: 6, borderRadius: 12, fontSize: 8, fontWeight: '900' },
+  careDoctorNote: { marginTop: 12, padding: 11, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e7efef' },
+  careDoctorNoteLabel: { color: '#168b8b', fontSize: 8, fontWeight: '900', letterSpacing: 0.8 },
+  careWeekCard: { paddingHorizontal: 12, paddingTop: 15, paddingBottom: 12 },
+  careSectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  careSectionHeading: { flex: 1, minWidth: 0 },
+  careKicker: { color: '#64819a', fontSize: 8, letterSpacing: 1, fontWeight: '900' },
+  careSectionTitle: { color: '#234254', fontSize: 15, lineHeight: 20, fontWeight: '900', marginTop: 3 },
+  careSectionSub: { color: '#82969d', fontSize: 9, lineHeight: 14, marginTop: 4 },
+  careProgressBadge: { minWidth: 66, alignItems: 'center', paddingHorizontal: 8, paddingVertical: 7, borderRadius: 12, backgroundColor: '#f3f7ff', borderWidth: 1, borderColor: '#e0e9fa', marginLeft: 8 },
+  careProgressLabel: { color: '#8b9db5', fontSize: 7, fontWeight: '900', letterSpacing: 0.5 },
+  careProgressValue: { color: '#3977f2', fontSize: 13, fontWeight: '900', marginTop: 2 },
+  careWeekScroller: { paddingRight: 3, gap: 8 },
+  careDayCard: { width: 178, padding: 9, borderRadius: 14, backgroundColor: '#f8faff', borderWidth: 1, borderColor: '#e4ebf8' },
+  careDayCardActive: { backgroundColor: '#fff', borderColor: '#8cb2ff', shadowColor: '#3577ee', shadowOpacity: 0.1, shadowRadius: 9, elevation: 2 },
+  careDayCardHeader: { flexDirection: 'row', alignItems: 'center' },
+  careDayNumber: { width: 26, height: 26, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#eaf0ff', marginRight: 7 },
+  careDayNumberActive: { backgroundColor: '#477af1' },
+  careDayNumberText: { color: '#477af1', fontSize: 8, fontWeight: '900' },
+  careDayNumberTextActive: { color: '#fff' },
+  careDayCardTitleWrap: { flex: 1 },
+  careDayCardTitle: { color: '#315261', fontSize: 9, fontWeight: '900' },
+  careDayCount: { color: '#96a7b4', fontSize: 7, marginTop: 2 },
+  careDayPercent: { color: '#3977f2', fontSize: 8, fontWeight: '900' },
+  careProgressTrack: { height: 3, overflow: 'hidden', backgroundColor: '#e9eef5', borderRadius: 3, marginTop: 8, marginBottom: 4 },
+  careProgressFill: { height: 3, borderRadius: 3, backgroundColor: '#29b896' },
+  careActivityRow: { minHeight: 58, flexDirection: 'row', alignItems: 'center', padding: 9, borderRadius: 13, backgroundColor: '#fbfdff', borderWidth: 1, borderColor: '#e8eef6', marginTop: 7 },
+  careActivityDone: { backgroundColor: '#f1fbf7', borderColor: '#d9f1e6' },
+  careActivityCompact: { minHeight: 36, paddingVertical: 5, paddingHorizontal: 4, borderWidth: 0, borderRadius: 9, backgroundColor: 'transparent', marginTop: 3 },
+  careActivityTime: { width: 42, color: '#597a9e', fontSize: 8, fontWeight: '900' },
+  careActivityIcon: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center', marginRight: 8, backgroundColor: '#fff1e7' },
+  careMealTone: { backgroundColor: '#fff2e7' },
+  careMoveTone: { backgroundColor: '#e8f8f3' },
+  careMedicineTone: { backgroundColor: '#edf0ff' },
+  careOtherTone: { backgroundColor: '#e8f5f6' },
+  careActivityIconText: { color: '#388e92', fontSize: 13, fontWeight: '900' },
+  careActivityCopy: { flex: 1, minWidth: 0 },
+  careActivityTitle: { color: '#315261', fontSize: 10, fontWeight: '900', lineHeight: 14 },
+  careActivityTitleDone: { color: '#36816d' },
+  careActivityType: { color: '#8095a1', fontSize: 8, marginTop: 3 },
+  careActivityDescription: { color: '#728996', fontSize: 9, lineHeight: 14, marginTop: 4 },
+  careTinyCheck: { width: 16, height: 16, borderRadius: 8, borderWidth: 1, borderColor: '#d8e2ed', marginLeft: 5, alignItems: 'center', justifyContent: 'center' },
+  careTinyCheckActive: { backgroundColor: '#20ad86', borderColor: '#20ad86' },
+  careTinyCheckText: { color: '#fff', fontSize: 9, fontWeight: '900' },
+  careNoActivities: { color: '#8b9ba8', fontSize: 8, textAlign: 'center', paddingVertical: 14 },
+  careDetailCard: { paddingHorizontal: 12 },
+  careDetailHeader: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#edf2f4', paddingBottom: 10, marginBottom: 4 },
+  careDayStatus: { backgroundColor: '#f3f7ff', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 6, marginLeft: 7 },
+  careDayStatusText: { color: '#647fa5', fontSize: 7, fontWeight: '900' },
+  careDaySummary: { color: '#657f8a', backgroundColor: '#f4f9f8', borderRadius: 10, padding: 9, marginTop: 8, fontSize: 9, lineHeight: 14 },
+  careActivityActions: { alignItems: 'flex-end', gap: 5, marginLeft: 6 },
+  careActionButton: { minWidth: 84, minHeight: 28, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7, borderRadius: 9, backgroundColor: '#eef4ff', borderWidth: 1, borderColor: '#dce7fb' },
+  careActionText: { color: '#3977f2', fontSize: 8, fontWeight: '800' },
+  careReminderDone: { backgroundColor: '#eef9f4', borderColor: '#d3efe2' },
+  careReminderDoneText: { color: '#258666' },
+  careDoneButton: { minWidth: 84, minHeight: 28, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7, borderRadius: 9, backgroundColor: '#078b8e' },
+  careDoneButtonActive: { backgroundColor: '#e7f7f0', borderWidth: 1, borderColor: '#ccebdd' },
+  careDoneButtonText: { color: '#fff', fontSize: 8, fontWeight: '900' },
+  careDoneButtonTextActive: { color: '#248369' },
   appointmentCard: { borderTopWidth: 1, borderTopColor: '#edf1f2', paddingTop: 13, marginTop: 10 },
   appointmentType: { color: '#315261', fontSize: 11, fontWeight: '900' },
   appointmentDate: { color: '#087d83', fontSize: 12, fontWeight: '900', marginTop: 9 },
