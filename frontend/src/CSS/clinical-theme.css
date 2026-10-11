@@ -1294,3 +1294,79 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
     transition-duration: .01ms !important;
   }
 }
+
+/* Patient drawer editor and charts: prevent inline labels and clipped ticks. */
+.patient-drawer .care-plan-editor {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 9px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin-top: 12px !important;
+  padding: 16px !important;
+  border: 1px solid #dce9eb !important;
+  border-radius: 13px !important;
+  background: linear-gradient(145deg,#fbfefe,#f5f9fa) !important;
+}
+.patient-drawer .care-plan-editor > label {
+  display: block !important;
+  min-width: 0 !important;
+  margin: 3px 0 0 !important;
+  color: #294e5c !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1.5 !important;
+}
+.patient-drawer .care-plan-editor > small {
+  display: block !important;
+  min-width: 0 !important;
+  margin: 0 0 2px !important;
+  color: #748b93 !important;
+  font-size: 11px !important;
+  line-height: 1.6 !important;
+  overflow-wrap: anywhere !important;
+}
+.patient-drawer .care-plan-editor > textarea {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 12px 13px !important;
+  border: 1px solid #d6e3e6 !important;
+  border-radius: 10px !important;
+  color: #244450 !important;
+  background: #fff !important;
+  font: 12px/1.6 ui-monospace,Consolas,monospace !important;
+  resize: vertical !important;
+}
+.patient-drawer .care-plan-editor > textarea:focus {
+  outline: none !important;
+  border-color: #4aa6a5 !important;
+  box-shadow: 0 0 0 3px rgba(42,158,156,.12) !important;
+}
+.patient-drawer .care-plan-editor > #care-plan-doctor-note {
+  font: 13px/1.55 "Be Vietnam Pro","Segoe UI",sans-serif !important;
+}
+.patient-drawer .care-plan-editor > .care-plan-editor-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 9px !important;
+  margin: 4px 0 0 !important;
+}
+.patient-drawer .care-plan-editor > .care-plan-editor-actions button {
+  min-height: 42px !important;
+}
+.patient-drawer .drawer-section > .care-plan-editor-actions {
+  display: flex !important;
+  align-items: center !important;
+  margin: 3px 0 12px !important;
+}
+.patient-drawer .doctor-chart { min-width: 0 !important; }
+.patient-drawer .doctor-chart .recharts-responsive-container { min-width: 0 !important; }
+.patient-drawer .doctor-chart .recharts-cartesian-axis-tick text { font-size: 11px !important; }
+@media (max-width: 620px) {
+  .patient-drawer .drawer-section { padding: 15px !important; }
+  .patient-drawer .care-plan-editor { padding: 12px !important; }
+  .patient-drawer .care-plan-editor > .care-plan-editor-actions button { flex: 1 1 100% !important; }
+}

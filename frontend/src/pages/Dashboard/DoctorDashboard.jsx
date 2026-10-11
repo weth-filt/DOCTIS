@@ -856,7 +856,10 @@ export default function DoctorDashboard() {
 
   const chartData = [...patientHistory].map((item, index) => ({
     day: item.createdAt
-      ? new Date(item.createdAt).toLocaleDateString("vi-VN")
+      ? new Date(item.createdAt).toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit"
+        })
       : `Lần ${index + 1}`,
     glucose: Number(item.glucose || 0),
     bmi: Number(item.bmi || 0),
@@ -1772,7 +1775,7 @@ export default function DoctorDashboard() {
                     <div className="doctor-chart">
                       <h4><FaHeartbeat /> Glucose</h4>
                       <ResponsiveContainer width="100%" height={250}>
-                        <AreaChart data={chartData}>
+                        <AreaChart data={chartData} margin={{ top: 8, right: 18, bottom: 8, left: 4 }}>
                           <defs>
                             <linearGradient id="doctorGlucoseGradient" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="0%" stopColor="#3977f2" stopOpacity={0.35} />
@@ -1780,7 +1783,7 @@ export default function DoctorDashboard() {
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="day" />
+                          <XAxis dataKey="day" tick={{ fill: "#68818b", fontSize: 11 }} tickMargin={8} minTickGap={24} padding={{ left: 12, right: 18 }} />
                           <YAxis />
                           <Tooltip />
                           <Area
@@ -1797,9 +1800,9 @@ export default function DoctorDashboard() {
                     <div className="doctor-chart">
                       <h4><FaChartLine /> BMI</h4>
                       <ResponsiveContainer width="100%" height={250}>
-                        <LineChart data={chartData}>
+                        <LineChart data={chartData} margin={{ top: 8, right: 18, bottom: 8, left: 4 }}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="day" />
+                          <XAxis dataKey="day" tick={{ fill: "#68818b", fontSize: 11 }} tickMargin={8} minTickGap={24} padding={{ left: 12, right: 18 }} />
                           <YAxis />
                           <Tooltip />
                           <Line
