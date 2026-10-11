@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   AppState,
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -74,7 +75,7 @@ const displayDate = (value) => {
 };
 const prettyStatus = (value) => ({ pending: 'Đang chờ', approved: 'Đã xác nhận', completed: 'Đã khám', cancelled: 'Đã hủy', confirmed: 'Đã chốt', draft: 'Bản nháp' }[value] || value || '—');
 
-function Field({ label, value, onChangeText, placeholder, secureTextEntry, keyboardType, multiline, autoCapitalize = 'sentences' }) {
+function Field({ label, value, onChangeText, placeholder, secureTextEntry, keyboardType, multiline, onFocus, autoCapitalize = 'sentences', autoCorrect = false }) {
   return (
     <View style={styles.fieldWrap}>
       {!!label && <Text style={styles.fieldLabel}>{label}</Text>}
@@ -87,8 +88,9 @@ function Field({ label, value, onChangeText, placeholder, secureTextEntry, keybo
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType || 'default'}
         multiline={multiline}
+        onFocus={onFocus}
         autoCapitalize={autoCapitalize}
-        autoCorrect={false}
+        autoCorrect={autoCorrect}
       />
     </View>
   );
@@ -133,9 +135,22 @@ export default function App() {
   const [messageText, setMessageText] = useState('');
   const [messageBusy, setMessageBusy] = useState(false);
   const messagePollBusy = useRef(false);
+  const screenScrollRef = useRef(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const setAuthValue = (key, value) => setAuthForm((previous) => ({ ...previous, [key]: value }));
   const patientMode = user?.role === 'user';
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSubscription = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSubscription = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const loadData = useCallback(async (activeToken, quiet = false) => {
     if (!quiet) setLoading(true);
@@ -372,13 +387,14 @@ export default function App() {
     if (tab === 'care') return <CareScreen carePlan={carePlan} prescriptions={prescriptions} />;
     if (tab === 'appointments') return <AppointmentsScreen appointments={appointments} onCancel={cancelAppointment} />;
     if (tab === 'profile') return <ProfileScreen profile={profile || user} editing={editingProfile} setEditing={setEditingProfile} setProfile={setProfile} onSave={saveProfile} busy={profileBusy} onSignOut={signOut} />;
-    if (tab === 'messages') return <MessagesScreen doctors={doctors} doctor={doctor} setDoctor={setDoctor} messages={messages} user={user} value={messageText} setValue={setMessageText} onSend={sendMessage} busy={messageBusy} />;
+    if (tab === 'messages') return <MessagesScreen doctors={doctors} doctor={doctor} setDoctor={setDoctor} messages={messages} user={user} value={messageText} setValue={setMessageText} onSend={sendMessage} busy={messageBusy} onComposerFocus={() => setTimeout(() => screenScrollRef.current?.scrollToEnd({ animated: true }), 300)} />;
     return <HomeScreen user={profile || user} greeting={greeting} health={health} appointments={appointments} carePlan={carePlan} onNavigate={setTab} />;
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.appHeader}>
         <BrandHeader compact />
         <Pressable style={styles.avatarButton} onPress={() => setTab('profile')}><Text style={styles.avatarText}>{greeting.slice(0, 1).toUpperCase()}</Text></Pressable>
@@ -387,21 +403,24 @@ export default function App() {
       {!!notice && <Notice text={notice} onClose={() => setNotice('')} />}
       <ScrollView
         key={tab}
+        ref={screenScrollRef}
         style={styles.flex}
         contentContainerStyle={styles.page}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor="#087d83" />}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
       >
         {renderScreen()}
       </ScrollView>
-      <View style={styles.tabBar}>
+      {!keyboardVisible && <View style={styles.tabBar}>
         {NAV_ITEMS.map((item) => (
           <Pressable key={item.id} style={styles.tabItem} onPress={() => { setError(''); setNotice(''); setTab(item.id); }}>
             <View style={[styles.tabIconWrap, tab === item.id && styles.tabIconActive]}><Text style={[styles.tabIcon, tab === item.id && styles.tabIconSelected]}>{item.icon}</Text></View>
             <Text numberOfLines={1} style={[styles.tabLabel, tab === item.id && styles.tabLabelSelected]}>{item.label}</Text>
           </Pressable>
         ))}
-      </View>
+      </View>}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -500,12 +519,12 @@ function ProfileScreen({ profile, editing, setEditing, setProfile, onSave, busy,
   </>;
 }
 
-function MessagesScreen({ doctors, doctor, setDoctor, messages, user, value, setValue, onSend, busy }) {
+function MessagesScreen({ doctors, doctor, setDoctor, messages, user, value, setValue, onSend, busy, onComposerFocus }) {
   return <>
     <ScreenTitle eyebrow="KẾT NỐI CHĂM SÓC" title="Bác sĩ phụ trách" subtitle="Trao đổi qua tin nhắn với bác sĩ đã được phân công." />
     {!asArray(doctors).length ? <Card><EmptyState text="Tài khoản của bạn chưa được phân công bác sĩ. Hãy liên hệ quản trị viên để được hỗ trợ." /></Card> : <>
       <Card><Text style={styles.cardTitle}>Bác sĩ của bạn</Text>{asArray(doctors).map((item) => <Pressable key={item._id} onPress={() => setDoctor(item)} style={[styles.doctorChoice, String(item._id) === String(doctor?._id) && styles.doctorChoiceActive]}><View style={styles.doctorAvatar}><Text style={styles.doctorAvatarText}>{(item.fullName || item.username || 'B').slice(0, 1).toUpperCase()}</Text></View><View style={styles.flex}><Text style={styles.planItemTitle}>{item.displayName || item.fullName || item.username}</Text><Text style={styles.bodyMuted}>Bác sĩ phụ trách</Text></View><Text style={styles.quickArrow}>›</Text></Pressable>)}</Card>
-      <Card><Text style={styles.cardTitle}>Tin nhắn</Text><View style={styles.messageList}>{asArray(messages).length ? asArray(messages).map((item) => <View key={item._id} style={[styles.messageBubble, String(item.senderId) === String(user?._id || user?.id) && styles.messageMine]}><Text style={[styles.messageText, String(item.senderId) === String(user?._id || user?.id) && styles.messageMineText]}>{item.content || 'Tệp đính kèm'}</Text><Text style={[styles.messageTime, String(item.senderId) === String(user?._id || user?.id) && styles.messageMineText]}>{displayDate(item.createdAt)}</Text></View>) : <EmptyState text="Chưa có tin nhắn. Bạn có thể bắt đầu trao đổi với bác sĩ." />}</View><Field label="Tin nhắn của bạn" value={value} onChangeText={setValue} placeholder="Nhập nội dung..." multiline /><ActionButton title="Gửi tin nhắn" onPress={onSend} disabled={busy || !value.trim()} style={styles.fullButton} /></Card>
+      <Card><Text style={styles.cardTitle}>Tin nhắn</Text><View style={styles.messageList}>{asArray(messages).length ? asArray(messages).map((item) => <View key={item._id} style={[styles.messageBubble, String(item.senderId) === String(user?._id || user?.id) && styles.messageMine]}><Text style={[styles.messageText, String(item.senderId) === String(user?._id || user?.id) && styles.messageMineText]}>{item.content || 'Tệp đính kèm'}</Text><Text style={[styles.messageTime, String(item.senderId) === String(user?._id || user?.id) && styles.messageMineText]}>{displayDate(item.createdAt)}</Text></View>) : <EmptyState text="Chưa có tin nhắn. Bạn có thể bắt đầu trao đổi với bác sĩ." />}</View><Field label="Tin nhắn của bạn" value={value} onChangeText={setValue} placeholder="Nhập nội dung..." multiline onFocus={onComposerFocus} autoCorrect autoCapitalize="sentences" /><ActionButton title="Gửi tin nhắn" onPress={onSend} disabled={busy || !value.trim()} style={styles.fullButton} /></Card>
     </>}
   </>;
 }
