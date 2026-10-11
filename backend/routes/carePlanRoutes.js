@@ -34,4 +34,6 @@ router.post(
   controller.saveMyGeneratedCarePlan
 );
 
+router.get("/my/mobile", auth, controller.getMyMobileCarePlan);
+
 module.exports = router;

@@ -175,7 +175,7 @@ export default function App() {
       api('/health/latest', { token: activeToken }),
       api('/health/history', { token: activeToken }),
       api('/appointments/patient', { token: activeToken }),
-      api('/care-plans/my', { token: activeToken }),
+      api('/care-plans/my/mobile', { token: activeToken }),
       api('/prescriptions/my', { token: activeToken }),
       api('/messages/doctors', { token: activeToken }),
     ]);
@@ -814,8 +814,8 @@ function CareScreen({ carePlan, prescriptions, activeDay, setActiveDay, doneIds,
       <Card style={styles.carePlanIntro}>
         <View style={styles.carePlanIntroTop}>
           <View style={styles.carePlanIntroIcon}><Text style={styles.carePlanIntroIconText}>✚</Text></View>
-          <View style={styles.carePlanIntroCopy}><Text style={styles.cardTitle}>Kế hoạch của bác sĩ</Text><Text style={styles.cardSub}>Cập nhật {displayDate(carePlan.updatedAt)}</Text></View>
-          <Text style={styles.careConfirmedPill}>● Đã chốt</Text>
+          <View style={styles.carePlanIntroCopy}><Text style={styles.cardTitle}>{carePlan.source === 'AI' ? 'Kế hoạch chăm sóc cá nhân' : 'Kế hoạch của bác sĩ'}</Text><Text style={styles.cardSub}>Cập nhật {displayDate(carePlan.updatedAt)}</Text></View>
+          <Text style={[styles.careConfirmedPill, carePlan.source === 'AI' && styles.careDraftPill]}>{carePlan.source === 'AI' ? 'AI · Chờ rà soát' : '● Đã chốt'}</Text>
         </View>
         {carePlan.doctorNote ? <View style={styles.careDoctorNote}><Text style={styles.careDoctorNoteLabel}>LƯU Ý TỪ BÁC SĨ</Text><Text style={styles.bodyText}>{carePlan.doctorNote}</Text></View> : null}
       </Card>
@@ -840,7 +840,7 @@ function CareScreen({ carePlan, prescriptions, activeDay, setActiveDay, doneIds,
           </ScrollView>
         </Card>
         <Card style={styles.careDetailCard}>
-          <View style={styles.careDetailHeader}><View style={styles.careSectionHeading}><Text style={styles.careKicker}>CHI TIẾT NGÀY</Text><Text style={styles.careSectionTitle}>{dayName(selectedDay, selectedIndex)}</Text><Text style={styles.careSectionSub}>{selectedDone}/{selectedActivities.length} hoạt động hoàn thành</Text></View><View style={styles.careDayStatus}><Text style={styles.careDayStatusText}>✚ Kế hoạch bác sĩ</Text></View></View>
+          <View style={styles.careDetailHeader}><View style={styles.careSectionHeading}><Text style={styles.careKicker}>CHI TIẾT NGÀY</Text><Text style={styles.careSectionTitle}>{dayName(selectedDay, selectedIndex)}</Text><Text style={styles.careSectionSub}>{selectedDone}/{selectedActivities.length} hoạt động hoàn thành</Text></View><View style={styles.careDayStatus}><Text style={styles.careDayStatusText}>{carePlan.source === 'AI' ? '✦ Kế hoạch cá nhân' : '✚ Kế hoạch bác sĩ'}</Text></View></View>
           {selectedDay?.summary ? <Text style={styles.careDaySummary}>{selectedDay.summary}</Text> : null}
           {selectedActivities.length ? selectedActivities.map((item) => renderActivity(selectedDay, item, selectedIndex)) : <EmptyState text="Chưa có hoạt động cho ngày này." />}
         </Card>
@@ -1060,6 +1060,7 @@ const styles = StyleSheet.create({
   carePlanIntroIconText: { color: '#078b8e', fontSize: 20, fontWeight: '900' },
   carePlanIntroCopy: { flex: 1 },
   careConfirmedPill: { color: '#13896b', backgroundColor: '#e8f8f1', overflow: 'hidden', paddingHorizontal: 9, paddingVertical: 6, borderRadius: 12, fontSize: 8, fontWeight: '900' },
+  careDraftPill: { color: '#8c6b32', backgroundColor: '#fff6e5' },
   careDoctorNote: { marginTop: 12, padding: 11, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e7efef' },
   careDoctorNoteLabel: { color: '#168b8b', fontSize: 8, fontWeight: '900', letterSpacing: 0.8 },
   careWeekCard: { paddingHorizontal: 12, paddingTop: 15, paddingBottom: 12 },

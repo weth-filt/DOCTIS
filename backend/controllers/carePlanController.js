@@ -253,3 +253,33 @@ exports.getMyConfirmedCarePlan = async (req, res) => {
     });
   }
 };
+
+// GET /care-plans/my/mobile
+// Mobile displays the doctor's confirmed plan first, then the patient's saved AI draft.
+exports.getMyMobileCarePlan = async (req, res) => {
+  try {
+    if (req.user?.role !== "user") {
+      return res.status(403).json({ msg: "Chỉ bệnh nhân mới xem được kế hoạch chăm sóc." });
+    }
+
+    const doctorPlan = await CarePlan.findOne({
+      patientId: req.user.id,
+      source: "DOCTOR",
+      status: "confirmed",
+    }).sort({ confirmedAt: -1, updatedAt: -1 }).lean();
+
+    const plan = doctorPlan || await CarePlan.findOne({
+      patientId: req.user.id,
+      source: "AI",
+    }).sort({ updatedAt: -1 }).lean();
+
+    if (!plan) {
+      return res.status(404).json({ msg: "Chưa có kế hoạch chăm sóc." });
+    }
+
+    return res.json(plan);
+  } catch (err) {
+    console.error("GET MOBILE CARE PLAN ERROR =", err);
+    return res.status(500).json({ msg: err.message || "Không thể tải kế hoạch chăm sóc." });
+  }
+};
