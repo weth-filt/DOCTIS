@@ -4453,6 +4453,12 @@
 }
 
 /* Larger, easier-to-read clinician messenger workspace. */
+.doctor-main-messages {
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+}
+
 .doctor-main-messages .messaging-shell {
   min-height: max(680px, calc(100vh - 135px));
 }

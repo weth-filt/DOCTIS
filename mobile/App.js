@@ -598,7 +598,7 @@ function MessagesScreen({ doctors, doctor, setDoctor, messages, user, value, set
           <Text style={styles.quickArrow}>›</Text>
         </Pressable>)}
       </Card>
-      <Card style={styles.messageCard}>
+      <Card style={styles.messageHistoryCard}>
         <Text style={styles.cardTitle}>Tin nhắn</Text>
         <View style={styles.messageList}>
           {asArray(messages).length ? asArray(messages).map((item) => {
@@ -610,19 +610,22 @@ function MessagesScreen({ doctors, doctor, setDoctor, messages, user, value, set
             </View>;
           }) : <EmptyState text="Chưa có tin nhắn. Bạn có thể bắt đầu trao đổi với bác sĩ." />}
         </View>
+      </Card>
+      <Card style={styles.messageComposerCard}>
+        <Text style={styles.cardTitle}>Gửi tin nhắn</Text>
+        <TextInput style={styles.messageComposerInput} value={value} onChangeText={setValue} placeholder="Nhập nội dung tin nhắn..." placeholderTextColor="#91a4a8" onFocus={onComposerFocus} multiline={false} autoCorrect autoCapitalize="sentences" returnKeyType="send" onSubmitEditing={onSend} />
         {attachment ? <View style={styles.pendingAttachment}><Text numberOfLines={1} style={styles.pendingAttachmentName}>{attachment.type?.startsWith('image/') ? '▧ ' : '▤ '}{attachment.name}</Text><Pressable onPress={onRemoveAttachment}><Text style={styles.removeAttachment}>×</Text></Pressable></View> : null}
-        <View style={styles.messageComposerRow}>
-          <Pressable style={styles.attachButton} onPress={() => onChooseAttachment('image')} disabled={attachmentBusy}><Text style={styles.attachButtonText}>▧</Text></Pressable>
-          <Pressable style={styles.attachButton} onPress={() => onChooseAttachment('file')} disabled={attachmentBusy}><Text style={styles.attachButtonText}>＋</Text></Pressable>
-          <TextInput style={styles.messageComposerInput} value={value} onChangeText={setValue} placeholder="Nhập tin nhắn..." placeholderTextColor="#91a4a8" onFocus={onComposerFocus} multiline={false} autoCorrect autoCapitalize="sentences" returnKeyType="send" onSubmitEditing={onSend} />
-          <Pressable style={[styles.messageSendButton, (busy || attachmentBusy || (!value.trim() && !attachment)) && styles.messageSendDisabled]} onPress={onSend} disabled={busy || attachmentBusy || (!value.trim() && !attachment)}><Text style={styles.messageSendText}>{busy ? '…' : '➤'}</Text></Pressable>
+        <View style={styles.messageActionsRow}>
+          <Pressable style={styles.attachmentActionButton} onPress={() => onChooseAttachment('image')} disabled={attachmentBusy}><Text style={styles.attachmentActionText}>▧ Ảnh</Text></Pressable>
+          <Pressable style={styles.attachmentActionButton} onPress={() => onChooseAttachment('file')} disabled={attachmentBusy}><Text style={styles.attachmentActionText}>＋ Tệp</Text></Pressable>
+          <View style={styles.flex} />
+          <Pressable style={[styles.messageSendButton, (busy || attachmentBusy || (!value.trim() && !attachment)) && styles.messageSendDisabled]} onPress={onSend} disabled={busy || attachmentBusy || (!value.trim() && !attachment)}><Text style={styles.messageSendText}>{busy ? 'Đang gửi…' : 'Gửi'}</Text></Pressable>
         </View>
-        <Text style={styles.attachmentHint}>{attachmentBusy ? 'Đang đọc tệp…' : 'Gửi ảnh hoặc tệp (tối đa 8 MB)'}</Text>
+        <Text style={styles.attachmentHint}>{attachmentBusy ? 'Đang đọc tệp…' : 'Ảnh và tệp đính kèm tối đa 8 MB'}</Text>
       </Card>
     </>}
   </>;
 }
-
 function MobileMessageAttachment({ attachment, mine, onOpen }) {
   const isImage = String(attachment.type || '').startsWith('image/');
   const source = attachment.dataUrl || attachment.url || attachment.fileUrl || attachment.src || '';
@@ -762,7 +765,8 @@ const styles = StyleSheet.create({
   doctorChoiceActive: { backgroundColor: '#f0f8f7', borderColor: '#aad7d3' },
   doctorAvatar: { width: 37, height: 37, borderRadius: 14, backgroundColor: '#e6edff', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   doctorAvatarText: { color: '#5570bc', fontWeight: '900' },
-  messageCard: { padding: 13 },
+  messageHistoryCard: { padding: 13 },
+  messageComposerCard: { padding: 13 },
   messageList: { minHeight: 110, maxHeight: 350, marginTop: 9, marginBottom: 10, justifyContent: 'flex-end' },
   messageBubble: { alignSelf: 'flex-start', maxWidth: '85%', backgroundColor: '#eef4f5', borderRadius: 14, borderBottomLeftRadius: 4, paddingHorizontal: 11, paddingVertical: 9, marginVertical: 4 },
   messageMine: { alignSelf: 'flex-end', backgroundColor: '#087d83', borderBottomLeftRadius: 14, borderBottomRightRadius: 4 },
@@ -781,11 +785,11 @@ const styles = StyleSheet.create({
   pendingAttachment: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, backgroundColor: '#edf7f6' },
   pendingAttachmentName: { flex: 1, color: '#315261', fontSize: 9, fontWeight: '700' },
   removeAttachment: { color: '#9c5560', fontSize: 19, fontWeight: '700', paddingLeft: 10 },
-  messageComposerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  attachButton: { width: 35, height: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: '#eef7f6', borderWidth: 1, borderColor: '#dbeae8' },
-  attachButtonText: { color: '#087d83', fontSize: 17, fontWeight: '900' },
-  messageComposerInput: { flex: 1, minWidth: 0, height: 42, borderWidth: 1, borderColor: '#dce7e9', borderRadius: 12, paddingHorizontal: 11, color: '#234254', backgroundColor: '#fbfdfd', fontSize: 12 },
-  messageSendButton: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#087d83' },
+  messageComposerInput: { width: '100%', height: 44, marginTop: 10, borderWidth: 1, borderColor: '#dce7e9', borderRadius: 12, paddingHorizontal: 12, color: '#234254', backgroundColor: '#fbfdfd', fontSize: 12 },
+  messageActionsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
+  attachmentActionButton: { minHeight: 38, paddingHorizontal: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#eef7f6', borderWidth: 1, borderColor: '#dbeae8' },
+  attachmentActionText: { color: '#087d83', fontSize: 10, fontWeight: '900' },
+  messageSendButton: { minWidth: 72, height: 40, paddingHorizontal: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#087d83' },
   messageSendDisabled: { opacity: 0.4 },
   messageSendText: { color: '#fff', fontSize: 17, fontWeight: '900' },
   attachmentHint: { color: '#9aabad', fontSize: 8, marginTop: 6, marginLeft: 2 },
