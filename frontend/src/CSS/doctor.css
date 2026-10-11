@@ -4451,3 +4451,39 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Larger, easier-to-read clinician messenger workspace. */
+.doctor-main-messages .messaging-shell {
+  min-height: max(680px, calc(100vh - 135px));
+}
+
+.doctor-main-messages .conversation-sidebar {
+  min-width: 310px;
+}
+
+.doctor-main-messages .messages-area {
+  padding: 26px 34px 30px;
+}
+
+.doctor-main-messages .message-bubble p {
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.doctor-main-messages .message-bubble small {
+  font-size: 10px;
+}
+
+@media (max-width: 900px) {
+  .doctor-main-messages .messaging-shell {
+    min-height: 0;
+  }
+
+  .doctor-main-messages .chat-window {
+    min-height: 68vh;
+  }
+
+  .doctor-main-messages .messages-area {
+    padding: 20px 17px 24px;
+  }
+}

@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import * as SecureStore from 'expo-secure-store';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import {
   ActivityIndicator,
   AppState,
   Alert,
+  Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -133,6 +137,8 @@ export default function App() {
   const [doctor, setDoctor] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
+  const [messageAttachment, setMessageAttachment] = useState(null);
+  const [attachmentBusy, setAttachmentBusy] = useState(false);
   const [messageBusy, setMessageBusy] = useState(false);
   const messagePollBusy = useRef(false);
   const screenScrollRef = useRef(null);
@@ -330,15 +336,75 @@ export default function App() {
   ]);
 
   const sendMessage = async () => {
-    if (!doctor?._id || !messageText.trim()) return;
+    const content = messageText.trim();
+    if (!doctor?._id || (!content && !messageAttachment)) return;
     setMessageBusy(true);
     try {
-      await api('/messages/send', { token, method: 'POST', body: { receiverId: doctor._id, content: messageText.trim() } });
+      await api('/messages/send', { token, method: 'POST', body: { receiverId: doctor._id, content, attachment: messageAttachment } });
       setMessageText('');
+      setMessageAttachment(null);
       const result = await api(`/messages/doctor/${doctor._id}`, { token });
       setMessages((previous) => mergeMessages(previous, asArray(result)));
     } catch (err) { setError(err.message); }
     finally { setMessageBusy(false); }
+  };
+
+  const chooseMessageAttachment = async (kind) => {
+    setAttachmentBusy(true);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: kind === 'image' ? ['image/*'] : '*/*',
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      const asset = result.assets[0];
+      if (asset.size > 8 * 1024 * 1024) {
+        Alert.alert('Tệp quá lớn', 'Vui lòng chọn tệp nhỏ hơn 8 MB.');
+        return;
+      }
+      const type = asset.mimeType || (kind === 'image' ? 'image/jpeg' : 'application/octet-stream');
+      const base64 = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.Base64 });
+      const size = asset.size || Math.floor(base64.length * 0.75);
+      if (size > 8 * 1024 * 1024) {
+        Alert.alert('Tệp quá lớn', 'Vui lòng chọn tệp nhỏ hơn 8 MB.');
+        return;
+      }
+      setMessageAttachment({
+        name: asset.name || (kind === 'image' ? 'anh-dinh-kem.jpg' : 'tep-dinh-kem'),
+        type,
+        size,
+        dataUrl: `data:${type};base64,${base64}`,
+      });
+    } catch (err) {
+      Alert.alert('Không thể đính kèm', err.message || 'Hãy thử chọn tệp khác.');
+    } finally {
+      setAttachmentBusy(false);
+    }
+  };
+
+  const openMessageAttachment = async (attachment) => {
+    try {
+      const fileName = String(attachment.name || 'tep-dinh-kem').replace(/[\\/:*?"<>|]/g, '_').trim() || 'tep-dinh-kem';
+      const fileUri = `${FileSystem.cacheDirectory}${Date.now()}-${fileName}`;
+      let localUri = fileUri;
+      const source = attachment.dataUrl || attachment.url || attachment.fileUrl || attachment.src || '';
+      if (source.startsWith('data:')) {
+        const base64 = source.slice(source.indexOf(',') + 1);
+        await FileSystem.writeAsStringAsync(fileUri, base64, { encoding: FileSystem.EncodingType.Base64 });
+      } else if (/^https?:\/\//i.test(source)) {
+        const downloaded = await FileSystem.downloadAsync(source, fileUri);
+        localUri = downloaded.uri;
+      } else if (source.startsWith('file://')) {
+        localUri = source;
+      } else {
+        throw new Error('Tệp này không có dữ liệu để mở.');
+      }
+      if (!(await Sharing.isAvailableAsync())) throw new Error('Thiết bị hiện không hỗ trợ mở/chia sẻ tệp.');
+      await Sharing.shareAsync(localUri, { mimeType: attachment.type || 'application/octet-stream', dialogTitle: `Mở hoặc lưu ${attachment.name || 'tệp đính kèm'}` });
+    } catch (err) {
+      Alert.alert('Không thể mở tệp', err.message || 'Vui lòng thử lại.');
+    }
   };
 
   const greeting = useMemo(() => fullName(profile || user).split(' ')[0], [profile, user]);
@@ -387,7 +453,7 @@ export default function App() {
     if (tab === 'care') return <CareScreen carePlan={carePlan} prescriptions={prescriptions} />;
     if (tab === 'appointments') return <AppointmentsScreen appointments={appointments} onCancel={cancelAppointment} />;
     if (tab === 'profile') return <ProfileScreen profile={profile || user} editing={editingProfile} setEditing={setEditingProfile} setProfile={setProfile} onSave={saveProfile} busy={profileBusy} onSignOut={signOut} />;
-    if (tab === 'messages') return <MessagesScreen doctors={doctors} doctor={doctor} setDoctor={setDoctor} messages={messages} user={user} value={messageText} setValue={setMessageText} onSend={sendMessage} busy={messageBusy} onComposerFocus={() => setTimeout(() => screenScrollRef.current?.scrollToEnd({ animated: true }), 300)} />;
+    if (tab === 'messages') return <MessagesScreen doctors={doctors} doctor={doctor} setDoctor={setDoctor} messages={messages} user={user} value={messageText} setValue={setMessageText} onSend={sendMessage} busy={messageBusy} attachment={messageAttachment} attachmentBusy={attachmentBusy} onChooseAttachment={chooseMessageAttachment} onRemoveAttachment={() => setMessageAttachment(null)} onOpenAttachment={openMessageAttachment} onComposerFocus={() => setTimeout(() => screenScrollRef.current?.scrollToEnd({ animated: true }), 300)} />;
     return <HomeScreen user={profile || user} greeting={greeting} health={health} appointments={appointments} carePlan={carePlan} onNavigate={setTab} />;
   };
 
@@ -519,16 +585,56 @@ function ProfileScreen({ profile, editing, setEditing, setProfile, onSave, busy,
   </>;
 }
 
-function MessagesScreen({ doctors, doctor, setDoctor, messages, user, value, setValue, onSend, busy, onComposerFocus }) {
+function MessagesScreen({ doctors, doctor, setDoctor, messages, user, value, setValue, onSend, busy, attachment, attachmentBusy, onChooseAttachment, onRemoveAttachment, onOpenAttachment, onComposerFocus }) {
+  const currentUserId = String(user?._id || user?.id || '');
   return <>
-    <ScreenTitle eyebrow="KẾT NỐI CHĂM SÓC" title="Bác sĩ phụ trách" subtitle="Trao đổi qua tin nhắn với bác sĩ đã được phân công." />
+    <ScreenTitle eyebrow="KẾT NỐI CHĂM SÓC" title="Bác sĩ phụ trách" subtitle="Trao đổi và gửi hồ sơ trực tiếp cho bác sĩ đã được phân công." />
     {!asArray(doctors).length ? <Card><EmptyState text="Tài khoản của bạn chưa được phân công bác sĩ. Hãy liên hệ quản trị viên để được hỗ trợ." /></Card> : <>
-      <Card><Text style={styles.cardTitle}>Bác sĩ của bạn</Text>{asArray(doctors).map((item) => <Pressable key={item._id} onPress={() => setDoctor(item)} style={[styles.doctorChoice, String(item._id) === String(doctor?._id) && styles.doctorChoiceActive]}><View style={styles.doctorAvatar}><Text style={styles.doctorAvatarText}>{(item.fullName || item.username || 'B').slice(0, 1).toUpperCase()}</Text></View><View style={styles.flex}><Text style={styles.planItemTitle}>{item.displayName || item.fullName || item.username}</Text><Text style={styles.bodyMuted}>Bác sĩ phụ trách</Text></View><Text style={styles.quickArrow}>›</Text></Pressable>)}</Card>
-      <Card><Text style={styles.cardTitle}>Tin nhắn</Text><View style={styles.messageList}>{asArray(messages).length ? asArray(messages).map((item) => <View key={item._id} style={[styles.messageBubble, String(item.senderId) === String(user?._id || user?.id) && styles.messageMine]}><Text style={[styles.messageText, String(item.senderId) === String(user?._id || user?.id) && styles.messageMineText]}>{item.content || 'Tệp đính kèm'}</Text><Text style={[styles.messageTime, String(item.senderId) === String(user?._id || user?.id) && styles.messageMineText]}>{displayDate(item.createdAt)}</Text></View>) : <EmptyState text="Chưa có tin nhắn. Bạn có thể bắt đầu trao đổi với bác sĩ." />}</View><Field label="Tin nhắn của bạn" value={value} onChangeText={setValue} placeholder="Nhập nội dung..." multiline onFocus={onComposerFocus} autoCorrect autoCapitalize="sentences" /><ActionButton title="Gửi tin nhắn" onPress={onSend} disabled={busy || !value.trim()} style={styles.fullButton} /></Card>
+      <Card>
+        <Text style={styles.cardTitle}>Bác sĩ của bạn</Text>
+        {asArray(doctors).map((item) => <Pressable key={item._id} onPress={() => setDoctor(item)} style={[styles.doctorChoice, String(item._id) === String(doctor?._id) && styles.doctorChoiceActive]}>
+          <View style={styles.doctorAvatar}><Text style={styles.doctorAvatarText}>{(item.fullName || item.username || 'B').slice(0, 1).toUpperCase()}</Text></View>
+          <View style={styles.flex}><Text style={styles.planItemTitle}>{item.displayName || item.fullName || item.username}</Text><Text style={styles.bodyMuted}>Bác sĩ phụ trách</Text></View>
+          <Text style={styles.quickArrow}>›</Text>
+        </Pressable>)}
+      </Card>
+      <Card style={styles.messageCard}>
+        <Text style={styles.cardTitle}>Tin nhắn</Text>
+        <View style={styles.messageList}>
+          {asArray(messages).length ? asArray(messages).map((item) => {
+            const mine = String(item.senderId) === currentUserId;
+            return <View key={item._id} style={[styles.messageBubble, mine && styles.messageMine]}>
+              {!!item.content && <Text style={[styles.messageText, mine && styles.messageMineText]}>{item.content}</Text>}
+              {item.attachment ? <MobileMessageAttachment attachment={item.attachment} mine={mine} onOpen={onOpenAttachment} /> : null}
+              <Text style={[styles.messageTime, mine && styles.messageMineText]}>{displayDate(item.createdAt)}</Text>
+            </View>;
+          }) : <EmptyState text="Chưa có tin nhắn. Bạn có thể bắt đầu trao đổi với bác sĩ." />}
+        </View>
+        {attachment ? <View style={styles.pendingAttachment}><Text numberOfLines={1} style={styles.pendingAttachmentName}>{attachment.type?.startsWith('image/') ? '▧ ' : '▤ '}{attachment.name}</Text><Pressable onPress={onRemoveAttachment}><Text style={styles.removeAttachment}>×</Text></Pressable></View> : null}
+        <View style={styles.messageComposerRow}>
+          <Pressable style={styles.attachButton} onPress={() => onChooseAttachment('image')} disabled={attachmentBusy}><Text style={styles.attachButtonText}>▧</Text></Pressable>
+          <Pressable style={styles.attachButton} onPress={() => onChooseAttachment('file')} disabled={attachmentBusy}><Text style={styles.attachButtonText}>＋</Text></Pressable>
+          <TextInput style={styles.messageComposerInput} value={value} onChangeText={setValue} placeholder="Nhập tin nhắn..." placeholderTextColor="#91a4a8" onFocus={onComposerFocus} multiline={false} autoCorrect autoCapitalize="sentences" returnKeyType="send" onSubmitEditing={onSend} />
+          <Pressable style={[styles.messageSendButton, (busy || attachmentBusy || (!value.trim() && !attachment)) && styles.messageSendDisabled]} onPress={onSend} disabled={busy || attachmentBusy || (!value.trim() && !attachment)}><Text style={styles.messageSendText}>{busy ? '…' : '➤'}</Text></Pressable>
+        </View>
+        <Text style={styles.attachmentHint}>{attachmentBusy ? 'Đang đọc tệp…' : 'Gửi ảnh hoặc tệp (tối đa 8 MB)'}</Text>
+      </Card>
     </>}
   </>;
 }
 
+function MobileMessageAttachment({ attachment, mine, onOpen }) {
+  const isImage = String(attachment.type || '').startsWith('image/');
+  const source = attachment.dataUrl || attachment.url || attachment.fileUrl || attachment.src || '';
+  return <View style={[styles.messageAttachmentCard, mine && styles.messageAttachmentMine]}>
+    {isImage && source ? <Image source={{ uri: source }} style={styles.messageImage} resizeMode="cover" /> : <Text style={styles.messageFileIcon}>▤</Text>}
+    <View style={styles.messageAttachmentDetails}>
+      <Text numberOfLines={2} style={[styles.messageAttachmentName, mine && styles.messageMineText]}>{attachment.name || (isImage ? 'Ảnh đính kèm' : 'Tệp đính kèm')}</Text>
+      <Text style={[styles.messageAttachmentMeta, mine && styles.messageMineText]}>{attachment.size ? `${(attachment.size / 1024).toFixed(1)} KB` : 'Tệp đính kèm'}{attachment.type ? ` · ${attachment.type.split('/').pop()}` : ''}</Text>
+    </View>
+    <Pressable style={styles.openAttachmentButton} onPress={() => onOpen(attachment)}><Text style={styles.openAttachmentText}>{isImage ? 'Lưu' : 'Mở / lưu'}</Text></Pressable>
+  </View>;
+}
 function EmptyState({ text }) {
   return <View style={styles.emptyState}><View style={styles.emptyIcon}><Text style={styles.emptyIconText}>i</Text></View><Text style={styles.emptyText}>{text}</Text></View>;
 }
@@ -656,12 +762,33 @@ const styles = StyleSheet.create({
   doctorChoiceActive: { backgroundColor: '#f0f8f7', borderColor: '#aad7d3' },
   doctorAvatar: { width: 37, height: 37, borderRadius: 14, backgroundColor: '#e6edff', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   doctorAvatarText: { color: '#5570bc', fontWeight: '900' },
+  messageCard: { padding: 13 },
   messageList: { minHeight: 110, maxHeight: 350, marginTop: 9, marginBottom: 10, justifyContent: 'flex-end' },
   messageBubble: { alignSelf: 'flex-start', maxWidth: '85%', backgroundColor: '#eef4f5', borderRadius: 14, borderBottomLeftRadius: 4, paddingHorizontal: 11, paddingVertical: 9, marginVertical: 4 },
   messageMine: { alignSelf: 'flex-end', backgroundColor: '#087d83', borderBottomLeftRadius: 14, borderBottomRightRadius: 4 },
   messageText: { color: '#315261', fontSize: 11, lineHeight: 16 },
   messageMineText: { color: '#fff' },
   messageTime: { color: '#8ba0a5', fontSize: 8, marginTop: 4 },
+  messageAttachmentCard: { flexDirection: 'row', alignItems: 'center', maxWidth: 270, marginTop: 7, padding: 8, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#dce9e9' },
+  messageAttachmentMine: { backgroundColor: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.32)' },
+  messageImage: { width: 54, height: 54, borderRadius: 8, marginRight: 9, backgroundColor: '#e9f0f0' },
+  messageFileIcon: { width: 40, height: 44, textAlign: 'center', textAlignVertical: 'center', color: '#087d83', fontSize: 20, backgroundColor: '#eaf5f4', borderRadius: 9, marginRight: 9, overflow: 'hidden' },
+  messageAttachmentDetails: { flex: 1, minWidth: 0 },
+  messageAttachmentName: { color: '#315261', fontSize: 10, lineHeight: 14, fontWeight: '800' },
+  messageAttachmentMeta: { color: '#82969d', fontSize: 8, marginTop: 4 },
+  openAttachmentButton: { paddingHorizontal: 9, paddingVertical: 7, marginLeft: 6, borderRadius: 9, backgroundColor: '#e8f4f3' },
+  openAttachmentText: { color: '#087d83', fontSize: 9, fontWeight: '900' },
+  pendingAttachment: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, backgroundColor: '#edf7f6' },
+  pendingAttachmentName: { flex: 1, color: '#315261', fontSize: 9, fontWeight: '700' },
+  removeAttachment: { color: '#9c5560', fontSize: 19, fontWeight: '700', paddingLeft: 10 },
+  messageComposerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  attachButton: { width: 35, height: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: '#eef7f6', borderWidth: 1, borderColor: '#dbeae8' },
+  attachButtonText: { color: '#087d83', fontSize: 17, fontWeight: '900' },
+  messageComposerInput: { flex: 1, minWidth: 0, height: 42, borderWidth: 1, borderColor: '#dce7e9', borderRadius: 12, paddingHorizontal: 11, color: '#234254', backgroundColor: '#fbfdfd', fontSize: 12 },
+  messageSendButton: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#087d83' },
+  messageSendDisabled: { opacity: 0.4 },
+  messageSendText: { color: '#fff', fontSize: 17, fontWeight: '900' },
+  attachmentHint: { color: '#9aabad', fontSize: 8, marginTop: 6, marginLeft: 2 },
   notice: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e9f6f1', borderRadius: 11, marginHorizontal: 16, marginTop: 8, paddingVertical: 9, paddingHorizontal: 11 },
   noticeError: { backgroundColor: '#fff0ef' },
   noticeText: { flex: 1, color: '#27765f', fontSize: 10, lineHeight: 15 },
