@@ -30,6 +30,7 @@ const NAV_ITEMS = [
   { id: 'home', label: 'Tổng quan', icon: '⌂' },
   { id: 'health', label: 'Sức khỏe', icon: '＋' },
   { id: 'care', label: 'Chăm sóc', icon: '♡' },
+  { id: 'ai', label: 'DOCTIS AI', icon: '✦' },
   { id: 'appointments', label: 'Lịch hẹn', icon: '▦' },
   { id: 'profile', label: 'Hồ sơ', icon: '○' },
 ];
@@ -137,6 +138,9 @@ export default function App() {
   const [doctors, setDoctors] = useState([]);
   const [doctor, setDoctor] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [aiMessages, setAiMessages] = useState([{ role: 'assistant', text: 'Xin chào! Mình là trợ lý kiến thức sức khỏe DOCTIS, tập trung vào đái tháo đường type 2. Bạn có thể hỏi về theo dõi đường huyết, ăn uống, vận động, thuốc và biến chứng.' }]);
+  const [aiInput, setAiInput] = useState('');
+  const [aiBusy, setAiBusy] = useState(false);
   const [messageText, setMessageText] = useState('');
   const [messageAttachment, setMessageAttachment] = useState(null);
   const [attachmentBusy, setAttachmentBusy] = useState(false);
@@ -206,6 +210,8 @@ export default function App() {
     setUser(null);
     setProfile(null);
     setTab('home');
+    setAiInput('');
+    setAiMessages([{ role: 'assistant', text: 'Xin chào! Mình là trợ lý kiến thức sức khỏe DOCTIS, tập trung vào đái tháo đường type 2. Bạn có thể hỏi về theo dõi đường huyết, ăn uống, vận động, thuốc và biến chứng.' }]);
   }, []);
 
   useEffect(() => {
@@ -350,6 +356,48 @@ export default function App() {
     finally { setMessageBusy(false); }
   };
 
+  const sendAIMessage = async () => {
+    const message = aiInput.trim();
+    if (!message || aiBusy) return;
+
+    const history = aiMessages
+      .filter((item) => !item.isError && (item.role === 'user' || item.role === 'assistant'))
+      .slice(-10)
+      .map(({ role, text }) => ({ role, content: text }));
+
+    setAiMessages((previous) => [...previous, { role: 'user', text: message }]);
+    setAiInput('');
+    setAiBusy(true);
+    try {
+      const result = await api('/ai/analyze', {
+        token,
+        method: 'POST',
+        body: {
+          message,
+          history,
+          glucose: health?.glucose ?? 0,
+          bmi: health?.bmi ?? 0,
+          bloodPressure: health?.systolic != null && health?.diastolic != null
+            ? `${health.systolic}/${health.diastolic}`
+            : '',
+          heartRate: health?.heartRate ?? 0,
+        },
+      });
+      setAiMessages((previous) => [...previous, {
+        role: 'assistant',
+        text: result?.reply || 'Mình chưa nhận được phản hồi. Bạn thử hỏi lại nhé.',
+      }]);
+    } catch (err) {
+      setAiMessages((previous) => [...previous, {
+        role: 'assistant',
+        text: err.message || 'Chưa kết nối được DOCTIS AI. Vui lòng thử lại sau.',
+        isError: true,
+      }]);
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
   const chooseMessageAttachment = async (kind) => {
     setAttachmentBusy(true);
     try {
@@ -461,6 +509,7 @@ export default function App() {
     if (tab === 'care') return <CareScreen carePlan={carePlan} prescriptions={prescriptions} />;
     if (tab === 'appointments') return <AppointmentsScreen appointments={appointments} onCancel={cancelAppointment} />;
     if (tab === 'profile') return <ProfileScreen profile={profile || user} editing={editingProfile} setEditing={setEditingProfile} setProfile={setProfile} onSave={saveProfile} busy={profileBusy} onSignOut={signOut} />;
+    if (tab === 'ai') return <AIChatScreen messages={aiMessages} value={aiInput} setValue={setAiInput} onSend={sendAIMessage} busy={aiBusy} />;
     if (tab === 'messages') return <MessagesScreen doctors={doctors} doctor={doctor} setDoctor={setDoctor} messages={messages} user={user} value={messageText} setValue={setMessageText} onSend={sendMessage} busy={messageBusy} attachment={messageAttachment} attachmentBusy={attachmentBusy} onChooseAttachment={chooseMessageAttachment} onRemoveAttachment={() => setMessageAttachment(null)} onOpenAttachment={openMessageAttachment} onComposerFocus={() => setTimeout(() => screenScrollRef.current?.scrollToEnd({ animated: true }), 300)} />;
     return <HomeScreen user={profile || user} greeting={greeting} health={health} appointments={appointments} carePlan={carePlan} onNavigate={setTab} />;
   };
@@ -562,6 +611,63 @@ function HealthScreen({ health, history, form, setForm, onSave, busy }) {
     <Card><Text style={styles.cardTitle}>Chỉ số mới nhất</Text><Text style={styles.cardSub}>{health?.createdAt ? displayDate(health.createdAt) : 'Chưa có dữ liệu'}</Text><View style={styles.metricGrid}><Metric label="GLUCOSE" value={health?.glucose ?? '—'} unit="mg/dL" /><Metric label="BMI" value={health?.bmi ?? '—'} unit="kg/m²" /><Metric label="HUYẾT ÁP" value={health?.systolic != null && health?.diastolic != null ? `${health.systolic}/${health.diastolic}` : '—'} unit="mmHg" /><Metric label="NHỊP TIM" value={health?.heartRate ?? '—'} unit="bpm" /></View>{health?.risk ? <View style={styles.riskPill}><Text style={styles.riskText}>Đánh giá hệ thống: {health.risk}</Text></View> : null}</Card>
     <Card><Text style={styles.cardTitle}>Thêm lần đo</Text><Text style={styles.cardSub}>Chiều cao và cân nặng là bắt buộc để tính BMI.</Text><View style={styles.formGrid}>{inputs.map(([key, label, keyboardType]) => <View key={key} style={styles.formGridItem}><Field label={label} value={form[key]} keyboardType={keyboardType} onChangeText={(value) => setForm((previous) => ({ ...previous, [key]: value }))} /></View>)}</View><ActionButton title="Lưu chỉ số" onPress={onSave} disabled={busy} style={styles.fullButton} /></Card>
     <Card><Text style={styles.cardTitle}>Lịch sử gần đây</Text>{asArray(history).length ? asArray(history).slice(0, 8).map((item, index) => <View key={item._id || index} style={styles.historyRow}><View style={styles.historyDot} /><View style={styles.historyContent}><Text style={styles.historyDate}>{displayDate(item.createdAt)}</Text><Text style={styles.historySummary}>Glucose {item.glucose ?? '—'} · BMI {item.bmi ?? '—'} · HA {item.systolic ?? '—'}/{item.diastolic ?? '—'}</Text></View></View>) : <EmptyState text="Các lần đo đã lưu sẽ xuất hiện tại đây." />}</Card>
+  </>;
+}
+
+function AIChatScreen({ messages, value, setValue, onSend, busy }) {
+  const chatScrollRef = useRef(null);
+
+  useEffect(() => {
+    requestAnimationFrame(() => chatScrollRef.current?.scrollToEnd({ animated: true }));
+  }, [messages, busy]);
+
+  return <>
+    <ScreenTitle eyebrow="TRỢ LÝ SỨC KHỎE" title="Trò chuyện với DOCTIS AI" subtitle="Hỏi đáp kiến thức về đái tháo đường type 2 và chăm sóc sức khỏe." />
+    <Card style={styles.aiChatCard}>
+      <View style={styles.aiChatHeader}>
+        <View style={styles.aiChatIcon}><Text style={styles.aiChatIconText}>✦</Text></View>
+        <View style={styles.aiChatHeading}>
+          <Text style={styles.aiChatTitle}>Trợ lý sức khỏe DOCTIS</Text>
+          <Text style={styles.aiChatSubtitle}>Kiến thức tham khảo về type 2</Text>
+        </View>
+        <View style={styles.aiOnline}><View style={styles.aiOnlineDot} /><Text style={styles.aiOnlineText}>AI</Text></View>
+      </View>
+      <ScrollView
+        ref={chatScrollRef}
+        style={styles.aiMessageList}
+        contentContainerStyle={styles.aiMessageContent}
+        nestedScrollEnabled
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator
+      >
+        {messages.map((item, index) => {
+          const mine = item.role === 'user';
+          return <View key={`${item.role}-${index}`} style={[styles.aiMessageRow, mine && styles.aiMessageRowMine]}>
+            <View style={[styles.aiMessageBubble, mine && styles.aiMessageBubbleMine, item.isError && styles.aiMessageBubbleError]}>
+              <Text style={[styles.aiMessageText, mine && styles.aiMessageTextMine]}>{item.text}</Text>
+            </View>
+          </View>;
+        })}
+        {busy ? <View style={styles.aiMessageRow}><View style={styles.aiThinkingBubble}><ActivityIndicator size="small" color="#087d83" /><Text style={styles.aiThinkingText}>DOCTIS AI đang trả lời…</Text></View></View> : null}
+      </ScrollView>
+      <View style={styles.aiComposer}>
+        <TextInput
+          style={styles.aiInput}
+          value={value}
+          onChangeText={setValue}
+          placeholder="Hỏi về đường huyết, ăn uống, vận động…"
+          placeholderTextColor="#91a4a8"
+          maxLength={1200}
+          multiline={false}
+          returnKeyType="send"
+          onSubmitEditing={onSend}
+        />
+        <Pressable style={[styles.aiSendButton, (busy || !value.trim()) && styles.messageSendDisabled]} onPress={onSend} disabled={busy || !value.trim()}>
+          <Text style={styles.aiSendText}>{busy ? '…' : '↑'}</Text>
+        </Pressable>
+      </View>
+      <Text style={styles.aiDisclaimer}>AI có thể tham khảo chỉ số sức khỏe gần nhất của bạn. Thông tin chỉ để tham khảo, không thay thế bác sĩ.</Text>
+    </Card>
   </>;
 }
 
@@ -798,6 +904,32 @@ const styles = StyleSheet.create({
   doctorChoiceActive: { backgroundColor: '#f0f8f7', borderColor: '#aad7d3' },
   doctorAvatar: { width: 37, height: 37, borderRadius: 14, backgroundColor: '#e6edff', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   doctorAvatarText: { color: '#5570bc', fontWeight: '900' },
+  aiChatCard: { height: 540, padding: 13, flexDirection: 'column' },
+  aiChatHeader: { flexDirection: 'row', alignItems: 'center', paddingBottom: 11, borderBottomWidth: 1, borderBottomColor: '#edf2f2' },
+  aiChatIcon: { width: 36, height: 36, borderRadius: 13, backgroundColor: '#e9f5f4', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  aiChatIconText: { color: '#087d83', fontSize: 20, fontWeight: '900' },
+  aiChatHeading: { flex: 1, minWidth: 0 },
+  aiChatTitle: { color: '#234254', fontSize: 11, fontWeight: '900' },
+  aiChatSubtitle: { color: '#879ba1', fontSize: 8, marginTop: 3 },
+  aiOnline: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 10, backgroundColor: '#eef8f4' },
+  aiOnlineDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#35a77b' },
+  aiOnlineText: { color: '#32846b', fontSize: 8, fontWeight: '900' },
+  aiMessageList: { flex: 1, minHeight: 0, marginVertical: 9 },
+  aiMessageContent: { flexGrow: 1, justifyContent: 'flex-end', paddingVertical: 3 },
+  aiMessageRow: { width: '100%', alignItems: 'flex-start', marginVertical: 4 },
+  aiMessageRowMine: { alignItems: 'flex-end' },
+  aiMessageBubble: { maxWidth: '88%', paddingHorizontal: 11, paddingVertical: 9, borderRadius: 14, borderBottomLeftRadius: 4, backgroundColor: '#eef4f5' },
+  aiMessageBubbleMine: { borderBottomLeftRadius: 14, borderBottomRightRadius: 4, backgroundColor: '#087d83' },
+  aiMessageBubbleError: { backgroundColor: '#fff0ef', borderColor: '#f2d5d3', borderWidth: 1 },
+  aiMessageText: { color: '#315261', fontSize: 10, lineHeight: 16 },
+  aiMessageTextMine: { color: '#fff' },
+  aiThinkingBubble: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 11, paddingVertical: 9, borderRadius: 14, backgroundColor: '#eef4f5' },
+  aiThinkingText: { color: '#708991', fontSize: 9 },
+  aiComposer: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 9, borderTopWidth: 1, borderTopColor: '#edf2f2' },
+  aiInput: { flex: 1, height: 42, borderWidth: 1, borderColor: '#dce7e9', borderRadius: 13, paddingHorizontal: 11, color: '#234254', backgroundColor: '#fbfdfd', fontSize: 10 },
+  aiSendButton: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: '#087d83' },
+  aiSendText: { color: '#fff', fontSize: 21, lineHeight: 24, fontWeight: '900' },
+  aiDisclaimer: { color: '#98a8ad', fontSize: 7, lineHeight: 11, textAlign: 'center', marginTop: 7 },
   messageHistoryCard: { height: 440, padding: 13, flexDirection: 'column' },
   messageList: { flex: 1, minHeight: 0, marginTop: 9, marginBottom: 10 },
   messageListContent: { flexGrow: 1, justifyContent: 'flex-end', paddingBottom: 2 },
