@@ -57,6 +57,25 @@ const authConfig = () => {
 };
 
 const safeArray = (value) => (Array.isArray(value) ? value : []);
+const emptyCarePlanDays = (days = []) => {
+  const existing = safeArray(days);
+  const count = Math.max(7, existing.length);
+  return Array.from({ length: count }, (_, dayIndex) => {
+    const day = existing.find((item) => Number(item.dayIndex) === dayIndex);
+    return {
+      dayIndex,
+      label: day?.label || `Ngày ${dayIndex + 1}`,
+      status: day?.status || "draft",
+      items: safeArray(day?.items).map((item) => ({
+        id: item.id || `care-${dayIndex}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        type: item.type || "NOTE",
+        time: item.time || "07:00",
+        title: item.title || "",
+        description: item.description || ""
+      }))
+    };
+  });
+};
 
 const riskClass = (risk = "") => {
   const value = String(risk).toLowerCase();
@@ -142,7 +161,7 @@ export default function DoctorDashboard() {
   // Care plan
   const [carePlan, setCarePlan] = useState(null);
   const [carePlanEditorOpen, setCarePlanEditorOpen] = useState(false);
-  const [carePlanDaysJson, setCarePlanDaysJson] = useState("[]");
+  const [carePlanDays, setCarePlanDays] = useState(() => emptyCarePlanDays());
   const [carePlanNote, setCarePlanNote] = useState("");
   const [carePlanSaving, setCarePlanSaving] = useState(false);
 
@@ -194,6 +213,7 @@ export default function DoctorDashboard() {
     setSelectedPatient(patient);
     setPatientLoading(true);
     setCarePlan(null);
+    setCarePlanDays(emptyCarePlanDays());
     setPrescriptions([]);
     setCarePlanEditorOpen(false);
 
@@ -224,12 +244,7 @@ export default function DoctorDashboard() {
         setPrescriptions(safeArray(prescriptionRes.value.data));
       }
       const plan = careRes.status === "fulfilled" ? careRes.value.data : null;
-      setCarePlanDaysJson(JSON.stringify(plan?.days || Array.from({ length: 7 }, (_, dayIndex) => ({
-        dayIndex,
-        label: `Ngày ${dayIndex + 1}`,
-        status: "draft",
-        items: [],
-      })), null, 2));
+      setCarePlanDays(emptyCarePlanDays(plan?.days));
       setCarePlanNote(plan?.doctorNote || "");
     } catch (err) {
       console.error("OPEN PATIENT ERROR =", err);
@@ -247,12 +262,19 @@ export default function DoctorDashboard() {
 
   const saveCarePlan = async (status) => {
     if (!selectedPatient?._id) return;
-    let days;
-    try {
-      days = JSON.parse(carePlanDaysJson);
-      if (!Array.isArray(days)) throw new Error("Danh sách ngày phải là một mảng JSON.");
-    } catch (err) {
-      alert(`JSON kế hoạch không hợp lệ: ${err.message}`);
+    const days = carePlanDays.map((day) => ({
+      ...day,
+      items: safeArray(day.items).map((item) => ({
+        ...item,
+        id: String(item.id || `care-${day.dayIndex}-${Date.now()}`),
+        time: String(item.time || "").trim(),
+        title: String(item.title || "").trim(),
+        description: String(item.description || "").trim()
+      }))
+    }));
+    const hasIncompleteActivity = days.some((day) => day.items.some((item) => !item.time || !item.title));
+    if (hasIncompleteActivity) {
+      alert("Mỗi hoạt động cần có giờ và tên hoạt động trước khi lưu.");
       return;
     }
 
@@ -265,6 +287,7 @@ export default function DoctorDashboard() {
         doctorNote: carePlanNote,
       }, authConfig());
       setCarePlan(res.data);
+      setCarePlanDays(emptyCarePlanDays(res.data?.days));
       setCarePlanEditorOpen(false);
       alert(status === "confirmed" ? "Đã chốt kế hoạch cho bệnh nhân." : "Đã lưu bản nháp kế hoạch.");
     } catch (err) {
@@ -272,6 +295,29 @@ export default function DoctorDashboard() {
     } finally {
       setCarePlanSaving(false);
     }
+  };
+
+  const addCarePlanActivity = (dayIndex, type = "MEAL") => {
+    const id = `care-${dayIndex}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    setCarePlanDays((current) => current.map((day) => day.dayIndex === dayIndex
+      ? { ...day, items: [...day.items, { id, type, time: "07:00", title: type === "MEDICATION" ? "Thuốc theo đơn" : "Hoạt động mới", description: "" }] }
+      : day));
+  };
+
+  const updateCarePlanActivity = (dayIndex, itemId, field, value) => {
+    setCarePlanDays((current) => current.map((day) => day.dayIndex === dayIndex
+      ? { ...day, items: day.items.map((item) => item.id === itemId ? { ...item, [field]: value } : item) }
+      : day));
+  };
+
+  const removeCarePlanActivity = (dayIndex, itemId) => {
+    setCarePlanDays((current) => current.map((day) => day.dayIndex === dayIndex
+      ? { ...day, items: day.items.filter((item) => item.id !== itemId) }
+      : day));
+  };
+
+  const jumpToPrescriptionEditor = () => {
+    document.getElementById("doctor-prescription-editor")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const sendAdvice = async (patientId) => {
@@ -1824,78 +1870,121 @@ export default function DoctorDashboard() {
                     <div>
                       <span className="section-kicker">05 · CARE PLAN</span>
                       <h3>Kế hoạch chăm sóc & ăn uống</h3>
+                      <p className="care-plan-caption">Lịch trình đã lưu của bệnh nhân theo ngày và từng hoạt động.</p>
                     </div>
-                    {carePlan?.status && (
-                      <span className={`plan-status ${carePlan.status}`}>
-                        {carePlan.status === "confirmed" ? "Đã chốt" : carePlan.status}
-                      </span>
-                    )}
+                    <div className="care-plan-heading-actions">
+                      {carePlan?.status && (
+                        <span className={`plan-status ${carePlan.status}`}>
+                          {carePlan.status === "confirmed" ? "Đã chốt" : carePlan.status === "draft" ? "Bản nháp" : carePlan.status}
+                        </span>
+                      )}
+                      <button type="button" className="soft-btn" onClick={jumpToPrescriptionEditor}>
+                        <FaPrescriptionBottleAlt /> Thêm đơn thuốc
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="care-plan-editor-actions">
+                  {carePlan?.doctorNote && !carePlanEditorOpen && (
+                    <div className="doctor-note">
+                      <strong>Ghi chú bác sĩ</strong>
+                      <p>{carePlan.doctorNote}</p>
+                    </div>
+                  )}
+
+                  <div className="care-plan-toolbar">
+                    <div className="care-plan-summary">
+                      <FaClipboardList />
+                      <span>{carePlanDays.reduce((total, day) => total + day.items.length, 0)} hoạt động · {carePlanDays.length} ngày</span>
+                    </div>
                     <button type="button" className="soft-btn" onClick={() => setCarePlanEditorOpen((open) => !open)}>
-                      {carePlanEditorOpen ? "Đóng trình sửa" : carePlan ? "Sửa kế hoạch" : "Tạo kế hoạch"}
+                      {carePlanEditorOpen ? "Hủy chỉnh sửa" : carePlan ? "Chỉnh sửa kế hoạch" : "Tạo kế hoạch"}
                     </button>
                   </div>
+
+                  {!carePlan && !carePlanEditorOpen && (
+                    <div className="empty-inline"><FaClipboardList /> Chưa có kế hoạch đã lưu. Bảng bên dưới đang sẵn sàng để tạo lịch theo dõi.</div>
+                  )}
+
+                  <div className="care-plan-table-wrap">
+                    <table className="care-plan-table">
+                      <thead>
+                        <tr>
+                          <th>Ngày</th>
+                          <th>Giờ</th>
+                          <th>Loại</th>
+                          <th>Hoạt động</th>
+                          <th>Ghi chú</th>
+                          <th>{carePlanEditorOpen ? "Thao tác" : "Tình trạng"}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {carePlanDays.flatMap((day) => day.items.length
+                          ? day.items.map((item, itemIndex) => (
+                            <tr key={item.id}>
+                              {itemIndex === 0 && (
+                                <th className="care-plan-day-cell" scope="rowgroup" rowSpan={day.items.length}>
+                                  <span>NGÀY {day.dayIndex + 1}</span>
+                                  <strong>{day.label}</strong>
+                                </th>
+                              )}
+                              <td>
+                                {carePlanEditorOpen
+                                  ? <input aria-label="Giờ hoạt động" type="time" value={item.time} onChange={(event) => updateCarePlanActivity(day.dayIndex, item.id, "time", event.target.value)} />
+                                  : <span className="care-plan-time">{item.time}</span>}
+                              </td>
+                              <td>
+                                {carePlanEditorOpen
+                                  ? <select aria-label="Loại hoạt động" value={item.type} onChange={(event) => updateCarePlanActivity(day.dayIndex, item.id, "type", event.target.value)}>
+                                      <option value="MEAL">Bữa ăn</option><option value="EXERCISE">Vận động</option><option value="MEDICATION">Thuốc</option><option value="NOTE">Ghi chú</option>
+                                    </select>
+                                  : <span className={`care-plan-type ${item.type?.toLowerCase()}`}>{item.type === "MEAL" ? "Bữa ăn" : item.type === "EXERCISE" ? "Vận động" : item.type === "MEDICATION" ? "Thuốc" : "Ghi chú"}</span>}
+                              </td>
+                              <td>
+                                {carePlanEditorOpen
+                                  ? <input aria-label="Tên hoạt động" value={item.title} onChange={(event) => updateCarePlanActivity(day.dayIndex, item.id, "title", event.target.value)} placeholder="Tên hoạt động" />
+                                  : <strong className="care-plan-activity-title">{item.title}</strong>}
+                              </td>
+                              <td>
+                                {carePlanEditorOpen
+                                  ? <input aria-label="Mô tả hoạt động" value={item.description} onChange={(event) => updateCarePlanActivity(day.dayIndex, item.id, "description", event.target.value)} placeholder="Ghi chú thêm (không bắt buộc)" />
+                                  : <span className="care-plan-description">{item.description || "—"}</span>}
+                              </td>
+                              <td>
+                                {carePlanEditorOpen
+                                  ? <button type="button" className="care-plan-remove" aria-label="Xóa hoạt động" onClick={() => removeCarePlanActivity(day.dayIndex, item.id)}><FaTrash /></button>
+                                  : <span className="care-plan-row-status">Đã lên lịch</span>}
+                              </td>
+                            </tr>
+                          ))
+                          : (
+                            <tr key={`empty-day-${day.dayIndex}`} className="care-plan-empty-row">
+                              <th className="care-plan-day-cell" scope="row"><span>NGÀY {day.dayIndex + 1}</span><strong>{day.label}</strong></th>
+                              <td colSpan="4">Chưa có hoạt động trong ngày này</td>
+                              <td>{carePlanEditorOpen && <button type="button" className="care-plan-add" onClick={() => addCarePlanActivity(day.dayIndex)}>+ Thêm hoạt động</button>}</td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
                   {carePlanEditorOpen && (
-                    <div className="care-plan-editor">
-                      <label htmlFor="care-plan-days-json">Các ngày và hoạt động (JSON theo cấu trúc ngày/kế hoạch)</label>
-                      <small>Mỗi hoạt động cần có id, type, time, title; description có thể để trống. Ví dụ: {`{"id":"breakfast-1","type":"MEAL","time":"07:00","title":"Ăn sáng","description":"Theo hướng dẫn"}`}</small>
-                      <textarea id="care-plan-days-json" rows={14} value={carePlanDaysJson} onChange={(event) => setCarePlanDaysJson(event.target.value)} spellCheck="false" />
+                    <div className="care-plan-edit-footer">
+                      <div className="care-plan-add-actions">
+                        {carePlanDays.map((day) => <button type="button" key={day.dayIndex} className="care-plan-add" onClick={() => addCarePlanActivity(day.dayIndex)}>+ {day.label}</button>)}
+                      </div>
                       <label htmlFor="care-plan-doctor-note">Ghi chú bác sĩ</label>
-                      <textarea id="care-plan-doctor-note" rows={3} value={carePlanNote} onChange={(event) => setCarePlanNote(event.target.value)} />
-                      <div className="care-plan-editor-actions">
+                      <textarea id="care-plan-doctor-note" rows={3} value={carePlanNote} onChange={(event) => setCarePlanNote(event.target.value)} placeholder="Trao đổi hoặc lưu ý theo dõi cho bệnh nhân..." />
+                      <div className="care-plan-save-actions">
                         <button type="button" className="soft-btn" disabled={carePlanSaving} onClick={() => saveCarePlan("draft")}>{carePlanSaving ? "Đang lưu..." : "Lưu nháp"}</button>
                         <button type="button" className="view-btn" disabled={carePlanSaving} onClick={() => saveCarePlan("confirmed")}>{carePlanSaving ? "Đang lưu..." : "Chốt cho bệnh nhân"}</button>
                       </div>
                     </div>
                   )}
-
-                  {!carePlan ? (
-                    <div className="empty-inline">
-                      <FaClipboardList />
-                      Chưa có kế hoạch chăm sóc của bác sĩ.
-                    </div>
-                  ) : (
-                    <>
-                      {carePlan.doctorNote && (
-                        <div className="doctor-note">
-                          <strong>Ghi chú của bác sĩ</strong>
-                          <p>{carePlan.doctorNote}</p>
-                        </div>
-                      )}
-
-                      <div className="care-week">
-                        {safeArray(carePlan.days).map((day) => (
-                          <div className="care-day" key={`${day.dayIndex}-${day.label}`}>
-                            <div className="care-day-head">
-                              <span>Ngày {day.dayIndex + 1}</span>
-                              <strong>{day.label}</strong>
-                            </div>
-
-                            {safeArray(day.items).length === 0 ? (
-                              <div className="care-empty">Không có lịch</div>
-                            ) : (
-                              day.items.map((item) => (
-                                <div className="care-item" key={item.id || `${day.dayIndex}-${item.time}-${item.title}`}>
-                                  <span className="care-time">{item.time}</span>
-                                  <div>
-                                    <strong>{item.title}</strong>
-                                    {item.description && <p>{item.description}</p>}
-                                    <small>{item.type || "NOTE"}</small>
-                                  </div>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
                 </section>
 
                 {/* Prescriptions */}
-                <section className="drawer-section">
+                <section className="drawer-section" id="doctor-prescription-editor">
                   <div className="section-heading">
                     <div>
                       <span className="section-kicker">06 · MEDICATION</span>

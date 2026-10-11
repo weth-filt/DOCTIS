@@ -1370,3 +1370,91 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   .patient-drawer .care-plan-editor { padding: 12px !important; }
   .patient-drawer .care-plan-editor > .care-plan-editor-actions button { flex: 1 1 100% !important; }
 }
+
+/* Editable care plan: show the stored week as a real schedule table. */
+.patient-drawer .care-plan-caption { margin: 5px 0 0 !important; color: #789098 !important; font-size: 11px !important; line-height: 1.5 !important; }
+.patient-drawer .care-plan-heading-actions,
+.patient-drawer .care-plan-toolbar,
+.patient-drawer .care-plan-save-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 9px !important;
+}
+.patient-drawer .care-plan-heading-actions { justify-content: flex-end !important; }
+.patient-drawer .care-plan-heading-actions .soft-btn { white-space: nowrap; }
+.patient-drawer .care-plan-toolbar { margin: 12px 0 10px !important; }
+.patient-drawer .care-plan-summary { display: inline-flex; align-items: center; gap: 8px; color: #6b858e; font-size: 11px; font-weight: 700; }
+.patient-drawer .care-plan-summary svg { color: #188d91; }
+.patient-drawer .care-plan-table-wrap { width: 100%; overflow-x: auto; border: 1px solid #dce8ea; border-radius: 12px; background: #fff; }
+.patient-drawer .care-plan-table { width: 100%; min-width: 890px; border-collapse: separate !important; border-spacing: 0 !important; table-layout: auto; }
+.patient-drawer .care-plan-table thead th {
+  padding: 11px 12px !important;
+  border-bottom: 1px solid #dce8ea !important;
+  color: #627e88 !important;
+  background: #f3f8f8 !important;
+  text-align: left !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: .045em !important;
+  white-space: nowrap;
+}
+.patient-drawer .care-plan-table tbody td,
+.patient-drawer .care-plan-table tbody th {
+  padding: 10px 12px !important;
+  border-bottom: 1px solid #edf2f3 !important;
+  color: #4e6b75 !important;
+  background: #fff !important;
+  vertical-align: middle !important;
+  text-align: left !important;
+  font-size: 11px !important;
+}
+.patient-drawer .care-plan-table tbody tr:last-child td,
+.patient-drawer .care-plan-table tbody tr:last-child th { border-bottom: 0 !important; }
+.patient-drawer .care-plan-table tbody tr:hover td { background: #fbfdfd !important; }
+.patient-drawer .care-plan-table .care-plan-day-cell {
+  min-width: 105px;
+  border-right: 1px solid #e7eeee !important;
+  background: linear-gradient(150deg,#f3f9f8,#f8fbfb) !important;
+}
+.patient-drawer .care-plan-day-cell span { display: block; margin-bottom: 4px; color: #168c91; font-size: 9px; font-weight: 800; letter-spacing: .1em; }
+.patient-drawer .care-plan-day-cell strong { color: #315663 !important; font-size: 11px !important; }
+.patient-drawer .care-plan-time { color: #1a7f87; font-variant-numeric: tabular-nums; font-weight: 800; white-space: nowrap; }
+.patient-drawer .care-plan-activity-title { color: #294e5c !important; font-size: 11px !important; }
+.patient-drawer .care-plan-description { display: inline-block; max-width: 260px; color: #748a92; line-height: 1.5; overflow-wrap: anywhere; }
+.patient-drawer .care-plan-type,
+.patient-drawer .care-plan-row-status { display: inline-flex; align-items: center; padding: 5px 8px; border-radius: 999px; color: #357d79; background: #edf8f5; font-size: 9px; font-weight: 800; white-space: nowrap; }
+.patient-drawer .care-plan-type.exercise { color: #566bb2; background: #f0f2ff; }
+.patient-drawer .care-plan-type.medication { color: #a26828; background: #fff5e8; }
+.patient-drawer .care-plan-type.note { color: #71838c; background: #f1f5f6; }
+.patient-drawer .care-plan-empty-row td { color: #94a5aa !important; font-style: italic; }
+.patient-drawer .care-plan-table input,
+.patient-drawer .care-plan-table select {
+  width: 100% !important;
+  min-width: 82px !important;
+  min-height: 36px !important;
+  box-sizing: border-box !important;
+  padding: 7px 8px !important;
+  border: 1px solid #d8e4e6 !important;
+  border-radius: 8px !important;
+  color: #345764 !important;
+  background: #fff !important;
+  font: 11px "Be Vietnam Pro","Segoe UI",sans-serif !important;
+}
+.patient-drawer .care-plan-table input:focus,
+.patient-drawer .care-plan-table select:focus { outline: none !important; border-color: #49a4a6 !important; box-shadow: 0 0 0 2px rgba(42,158,156,.11) !important; }
+.patient-drawer .care-plan-remove { width: 32px; height: 32px; display: grid; place-items: center; color: #bd5860; border: 1px solid #f1dfe0; border-radius: 8px; background: #fffafa; cursor: pointer; }
+.patient-drawer .care-plan-remove:hover { color: #fff; border-color: #bd5860; background: #bd5860; }
+.patient-drawer .care-plan-add { min-height: 32px; padding: 0 9px; color: #157d85; border: 1px solid #d3e8e7; border-radius: 8px; background: #f6fbfa; cursor: pointer; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.patient-drawer .care-plan-add:hover { color: #fff; border-color: #168c91; background: #168c91; }
+.patient-drawer .care-plan-edit-footer { display: grid; gap: 9px; margin-top: 13px; padding: 14px; border: 1px solid #deeaeb; border-radius: 12px; background: #f8fbfb; }
+.patient-drawer .care-plan-add-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.patient-drawer .care-plan-edit-footer > label { color: #375b67; font-size: 11px; font-weight: 800; }
+.patient-drawer .care-plan-edit-footer > textarea { width: 100% !important; min-height: 76px; box-sizing: border-box !important; padding: 10px 12px !important; border: 1px solid #d8e4e6 !important; border-radius: 9px !important; color: #31525e !important; background: white !important; font: 12px/1.55 "Be Vietnam Pro","Segoe UI",sans-serif !important; resize: vertical; }
+.patient-drawer #doctor-prescription-editor { scroll-margin-top: 20px; }
+@media (max-width: 620px) {
+  .patient-drawer .care-plan-heading-actions { width: 100%; justify-content: space-between !important; }
+  .patient-drawer .care-plan-toolbar { align-items: flex-start !important; }
+  .patient-drawer .care-plan-save-actions > button { flex: 1 1 100%; }
+}
