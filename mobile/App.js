@@ -30,7 +30,6 @@ const NAV_ITEMS = [
   { id: 'home', label: 'Tổng quan', icon: '⌂' },
   { id: 'health', label: 'Sức khỏe', icon: '＋' },
   { id: 'care', label: 'Chăm sóc', icon: '♡' },
-  { id: 'ai', label: 'DOCTIS AI', icon: '✦' },
   { id: 'appointments', label: 'Lịch hẹn', icon: '▦' },
   { id: 'profile', label: 'Hồ sơ', icon: '○' },
 ];
@@ -141,6 +140,7 @@ export default function App() {
   const [aiMessages, setAiMessages] = useState([{ role: 'assistant', text: 'Xin chào! Mình là trợ lý kiến thức sức khỏe DOCTIS, tập trung vào đái tháo đường type 2. Bạn có thể hỏi về theo dõi đường huyết, ăn uống, vận động, thuốc và biến chứng.' }]);
   const [aiInput, setAiInput] = useState('');
   const [aiBusy, setAiBusy] = useState(false);
+  const [aiNudgeVisible, setAiNudgeVisible] = useState(true);
   const [messageText, setMessageText] = useState('');
   const [messageAttachment, setMessageAttachment] = useState(null);
   const [attachmentBusy, setAttachmentBusy] = useState(false);
@@ -211,6 +211,7 @@ export default function App() {
     setProfile(null);
     setTab('home');
     setAiInput('');
+    setAiNudgeVisible(true);
     setAiMessages([{ role: 'assistant', text: 'Xin chào! Mình là trợ lý kiến thức sức khỏe DOCTIS, tập trung vào đái tháo đường type 2. Bạn có thể hỏi về theo dõi đường huyết, ăn uống, vận động, thuốc và biến chứng.' }]);
   }, []);
 
@@ -509,7 +510,7 @@ export default function App() {
     if (tab === 'care') return <CareScreen carePlan={carePlan} prescriptions={prescriptions} />;
     if (tab === 'appointments') return <AppointmentsScreen appointments={appointments} onCancel={cancelAppointment} />;
     if (tab === 'profile') return <ProfileScreen profile={profile || user} editing={editingProfile} setEditing={setEditingProfile} setProfile={setProfile} onSave={saveProfile} busy={profileBusy} onSignOut={signOut} />;
-    if (tab === 'ai') return <AIChatScreen messages={aiMessages} value={aiInput} setValue={setAiInput} onSend={sendAIMessage} busy={aiBusy} />;
+    if (tab === 'ai') return <AIChatScreen messages={aiMessages} value={aiInput} setValue={setAiInput} onSend={sendAIMessage} busy={aiBusy} onBack={() => setTab('home')} />;
     if (tab === 'messages') return <MessagesScreen doctors={doctors} doctor={doctor} setDoctor={setDoctor} messages={messages} user={user} value={messageText} setValue={setMessageText} onSend={sendMessage} busy={messageBusy} attachment={messageAttachment} attachmentBusy={attachmentBusy} onChooseAttachment={chooseMessageAttachment} onRemoveAttachment={() => setMessageAttachment(null)} onOpenAttachment={openMessageAttachment} onComposerFocus={() => setTimeout(() => screenScrollRef.current?.scrollToEnd({ animated: true }), 300)} />;
     return <HomeScreen user={profile || user} greeting={greeting} health={health} appointments={appointments} carePlan={carePlan} onNavigate={setTab} />;
   };
@@ -544,6 +545,27 @@ export default function App() {
         ))}
       </View>}
       </KeyboardAvoidingView>
+      {token && patientMode && tab !== 'ai' && !keyboardVisible && (
+        <View pointerEvents="box-none" style={styles.aiFloatingLayer}>
+          {aiNudgeVisible && (
+            <View style={styles.aiWelcomeCard}>
+              <Text style={styles.aiWelcomeRobot}>🤖</Text>
+              <Text style={styles.aiWelcomeText}>Bạn có cần DOCTIS AI hỗ trợ gì không?</Text>
+              <Pressable style={styles.aiWelcomeClose} onPress={() => setAiNudgeVisible(false)} accessibilityRole="button" accessibilityLabel="Đóng lời mời DOCTIS AI">
+                <Text style={styles.aiWelcomeCloseText}>×</Text>
+              </Pressable>
+            </View>
+          )}
+          <Pressable
+            style={styles.aiFloatingButton}
+            onPress={() => { setAiNudgeVisible(false); setTab('ai'); }}
+            accessibilityRole="button"
+            accessibilityLabel="Mở trò chuyện với DOCTIS AI"
+          >
+            <Text style={styles.aiFloatingIcon}>🤖</Text>
+          </Pressable>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -614,7 +636,7 @@ function HealthScreen({ health, history, form, setForm, onSave, busy }) {
   </>;
 }
 
-function AIChatScreen({ messages, value, setValue, onSend, busy }) {
+function AIChatScreen({ messages, value, setValue, onSend, busy, onBack }) {
   const chatScrollRef = useRef(null);
 
   useEffect(() => {
@@ -622,6 +644,9 @@ function AIChatScreen({ messages, value, setValue, onSend, busy }) {
   }, [messages, busy]);
 
   return <>
+    <Pressable style={styles.aiBackButton} onPress={onBack} accessibilityRole="button">
+      <Text style={styles.aiBackText}>‹  Quay lại</Text>
+    </Pressable>
     <ScreenTitle eyebrow="TRỢ LÝ SỨC KHỎE" title="Trò chuyện với DOCTIS AI" subtitle="Hỏi đáp kiến thức về đái tháo đường type 2 và chăm sóc sức khỏe." />
     <Card style={styles.aiChatCard}>
       <View style={styles.aiChatHeader}>
@@ -971,6 +996,16 @@ const styles = StyleSheet.create({
   tabIconSelected: { color: '#087d83' },
   tabLabel: { color: '#85999e', fontSize: 8, fontWeight: '700', marginTop: 3 },
   tabLabelSelected: { color: '#087d83', fontWeight: '900' },
+  aiFloatingLayer: { position: 'absolute', right: 15, bottom: 82, alignItems: 'flex-end', zIndex: 30, elevation: 20 },
+  aiWelcomeCard: { width: 258, minHeight: 62, flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingLeft: 11, paddingRight: 34, marginBottom: 10, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#dfeaec', shadowColor: '#15394b', shadowOpacity: 0.16, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 7 },
+  aiWelcomeRobot: { fontSize: 26, marginRight: 9 },
+  aiWelcomeText: { flex: 1, color: '#234254', fontSize: 10, lineHeight: 15, fontWeight: '800' },
+  aiWelcomeClose: { position: 'absolute', right: 7, top: 6, width: 23, height: 23, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: '#f0f5f5' },
+  aiWelcomeCloseText: { color: '#6f858c', fontSize: 17, lineHeight: 20, fontWeight: '700' },
+  aiFloatingButton: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: '#087d83', borderWidth: 2, borderColor: '#fff', shadowColor: '#087d83', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 8 },
+  aiFloatingIcon: { fontSize: 26 },
+  aiBackButton: { alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 3, marginBottom: 8 },
+  aiBackText: { color: '#087d83', fontSize: 11, fontWeight: '900' },
   loadingScreen: { alignItems: 'center', justifyContent: 'center' },
   loadingLabel: { color: '#708991', fontSize: 12, marginTop: 12 },
 });
