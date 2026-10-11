@@ -144,7 +144,6 @@ export default function DoctorDashboard() {
   const [messageAttachment, setMessageAttachment] = useState(null);
   const [messageLoading, setMessageLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
-  const messageEndRef = useRef(null);
   const messageAreaRef = useRef(null);
   const messageAttachmentInputRef = useRef(null);
   const messageStickToBottomRef = useRef(true);
@@ -467,7 +466,15 @@ export default function DoctorDashboard() {
 
   const scrollMessagesToBottom = useCallback((behavior = "smooth") => {
     requestAnimationFrame(() => {
-      messageEndRef.current?.scrollIntoView({ behavior, block: "end" });
+      const messageArea = messageAreaRef.current;
+      if (!messageArea) return;
+
+      // Scroll only the message pane. scrollIntoView also moves the page itself,
+      // which makes the doctor's outer page jump while a conversation updates.
+      messageArea.scrollTo({
+        top: messageArea.scrollHeight,
+        behavior,
+      });
     });
   }, []);
 
@@ -1431,8 +1438,6 @@ export default function DoctorDashboard() {
                         );
                       })
                     )}
-
-                    <div ref={messageEndRef} aria-hidden="true" />
                   </div>
 
                   {messageAttachment && (
