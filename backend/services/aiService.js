@@ -3,6 +3,17 @@ const ollama = require("ollama");
 const DEFAULT_GEMINI_MODEL = "gemini-3.6-flash";
 const MAX_MESSAGE_LENGTH = 1200;
 const MAX_HISTORY_MESSAGES = 10;
+const MAX_OUTPUT_TOKENS = 1500;
+const REQUEST_TIMEOUT_MS = 20000;
+
+const RESPONSE_STYLE_INSTRUCTION = `
+HƯỚNG DẪN TRẢ LỜI:
+- Trả lời trực tiếp câu hỏi trước. Nếu người dùng hỏi nhiều ý, trả lời lần lượt từng ý; không bỏ sót.
+- Giải thích bằng tiếng Việt phổ thông, câu ngắn, từ dễ hiểu. Với câu hỏi cần hướng dẫn, nêu các bước cụ thể và dấu hiệu cần đi khám khi phù hợp.
+- Không tự lặp lại câu hỏi, không kéo dài bằng cảnh báo chung chung, không kết thúc giữa câu hoặc bỏ dở ý.
+- Chỉ dùng văn bản thuần: không dùng dấu sao để in đậm/in nghiêng, không dùng tiêu đề Markdown, dấu backtick hay bảng. Nếu cần liệt kê, mỗi ý bắt đầu bằng ký tự •.
+- Câu hỏi đơn giản nên trả lời gọn; câu hỏi nhiều phần cần giải thích đủ từng phần. Nếu thiếu thông tin ảnh hưởng đến lời khuyên, nói rõ điều cần biết và hỏi lại ngắn gọn.
+`;
 
 const SYSTEM_PROMPT = `
 Bạn là DOCTIS, trợ lý giáo dục sức khỏe tập trung vào đái tháo đường type 2 và các vấn đề sức khỏe liên quan.
@@ -100,6 +111,22 @@ function makeCurrentPrompt(input) {
   return `${formatPatientContext(input)}\n\nCâu hỏi hiện tại của người dùng:\n${input.message}`;
 }
 
+function normalizeAIReply(value) {
+  return String(value || "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/```[^\n]*\n?([\s\S]*?)```/g, "$1")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/\*\*([\s\S]+?)\*\*/g, "$1")
+    .replace(/__([\s\S]+?)__/g, "$1")
+    .replace(/(^|[^*])\*([^*\n]+)\*(?=$|[^*])/g, "$1$2")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^\s*[-*]\s+/gm, "• ")
+    .replace(/(^|\s)\*+(?=\s|$)/gm, "$1")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 async function callGemini({ apiKey, model, history, prompt }) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     model
@@ -121,14 +148,14 @@ async function callGemini({ apiKey, model, history, prompt }) {
         "x-goog-api-key": apiKey,
       },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        systemInstruction: { parts: [{ text: `${SYSTEM_PROMPT}\n\n${RESPONSE_STYLE_INSTRUCTION}` }] },
         contents,
         generationConfig: {
           temperature: 0.35,
-          maxOutputTokens: 900,
+          maxOutputTokens: MAX_OUTPUT_TOKENS,
         },
       }),
-      signal: AbortSignal.timeout(8500),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
   } catch (error) {
     if (error.name === "TimeoutError" || error.name === "AbortError") {
@@ -178,7 +205,7 @@ async function callGemini({ apiKey, model, history, prompt }) {
     );
   }
 
-  return reply;
+  return normalizeAIReply(reply);
 }
 
 async function callLocalOllama({ history, prompt }) {
@@ -194,7 +221,7 @@ async function callLocalOllama({ history, prompt }) {
     });
     const reply = response?.message?.content?.trim();
     if (!reply) throw new Error("Empty local model response");
-    return reply;
+    return normalizeAIReply(reply);
   } catch (error) {
     console.error("Local Ollama unavailable:", error.message);
     throw new AIServiceError(

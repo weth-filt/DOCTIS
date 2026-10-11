@@ -360,13 +360,14 @@ export default function App() {
   const sendAIMessage = async () => {
     const message = aiInput.trim();
     if (!message || aiBusy) return;
+    const requestId = `${Date.now()}-${Math.random()}`;
 
     const history = aiMessages
       .filter((item) => !item.isError && (item.role === 'user' || item.role === 'assistant'))
       .slice(-10)
       .map(({ role, text }) => ({ role, content: text }));
 
-    setAiMessages((previous) => [...previous, { role: 'user', text: message }]);
+    setAiMessages((previous) => [...previous, { role: 'user', text: message, requestId }]);
     setAiInput('');
     setAiBusy(true);
     try {
@@ -389,6 +390,8 @@ export default function App() {
         text: result?.reply || 'Mình chưa nhận được phản hồi. Bạn thử hỏi lại nhé.',
       }]);
     } catch (err) {
+      setAiMessages((previous) => previous.filter((item) => item.requestId !== requestId));
+      setAiInput((previous) => previous || message);
       setAiMessages((previous) => [...previous, {
         role: 'assistant',
         text: err.message || 'Chưa kết nối được DOCTIS AI. Vui lòng thử lại sau.',
@@ -667,7 +670,7 @@ function AIChatScreen({ messages, value, setValue, onSend, busy, onBack }) {
       >
         {messages.map((item, index) => {
           const mine = item.role === 'user';
-          return <View key={`${item.role}-${index}`} style={[styles.aiMessageRow, mine && styles.aiMessageRowMine]}>
+          return <View key={item.requestId || `${item.role}-${index}`} style={[styles.aiMessageRow, mine && styles.aiMessageRowMine]}>
             <View style={[styles.aiMessageBubble, mine && styles.aiMessageBubbleMine, item.isError && styles.aiMessageBubbleError]}>
               <Text style={[styles.aiMessageText, mine && styles.aiMessageTextMine]}>{item.text}</Text>
             </View>
