@@ -28,4 +28,10 @@ router.get(
   controller.getMyConfirmedCarePlan
 );
 
+router.post(
+  "/my",
+  auth,
+  controller.saveMyGeneratedCarePlan
+);
+
 module.exports = router;

@@ -24,7 +24,7 @@ const careDaySchema = new mongoose.Schema(
 const carePlanSchema = new mongoose.Schema(
   {
     patientId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null, index: true },
     source: { type: String, enum: ["AI", "DOCTOR"], default: "DOCTOR" },
     status: { type: String, enum: ["draft", "confirmed", "cancelled"], default: "draft", index: true },
     days: { type: [careDaySchema], default: [] },

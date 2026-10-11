@@ -45,9 +45,12 @@ exports.getDoctorPatientCarePlan = async (req, res) => {
     const plan = await CarePlan.findOne({
       patientId,
       doctorId: req.user.id,
+      source: "DOCTOR",
     })
       .sort({ updatedAt: -1 })
-      .lean();
+      .lean() || await CarePlan.findOne({ patientId, source: "AI" })
+        .sort({ updatedAt: -1 })
+        .lean();
 
     if (!plan) {
       return res.status(404).json({
@@ -133,6 +136,7 @@ exports.saveDoctorCarePlan = async (req, res) => {
         {
           patientId,
           doctorId: req.user.id,
+          source: "DOCTOR",
         },
         {
           patientId,
@@ -165,6 +169,47 @@ exports.saveDoctorCarePlan = async (req, res) => {
         err.message ||
         "Không thể lưu kế hoạch chăm sóc.",
     });
+  }
+};
+
+// ======================================================
+// POST /care-plans/my — patient saves their generated plan
+// It remains a draft until a doctor reviews and confirms it.
+// ======================================================
+exports.saveMyGeneratedCarePlan = async (req, res) => {
+  try {
+    if (req.user?.role !== "user") {
+      return res.status(403).json({ msg: "Chỉ bệnh nhân mới lưu kế hoạch cá nhân." });
+    }
+
+    const days = req.body?.days;
+    if (!Array.isArray(days) || days.length === 0) {
+      return res.status(400).json({ msg: "Kế hoạch cần có danh sách ngày." });
+    }
+
+    const patient = await User.findById(req.user.id).select("_id doctorId role").lean();
+    if (!patient || patient.role !== "user") {
+      return res.status(404).json({ msg: "Không tìm thấy hồ sơ bệnh nhân." });
+    }
+
+    const plan = await CarePlan.findOneAndUpdate(
+      { patientId: patient._id, source: "AI" },
+      {
+        patientId: patient._id,
+        doctorId: patient.doctorId || null,
+        source: "AI",
+        status: "draft",
+        days,
+        doctorNote: "",
+        confirmedAt: null,
+      },
+      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
+    );
+
+    return res.status(201).json(plan);
+  } catch (err) {
+    console.error("SAVE PATIENT GENERATED CARE PLAN ERROR =", err);
+    return res.status(500).json({ msg: err.message || "Không thể lưu kế hoạch cá nhân." });
   }
 };
 

@@ -1871,11 +1871,12 @@ export default function DoctorDashboard() {
                       <span className="section-kicker">05 · CARE PLAN</span>
                       <h3>Kế hoạch chăm sóc & ăn uống</h3>
                       <p className="care-plan-caption">Lịch trình đã lưu của bệnh nhân theo ngày và từng hoạt động.</p>
+                      {carePlan?.source === "AI" && <p className="care-plan-review-note">Bệnh nhân đã tạo kế hoạch này. Hãy rà soát và điều chỉnh trước khi chốt.</p>}
                     </div>
                     <div className="care-plan-heading-actions">
                       {carePlan?.status && (
                         <span className={`plan-status ${carePlan.status}`}>
-                          {carePlan.status === "confirmed" ? "Đã chốt" : carePlan.status === "draft" ? "Bản nháp" : carePlan.status}
+                          {carePlan.source === "AI" ? "Chờ bác sĩ rà soát" : carePlan.status === "confirmed" ? "Đã chốt" : carePlan.status === "draft" ? "Bản nháp" : carePlan.status}
                         </span>
                       )}
                       <button type="button" className="soft-btn" onClick={jumpToPrescriptionEditor}>

@@ -1373,6 +1373,7 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
 
 /* Editable care plan: show the stored week as a real schedule table. */
 .patient-drawer .care-plan-caption { margin: 5px 0 0 !important; color: #789098 !important; font-size: 11px !important; line-height: 1.5 !important; }
+.patient-drawer .care-plan-review-note { margin: 7px 0 0 !important; color: #8a672b !important; font-size: 11px !important; font-weight: 700 !important; line-height: 1.5 !important; }
 .patient-drawer .care-plan-heading-actions,
 .patient-drawer .care-plan-toolbar,
 .patient-drawer .care-plan-save-actions {

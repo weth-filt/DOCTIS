@@ -827,12 +827,49 @@ export default function Dashboard() {
     }
 
     setNutritionLoading(true);
-    window.setTimeout(() => {
+    window.setTimeout(async () => {
       const plan = generateNutritionPlan({ latest, profile });
+      const week = buildCareWeek(plan, prescriptions);
       setNutritionPlan(plan);
-      setCareWeek(buildCareWeek(plan, prescriptions));
+      setCareWeek(week);
       setActiveDay(0);
-      setNutritionLoading(false);
+      const days = week.map((day, dayIndex) => ({
+        dayIndex,
+        label: day.label || `Ngày ${dayIndex + 1}`,
+        status: "draft",
+        items: [
+          ...(day.meals || []).filter((item) => item.text).map((item) => ({
+            id: item.id,
+            type: "MEAL",
+            time: item.time,
+            title: item.label,
+            description: item.text,
+          })),
+          ...(day.exercise ? [{
+            id: day.exercise.id,
+            type: "EXERCISE",
+            time: day.exercise.time || "16:30",
+            title: day.exercise.title || "Vận động nhẹ",
+            description: day.exercise.duration || "",
+          }] : []),
+          ...(day.medications || []).map((item) => ({
+            id: item.id,
+            type: "MEDICATION",
+            time: item.time || "08:00",
+            title: item.title,
+            description: item.description || "",
+          })),
+        ],
+      }));
+
+      try {
+        await API.post("/care-plans/my", { days });
+      } catch (error) {
+        console.error("SAVE GENERATED CARE PLAN ERROR =", error);
+        alert("Kế hoạch đã tạo trên màn hình nhưng chưa đồng bộ được với bác sĩ. Hãy kiểm tra kết nối rồi tạo lại kế hoạch.");
+      } finally {
+        setNutritionLoading(false);
+      }
     }, 900);
   };
 
