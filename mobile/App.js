@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import * as SecureStore from 'expo-secure-store';
 import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import {
@@ -352,26 +353,33 @@ export default function App() {
   const chooseMessageAttachment = async (kind) => {
     setAttachmentBusy(true);
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: kind === 'image' ? ['image/*'] : '*/*',
-        copyToCacheDirectory: true,
-        multiple: false,
-      });
+      const result = kind === 'image'
+        ? await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: false,
+            quality: 0.9,
+          })
+        : await DocumentPicker.getDocumentAsync({
+            type: '*/*',
+            copyToCacheDirectory: true,
+            multiple: false,
+          });
       if (result.canceled || !result.assets?.[0]) return;
       const asset = result.assets[0];
-      if (asset.size > 8 * 1024 * 1024) {
+      const selectedSize = asset.size || asset.fileSize || 0;
+      if (selectedSize > 8 * 1024 * 1024) {
         Alert.alert('Tệp quá lớn', 'Vui lòng chọn tệp nhỏ hơn 8 MB.');
         return;
       }
       const type = asset.mimeType || (kind === 'image' ? 'image/jpeg' : 'application/octet-stream');
       const base64 = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.Base64 });
-      const size = asset.size || Math.floor(base64.length * 0.75);
+      const size = selectedSize || Math.floor(base64.length * 0.75);
       if (size > 8 * 1024 * 1024) {
         Alert.alert('Tệp quá lớn', 'Vui lòng chọn tệp nhỏ hơn 8 MB.');
         return;
       }
       setMessageAttachment({
-        name: asset.name || (kind === 'image' ? 'anh-dinh-kem.jpg' : 'tep-dinh-kem'),
+        name: asset.name || asset.fileName || (kind === 'image' ? 'anh-dinh-kem.jpg' : 'tep-dinh-kem'),
         type,
         size,
         dataUrl: `data:${type};base64,${base64}`,

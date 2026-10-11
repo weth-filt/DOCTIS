@@ -22,7 +22,13 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "DOCTIS cần truy cập thư viện ảnh để bạn gửi hình ảnh cho bác sĩ."
+        }
+      ]
     ]
   }
 }
