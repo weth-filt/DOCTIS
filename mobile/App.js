@@ -415,7 +415,7 @@ export default function App() {
     }
   };
 
-  const greeting = useMemo(() => fullName(profile || user).split(' ')[0], [profile, user]);
+  const greeting = useMemo(() => fullName(profile || user), [profile, user]);
 
   if (booting) return <LoadingScreen />;
   if (!token || !user) {
@@ -522,9 +522,9 @@ function HomeScreen({ user, greeting, health, appointments, carePlan, onNavigate
   return <>
     <View style={styles.homeHero}>
       <Text style={styles.heroEyebrow}>THEO DÕI SỨC KHỎE CÙNG DOCTIS</Text>
-      <Text style={styles.homeTitle}>Xin chào, {greeting}</Text>
+      <Text style={styles.homeTitle} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.72}>Xin chào, {greeting}</Text>
       <Text style={styles.homeDescription}>Ghi lại chỉ số và theo dõi kế hoạch chăm sóc của bạn mỗi ngày.</Text>
-      <View style={styles.heroStats}><Metric label="ĐƯỜNG HUYẾT" value={health?.glucose == null ? '—' : `${health.glucose}`} unit="mg/dL" /><View style={styles.statDivider} /><Metric label="BMI GẦN NHẤT" value={health?.bmi == null ? '—' : `${health.bmi}`} unit="kg/m²" /></View>
+      <View style={styles.heroStats}><Metric light label="HUYẾT ÁP GẦN NHẤT" value={health?.systolic != null && health?.diastolic != null ? `${health.systolic}/${health.diastolic}` : '—'} unit="mmHg" /><View style={styles.statDivider} /><Metric light label="BMI GẦN NHẤT" value={health?.bmi == null ? '—' : `${health.bmi}`} unit="kg/m²" /></View>
     </View>
     <View style={styles.sectionHeading}><View><Text style={styles.sectionTitle}>Truy cập nhanh</Text><Text style={styles.sectionSubtitle}>Các tiện ích trong tài khoản của bạn</Text></View></View>
     <View style={styles.quickGrid}>
@@ -539,8 +539,8 @@ function HomeScreen({ user, greeting, health, appointments, carePlan, onNavigate
   </>;
 }
 
-function Metric({ label, value, unit }) {
-  return <View style={styles.metric}><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}<Text style={styles.metricUnit}>{unit ? ` ${unit}` : ''}</Text></Text></View>;
+function Metric({ label, value, unit, light = false }) {
+  return <View style={styles.metric}><Text style={[styles.metricLabel, light && styles.metricLabelLight]}>{label}</Text><Text style={[styles.metricValue, light && styles.metricValueLight]}>{value}<Text style={[styles.metricUnit, light && styles.metricUnitLight]}>{unit ? ` ${unit}` : ''}</Text></Text></View>;
 }
 
 function QuickCard({ icon, title, detail, tint, onPress }) {
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
   avatarText: { color: '#087d83', fontWeight: '900' },
   homeHero: { backgroundColor: '#103b4b', borderRadius: 24, padding: 21, overflow: 'hidden' },
   heroEyebrow: { color: '#7fe0da', fontSize: 9, letterSpacing: 0.9, fontWeight: '900' },
-  homeTitle: { color: '#fff', fontSize: 24, lineHeight: 30, fontWeight: '900', marginTop: 11 },
+  homeTitle: { color: '#fff', fontSize: 24, lineHeight: 30, fontWeight: '900', marginTop: 11, flexShrink: 1 },
   homeDescription: { color: '#c4dadd', fontSize: 12, lineHeight: 18, marginTop: 7 },
   heroStats: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.09)', borderRadius: 14, padding: 12, marginTop: 19 },
   statDivider: { width: 1, height: 33, backgroundColor: 'rgba(255,255,255,0.2)', marginHorizontal: 14 },
@@ -725,8 +725,11 @@ const styles = StyleSheet.create({
   metricGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 10, marginTop: 15 },
   metric: { flex: 1, minWidth: 105 },
   metricLabel: { color: '#a0afb3', fontSize: 8, letterSpacing: 0.7, fontWeight: '900' },
+  metricLabelLight: { color: '#c2e8e8' },
   metricValue: { color: '#18394c', fontSize: 17, fontWeight: '900', marginTop: 4 },
+  metricValueLight: { color: '#fff' },
   metricUnit: { color: '#8a9da3', fontSize: 8, fontWeight: '600' },
+  metricUnitLight: { color: '#dcf4f3' },
   disclaimer: { color: '#9aa9ad', fontSize: 9, lineHeight: 14, textAlign: 'center', paddingHorizontal: 8, paddingTop: 6 },
   screenTitleWrap: { marginBottom: 17 },
   screenEyebrow: { color: '#168b8b', fontSize: 9, fontWeight: '900', letterSpacing: 1.05 },
