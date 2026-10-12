@@ -1,16 +1,24 @@
 # DOCTIS Mobile
 
-Expo React Native patient app. It uses the existing DOCTIS API and MongoDB data; database credentials stay on the backend.
+Ứng dụng bệnh nhân DOCTIS viết bằng Expo / React Native. Ứng dụng dùng API hiện có; thông tin đăng nhập và dữ liệu vẫn do backend quản lý.
 
-## Start on iPhone
+## Dùng thử với Expo Go
 
-1. Install Expo Go from the iOS App Store.
-2. From this directory, run `npm install` once and then `npm start`.
-3. Keep the iPhone and computer on the same Wi-Fi network.
-4. Scan the terminal QR code with the iPhone Camera and open it in Expo Go.
+1. Cài Expo Go trên iPhone.
+2. Trong thư mục này, chạy `npm install`, sau đó `npm start`.
+3. Kết nối iPhone và máy tính cùng Wi-Fi, quét mã QR trong terminal bằng Camera iPhone rồi mở bằng Expo Go.
 
-## API
+Mã QR Expo Go chỉ dành cho phát triển và máy chủ cần đang chạy trên máy tính.
 
-The app defaults to `https://doctis.vercel.app/api`. To point it at another API, copy `.env.example` to `.env`, edit `EXPO_PUBLIC_API_URL`, and restart Expo.
+## Xuất bản web/PWA lên Vercel
 
-The app stores the JWT in iOS Keychain through Expo SecureStore. It does not store MongoDB credentials in the mobile client.
+Bản web được build thành thư mục tĩnh `dist` bằng `npm run build:web`. Để triển khai thành một dự án Vercel riêng:
+
+1. Import repository hiện có vào Vercel và đặt **Root Directory** là `mobile`.
+2. Đặt **Build Command** là `npm run build:web` và **Output Directory** là `dist`.
+3. Deploy. Vercel cấp URL HTTPS công khai; mã QR dùng URL này để người dùng mở DOCTIS và đăng nhập.
+4. Trên iPhone, mở URL bằng Safari → Chia sẻ → Thêm vào Màn hình chính để có biểu tượng và chế độ hiển thị như app.
+
+Ứng dụng gọi API mặc định tại `https://doctis.vercel.app/api`. Nếu deploy API ở địa chỉ khác, đặt biến `EXPO_PUBLIC_API_URL` trong Vercel trước khi build. Nếu API đang giới hạn CORS bằng `ALLOWED_ORIGINS`, thêm chính xác domain production của app mobile vào biến này ở dự án backend rồi redeploy backend.
+
+Bản PWA chạy qua trình duyệt và có thể ghim vào màn hình chính; để phân phối ứng dụng iOS native cài đặt trực tiếp, cần build và phân phối qua Apple TestFlight/App Store.
