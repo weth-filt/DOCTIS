@@ -1230,7 +1230,7 @@ const styles = StyleSheet.create({
   tabIconSelected: { color: '#087d83' },
   tabLabel: { color: '#85999e', fontSize: 8, fontWeight: '700', marginTop: 3 },
   tabLabelSelected: { color: '#087d83', fontWeight: '900' },
-  aiFloatingLayer: { position: 'absolute', right: 15, bottom: 92, alignItems: 'flex-end', zIndex: 30, elevation: 20 },
+  aiFloatingLayer: { position: 'absolute', right: 15, bottom: 120, alignItems: 'flex-end', zIndex: 30, elevation: 20 },
   aiWelcomeCard: { width: 258, minHeight: 62, flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingLeft: 11, paddingRight: 34, marginBottom: 10, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#dfeaec', shadowColor: '#15394b', shadowOpacity: 0.16, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 7 },
   aiWelcomeRobot: { fontSize: 26, marginRight: 9 },
   aiWelcomeText: { flex: 1, color: '#234254', fontSize: 10, lineHeight: 15, fontWeight: '800' },
