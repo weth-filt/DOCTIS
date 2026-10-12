@@ -620,7 +620,7 @@ export default function App() {
       <ScrollView
         key={tab}
         ref={screenScrollRef}
-        style={styles.flex}
+        style={[styles.flex, styles.screenScroll]}
         contentContainerStyle={styles.page}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor="#087d83" />}
         keyboardShouldPersistTaps="handled"
@@ -637,7 +637,7 @@ export default function App() {
         ))}
       </View>}
       </KeyboardAvoidingView>
-      {token && patientMode && tab !== 'ai' && !keyboardVisible && (
+      {token && patientMode && (tab === 'home' || tab === 'profile') && !keyboardVisible && (
         <View pointerEvents="box-none" style={styles.aiFloatingLayer}>
           {aiNudgeVisible && (
             <View style={styles.aiWelcomeCard}>
@@ -974,6 +974,7 @@ function EmptyState({ text }) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#f3f7f8' },
   flex: { flex: 1 },
+  screenScroll: { minHeight: 0, maxHeight: '100%' },
   page: { paddingHorizontal: 18, paddingTop: 17, paddingBottom: 25 },
   authPage: { paddingHorizontal: 22, paddingTop: 22, paddingBottom: 32, maxWidth: 580, width: '100%', alignSelf: 'center', flexGrow: 1 },
   brandHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 22 },
@@ -1221,7 +1222,7 @@ const styles = StyleSheet.create({
   noticeText: { flex: 1, color: '#27765f', fontSize: 10, lineHeight: 15 },
   noticeErrorText: { color: '#ad504c' },
   noticeClose: { color: '#83999d', fontSize: 18, paddingLeft: 8 },
-  tabBar: { flexDirection: 'row', backgroundColor: '#fff', borderTopColor: '#e3ebed', borderTopWidth: 1, paddingTop: 7, paddingBottom: Platform.OS === 'ios' ? 5 : 8, paddingHorizontal: 5 },
+  tabBar: { flexDirection: 'row', flexShrink: 0, backgroundColor: '#fff', borderTopColor: '#e3ebed', borderTopWidth: 1, paddingTop: 7, paddingBottom: Platform.OS === 'web' ? 'max(12px, env(safe-area-inset-bottom))' : Platform.OS === 'ios' ? 5 : 8, paddingHorizontal: 5 },
   tabItem: { flex: 1, alignItems: 'center', justifyContent: 'center', minWidth: 0 },
   tabIconWrap: { width: 30, height: 27, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   tabIconActive: { backgroundColor: '#e5f4f2' },
@@ -1229,7 +1230,7 @@ const styles = StyleSheet.create({
   tabIconSelected: { color: '#087d83' },
   tabLabel: { color: '#85999e', fontSize: 8, fontWeight: '700', marginTop: 3 },
   tabLabelSelected: { color: '#087d83', fontWeight: '900' },
-  aiFloatingLayer: { position: 'absolute', right: 15, bottom: 82, alignItems: 'flex-end', zIndex: 30, elevation: 20 },
+  aiFloatingLayer: { position: 'absolute', right: 15, bottom: 92, alignItems: 'flex-end', zIndex: 30, elevation: 20 },
   aiWelcomeCard: { width: 258, minHeight: 62, flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingLeft: 11, paddingRight: 34, marginBottom: 10, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#dfeaec', shadowColor: '#15394b', shadowOpacity: 0.16, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 7 },
   aiWelcomeRobot: { fontSize: 26, marginRight: 9 },
   aiWelcomeText: { flex: 1, color: '#234254', fontSize: 10, lineHeight: 15, fontWeight: '800' },
