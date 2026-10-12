@@ -26,6 +26,28 @@ import {
 const API_BASE = (process.env.EXPO_PUBLIC_API_URL || 'https://doctis.vercel.app/api').replace(/\/$/, '');
 const TOKEN_KEY = 'doctis.session.token';
 const USER_KEY = 'doctis.session.user';
+// expo-secure-store has no web implementation. Use browser storage for the PWA
+// while keeping iOS/Android credentials in the native secure store.
+const sessionStore = {
+  getItemAsync: async (key) => Platform.OS === 'web'
+    ? (typeof window !== 'undefined' ? window.localStorage.getItem(key) : null)
+    : SecureStore.getItemAsync(key),
+  setItemAsync: async (key, value) => {
+    if (Platform.OS === 'web') {
+      if (typeof window === 'undefined') return;
+      window.localStorage.setItem(key, value);
+      return;
+    }
+    await SecureStore.setItemAsync(key, value);
+  },
+  deleteItemAsync: async (key) => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') window.localStorage.removeItem(key);
+      return;
+    }
+    await SecureStore.deleteItemAsync(key);
+  },
+};
 const NAV_ITEMS = [
   { id: 'home', label: 'Tổng quan', icon: '⌂' },
   { id: 'health', label: 'Sức khỏe', icon: '＋' },
@@ -189,7 +211,7 @@ export default function App() {
     if (profileResult.status === 'fulfilled') {
       setProfile(profileResult.value);
       setUser((previous) => ({ ...previous, ...profileResult.value }));
-      await SecureStore.setItemAsync(USER_KEY, JSON.stringify(profileResult.value));
+      await sessionStore.setItemAsync(USER_KEY, JSON.stringify(profileResult.value));
     } else {
       setError(profileResult.reason?.message || 'Không tải được hồ sơ.');
     }
@@ -215,7 +237,7 @@ export default function App() {
       setCareActiveDay(0);
       return () => { active = false; };
     }
-    SecureStore.getItemAsync(`doctis.care.done.${planId}`)
+    sessionStore.getItemAsync(`doctis.care.done.${planId}`)
       .then((value) => {
         if (!active) return;
         const saved = value ? JSON.parse(value) : [];
@@ -234,7 +256,7 @@ export default function App() {
       const next = previous.includes(activityKey)
         ? previous.filter((key) => key !== activityKey)
         : [...previous, activityKey];
-      SecureStore.setItemAsync(`doctis.care.done.${planId}`, JSON.stringify(next)).catch(() => {});
+      sessionStore.setItemAsync(`doctis.care.done.${planId}`, JSON.stringify(next)).catch(() => {});
       return next;
     });
   };
@@ -271,8 +293,8 @@ export default function App() {
   };
 
   const signOut = useCallback(async () => {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
-    await SecureStore.deleteItemAsync(USER_KEY);
+    await sessionStore.deleteItemAsync(TOKEN_KEY);
+    await sessionStore.deleteItemAsync(USER_KEY);
     setToken('');
     setUser(null);
     setProfile(null);
@@ -286,8 +308,8 @@ export default function App() {
     let active = true;
     (async () => {
       try {
-        const savedToken = await SecureStore.getItemAsync(TOKEN_KEY);
-        const savedUser = await SecureStore.getItemAsync(USER_KEY);
+        const savedToken = await sessionStore.getItemAsync(TOKEN_KEY);
+        const savedUser = await sessionStore.getItemAsync(USER_KEY);
         if (savedToken && savedUser && active) {
           setToken(savedToken);
           setUser(JSON.parse(savedUser));
@@ -348,8 +370,8 @@ export default function App() {
         setNotice('Tạo tài khoản thành công. Đăng nhập để bắt đầu sử dụng DOCTIS.');
       } else {
         const result = await api('/auth/login', { method: 'POST', body: { email, password: authForm.password } });
-        await SecureStore.setItemAsync(TOKEN_KEY, result.token);
-        await SecureStore.setItemAsync(USER_KEY, JSON.stringify(result.user));
+        await sessionStore.setItemAsync(TOKEN_KEY, result.token);
+        await sessionStore.setItemAsync(USER_KEY, JSON.stringify(result.user));
         setToken(result.token);
         setUser(result.user);
         setProfile(result.user);
@@ -392,7 +414,7 @@ export default function App() {
       const saved = result.profile || profile;
       setProfile(saved);
       setUser((previous) => ({ ...previous, ...saved }));
-      await SecureStore.setItemAsync(USER_KEY, JSON.stringify(saved));
+      await sessionStore.setItemAsync(USER_KEY, JSON.stringify(saved));
       setEditingProfile(false);
       setNotice('Đã cập nhật hồ sơ.');
     } catch (err) { setError(err.message); }
