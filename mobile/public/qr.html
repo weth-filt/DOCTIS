@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#087f83" />
+    <meta name="description" content="Quét mã QR để mở DOCTIS Mobile." />
+    <title>Chia sẻ DOCTIS Mobile</title>
+    <style>
+      :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color: #153b4b; background: #eef5f5; }
+      * { box-sizing: border-box; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; }
+      main { width: min(100%, 560px); padding: 36px; border: 1px solid #dce8eb; border-radius: 28px; background: #fff; box-shadow: 0 22px 60px #153b4b14; text-align: center; }
+      .brand { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 28px; font-size: 22px; font-weight: 850; letter-spacing: .03em; }
+      .heart { display: grid; width: 46px; height: 46px; place-items: center; border-radius: 15px; background: #087f83; color: white; font-size: 25px; }
+      h1 { margin: 0; font-size: clamp(26px, 6vw, 34px); }
+      p { margin: 12px 0 22px; color: #63808b; line-height: 1.6; }
+      .qr { display: block; width: min(100%, 330px); height: auto; margin: 0 auto 18px; border: 10px solid white; border-radius: 18px; }
+      .url { overflow-wrap: anywhere; margin: 0 auto 24px; color: #087f83; font-weight: 700; }
+      .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      a, button { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; padding: 12px 16px; border: 0; border-radius: 13px; background: #eef5f5; color: #087f83; font: inherit; font-weight: 750; text-decoration: none; cursor: pointer; }
+      a.primary { grid-column: 1 / -1; background: #087f83; color: white; }
+      button:hover, a:hover { filter: brightness(.97); }
+      #status { min-height: 24px; margin: 14px 0 0; font-size: 14px; }
+      @media (max-width: 460px) { body { padding: 14px; } main { padding: 26px 18px; border-radius: 22px; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand"><span class="heart" aria-hidden="true">♥</span><span>DOCTIS</span></div>
+      <h1>Chia sẻ ứng dụng DOCTIS</h1>
+      <p>Dùng camera điện thoại quét mã để mở app. Bạn cũng có thể gửi link này cho người khác.</p>
+      <img class="qr" src="/doctis-mobile-qr.png" alt="Mã QR mở ứng dụng DOCTIS Mobile" />
+      <div class="url">https://doctis-mobile.vercel.app</div>
+      <div class="actions">
+        <a class="primary" href="/">Mở DOCTIS</a>
+        <button id="share" type="button">Chia sẻ link</button>
+        <a href="/doctis-mobile-qr.png" download="doctis-mobile-qr.png">Tải mã QR</a>
+      </div>
+      <p id="status" role="status" aria-live="polite"></p>
+    </main>
+    <script>
+      const shareButton = document.getElementById('share');
+      const status = document.getElementById('status');
+      shareButton.addEventListener('click', async () => {
+        const url = 'https://doctis-mobile.vercel.app';
+        try {
+          if (navigator.share) await navigator.share({ title: 'DOCTIS Mobile', text: 'Mở ứng dụng DOCTIS', url });
+          else { await navigator.clipboard.writeText(url); status.textContent = 'Đã sao chép link DOCTIS.'; }
+        } catch (error) {
+          if (error.name !== 'AbortError') status.textContent = 'Không chia sẻ được. Hãy sao chép link ở phía trên.';
+        }
+      });
+    </script>
+  </body>
+</html>

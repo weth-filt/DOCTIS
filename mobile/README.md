@@ -19,6 +19,8 @@ Bản web được build thành thư mục tĩnh `dist` bằng `npm run build:we
 3. Deploy. Vercel cấp URL HTTPS công khai; mã QR dùng URL này để người dùng mở DOCTIS và đăng nhập.
 4. Trên iPhone, mở URL bằng Safari → Chia sẻ → Thêm vào Màn hình chính để có biểu tượng và chế độ hiển thị như app.
 
+Trang chia sẻ công khai có mã QR, nút mở app, tải QR và chia sẻ link tại `https://doctis-mobile.vercel.app/qr`.
+
 Ứng dụng gọi API mặc định tại `https://doctis.vercel.app/api`. Nếu deploy API ở địa chỉ khác, đặt biến `EXPO_PUBLIC_API_URL` trong Vercel trước khi build. Nếu API đang giới hạn CORS bằng `ALLOWED_ORIGINS`, thêm chính xác domain production của app mobile vào biến này ở dự án backend rồi redeploy backend.
 
 Bản PWA chạy qua trình duyệt và có thể ghim vào màn hình chính; để phân phối ứng dụng iOS native cài đặt trực tiếp, cần build và phân phối qua Apple TestFlight/App Store.
