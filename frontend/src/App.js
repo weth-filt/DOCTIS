@@ -32,6 +32,7 @@ import AdminRoute from "./components/AdminRoute";
    GLOBAL STYLES
    ========================================================= */
 
+import "./CSS/doctis-system.css";
 import "./CSS/index.css";
 import "./CSS/auth.css";
 import "./CSS/dashboard.css";

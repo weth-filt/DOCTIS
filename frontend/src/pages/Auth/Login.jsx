@@ -1,256 +1,222 @@
 import { useState } from "react";
-
 import { useNavigate } from "react-router-dom";
-
 import { motion } from "framer-motion";
-
 import {
   FaHeartbeat,
   FaLock,
   FaEnvelope,
+  FaExclamationCircle,
+  FaArrowRight,
+  FaSignInAlt,
 } from "react-icons/fa";
 
 import API from "../../services/api";
+import Auth3DVisual from "../../components/Auth3DVisual";
 
 export default function Login() {
-  const [email, setEmail] =
-    useState("");
-
-  const [password, setPassword] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const nav = useNavigate();
 
   const login = async () => {
     if (loading) return;
+    setErrorMessage("");
 
-    const emailValue =
-      email.trim().toLowerCase();
+    const emailValue = email.trim().toLowerCase();
 
     if (!emailValue || !password) {
-      alert(
-        "Vui lòng nhập email và mật khẩu."
-      );
+      const msg = "Vui lòng nhập đầy đủ email và mật khẩu.";
+      setErrorMessage(msg);
+      alert(msg);
       return;
     }
 
     try {
       setLoading(true);
 
-      const res = await API.post(
-        "/auth/login",
-        {
-          email: emailValue,
-          password,
-        }
-      );
+      const res = await API.post("/auth/login", {
+        email: emailValue,
+        password,
+      });
 
-      console.log(
-        "LOGIN RESPONSE =",
-        res.data
-      );
+      console.log("LOGIN RESPONSE =", res.data);
 
-      const token =
-        res.data?.token;
-
-      const role =
-        res.data?.role;
+      const token = res.data?.token;
+      const role = res.data?.role;
 
       if (!token) {
-        alert(
-          "Đăng nhập thất bại: server không trả về token."
-        );
+        const failMsg = "Đăng nhập thất bại: server không trả về token.";
+        setErrorMessage(failMsg);
+        alert(failMsg);
         return;
       }
 
       const userData = {
-        id:
-          res.data?.id ||
-          res.data?._id ||
-          "",
-
-        _id:
-          res.data?._id ||
-          res.data?.id ||
-          "",
-
-        username:
-          res.data?.username ||
-          "",
-
-        fullName:
-          res.data?.fullName ||
-          "",
-
-        email:
-          res.data?.email ||
-          emailValue,
-
-        role:
-          role || "user",
-
-        // Lưu luôn token trong user
-        // để tương thích code cũ
+        id: res.data?.id || res.data?._id || "",
+        _id: res.data?._id || res.data?.id || "",
+        username: res.data?.username || "",
+        fullName: res.data?.fullName || "",
+        email: res.data?.email || emailValue,
+        role: role || "user",
         token,
       };
 
-      // ================================
-      // LƯU TOKEN
-      // ================================
+      // Lưu token và user data
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(userData));
 
-      localStorage.setItem(
-        "token",
-        token
-      );
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(userData)
-      );
-
-      console.log(
-        "USER SAVED =",
-        userData
-      );
+      console.log("USER SAVED =", userData);
 
       if (role === "admin") {
-        nav("/admin", {
-          replace: true,
-        });
-      } else if (
-        role === "doctor"
-      ) {
-        nav("/doctor", {
-          replace: true,
-        });
+        nav("/admin", { replace: true });
+      } else if (role === "doctor") {
+        nav("/doctor", { replace: true });
       } else {
-        nav("/dashboard", {
-          replace: true,
-        });
+        nav("/dashboard", { replace: true });
       }
     } catch (err) {
-      console.error(
-        "LOGIN ERROR =",
-        err
-      );
-
-      alert(
+      console.error("LOGIN ERROR =", err);
+      const errText =
         err.response?.data?.msg ||
-          err.response?.data?.message ||
-          "Đăng nhập thất bại."
-      );
+        err.response?.data?.message ||
+        "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.";
+      setErrorMessage(errText);
+      alert(errText);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="circle"></div>
-      <div className="circle"></div>
-      <div className="circle"></div>
+    <div className="doctis-auth-page">
+      {/* Vùng thương hiệu & 3D Visual bên trái */}
+      <section className="doctis-auth-brand-panel" aria-label="Giới thiệu DOCTIS">
+        <header className="auth-brand-top">
+          <div className="auth-logo-badge">
+            <div className="auth-logo-icon-box">
+              <FaHeartbeat />
+            </div>
+            <div>
+              <div className="auth-logo-text">DOCTIS</div>
+              <div className="auth-logo-tagline">Nền tảng Y tế Thông minh</div>
+            </div>
+          </div>
+        </header>
 
-      <motion.div
-        className="auth-card"
-        initial={{
-          opacity: 0,
-          y: 50,
-        }}
-        animate={{
-          opacity: 1,
-          y: 0,
-        }}
-        transition={{
-          duration: 0.7,
-        }}
-      >
-        <div className="logo">
-          <FaHeartbeat className="logo-icon" />
+        <Auth3DVisual />
 
-          <h2>
-            DOCTIS
-          </h2>
-        </div>
+        <footer className="auth-brand-footer">
+          <small style={{ color: "rgba(255, 255, 255, 0.7)", fontSize: "13px" }}>
+            © {new Date().getFullYear()} DOCTIS Healthcare. Đồng hành cùng sức khỏe của bạn.
+          </small>
+        </footer>
+      </section>
 
-        <div className="input-group">
-          <FaEnvelope className="input-icon" />
+      {/* Vùng thao tác đăng nhập bên phải */}
+      <main className="doctis-auth-form-panel">
+        <motion.div
+          className="auth-form-card"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+        >
+          <header className="auth-header">
+            <h1>Đăng nhập</h1>
+            <p>Truy cập bảng điều khiển sức khỏe cá nhân của bạn</p>
+          </header>
 
-          <input
-            className="input"
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) =>
-              setEmail(
-                e.target.value
-              )
-            }
-            onKeyDown={(e) => {
-              if (
-                e.key === "Enter"
-              ) {
-                login();
-              }
+          {errorMessage && (
+            <div className="doc-alert doc-alert-danger" role="alert">
+              <FaExclamationCircle className="doc-alert-icon" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              login();
             }}
-          />
-        </div>
+            noValidate
+          >
+            <div className="doc-field">
+              <label className="doc-label" htmlFor="login-email">
+                Địa chỉ Email
+              </label>
+              <div className="doc-input-wrapper">
+                <FaEnvelope className="doc-input-icon" aria-hidden="true" />
+                <input
+                  id="login-email"
+                  className="doc-input doc-input-with-icon"
+                  type="email"
+                  placeholder="name@example.com"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            </div>
 
-        <div className="input-group">
-          <FaLock className="input-icon" />
+            <div className="doc-field">
+              <label className="doc-label" htmlFor="login-password">
+                <span>Mật khẩu</span>
+                <button
+                  type="button"
+                  className="auth-link"
+                  style={{ fontSize: "13px" }}
+                  onClick={() => nav("/forgot")}
+                >
+                  Quên mật khẩu?
+                </button>
+              </label>
+              <div className="doc-input-wrapper">
+                <FaLock className="doc-input-icon" aria-hidden="true" />
+                <input
+                  id="login-password"
+                  type="password"
+                  className="doc-input doc-input-with-icon"
+                  placeholder="Nhập mật khẩu"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            </div>
 
-          <input
-            type="password"
-            className="input"
-            placeholder="Password"
-            value={password}
-            onChange={(e) =>
-              setPassword(
-                e.target.value
-              )
-            }
-            onKeyDown={(e) => {
-              if (
-                e.key === "Enter"
-              ) {
-                login();
-              }
-            }}
-          />
-        </div>
+            <button
+              type="submit"
+              className="doc-btn doc-btn-primary auth-submit-btn"
+              disabled={loading}
+            >
+              {loading ? (
+                "Đang đăng nhập..."
+              ) : (
+                <>
+                  <FaSignInAlt /> Đăng nhập
+                </>
+              )}
+            </button>
+          </form>
 
-        <button
-          className="btn"
-          onClick={login}
-          disabled={loading}
-        >
-          {loading
-            ? "Đang đăng nhập..."
-            : "Login"}
-        </button>
-
-        <div
-          className="link"
-          onClick={() =>
-            nav("/register")
-          }
-        >
-          Chưa có tài khoản?
-          {" "}
-          Đăng ký
-        </div>
-
-        <div
-          className="link"
-          onClick={() =>
-            nav("/forgot")
-          }
-        >
-          Quên mật khẩu?
-        </div>
-      </motion.div>
+          <footer className="auth-footer-links">
+            <p className="auth-link">
+              Chưa có tài khoản?{" "}
+              <button
+                type="button"
+                className="auth-link"
+                onClick={() => nav("/register")}
+              >
+                <strong>Đăng ký ngay <FaArrowRight style={{ fontSize: "11px", marginLeft: "2px" }} /></strong>
+              </button>
+            </p>
+          </footer>
+        </motion.div>
+      </main>
     </div>
   );
 }
