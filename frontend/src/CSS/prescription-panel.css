@@ -1,0 +1,38 @@
+/* The week track must scroll inside its grid cell, never size the whole page.
+   Grid's default auto minimum otherwise propagates the seven-column track. */
+.dashboard-layout.health-studio-layout.doctis-v5 .care-plan-page {
+  box-sizing: border-box;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  max-width: 100%;
+}
+.dashboard-layout.health-studio-layout.doctis-v5 .care-plan-page > *,
+.care-gallery-shell { min-width: 0; max-width: 100%; }
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-panel-v6 { min-width: 0; }
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-panel-header { flex-wrap: wrap; }
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-panel-header > div { flex: 1 1 240px; min-width: 0; }
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-empty-v6 {
+  width: 100%; min-width: 0; box-sizing: border-box; justify-content: center;
+  padding: 24px 18px; text-align: left; color: var(--care-muted);
+  background: var(--care-soft); border-color: var(--care-line);
+}
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-empty-v6 > span { flex: 0 0 auto; }
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-empty-v6 > div { flex: 0 1 540px; min-width: 0; }
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-panel-v6 :is(p, strong, span, li, .prescription-copy) {
+  min-width: 0; white-space: normal; overflow-wrap: anywhere;
+}
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-empty-v6 strong { color: var(--care-ink); font-size: 13px; }
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-empty-v6 p { color: var(--care-muted); font-size: 12px; line-height: 1.65; }
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-card-v6 { align-items: start; overflow: visible; }
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-medicines { margin: 12px 0 0; padding-left: 18px; }
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-medicines li + li { margin-top: 12px; }
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-card-v6 :is(strong, p, span) { color: var(--care-ink); font-size: 12px; line-height: 1.65; }
+.dashboard-layout.health-studio-layout.doctis-v5 .prescription-card-v6 p { margin: 4px 0 0; color: var(--care-muted); }
+.dashboard-layout.health-studio-layout.doctis-v5 .care-plan-page :is(.care-health-card > div,.care-detail-content-v6) { min-width: 0; overflow-wrap: anywhere; }
+.care-gallery-activity :is(strong,p), .care-gallery-day h4 { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .dashboard-layout.health-studio-layout.doctis-v5 .prescription-empty-v6 { flex-direction: column; text-align: center; }
+  .dashboard-layout.health-studio-layout.doctis-v5 .prescription-empty-v6 > div { flex-basis: auto; }
+  .dashboard-layout.health-studio-layout.doctis-v5 .prescription-card-v6 { grid-template-columns: 30px minmax(0,1fr); }
+  .dashboard-layout.health-studio-layout.doctis-v5 .prescription-status { grid-column: 2; justify-self: start; }
+}

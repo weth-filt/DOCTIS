@@ -1,4 +1,5 @@
 import { ConversationBack, ConversationNotice, useConversationViewport } from "../../components/ConversationViewport";
+import PrescriptionPanel from "../../components/PrescriptionPanel";
 import HealthAnalytics from "../../components/HealthAnalytics";
 import CareScene from "../../components/CareScene";
 import { Children, cloneElement, isValidElement, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -2906,23 +2907,7 @@ export default function Dashboard() {
               </section>
             )}
 
-            <section className="prescription-panel prescription-panel-v6">
-              <div className="prescription-panel-header">
-                <div><span className="care-section-kicker">BÁC SĨ</span><h3>Đơn thuốc đã chốt</h3><p>Chỉ đơn đã được xác nhận mới được tự động đưa vào thời khóa biểu.</p></div>
-                <span>{prescriptionLoading ? "Đang tải..." : `${prescriptions.filter(isConfirmedPrescription).length} đơn đã chốt`}</span>
-              </div>
-              {prescriptions.filter(isConfirmedPrescription).length > 0 ? (
-                prescriptions.filter(isConfirmedPrescription).map((rx, index) => (
-                  <div className="prescription-card prescription-card-v6" key={getId(rx) || index}>
-                    <div className="prescription-med-icon">💊</div>
-                    <div><strong>{rx.title || rx.name || `Đơn thuốc ${index + 1}`}</strong><span>{rx.doctorId?.fullName || rx.doctor?.fullName || "Bác sĩ điều trị"}</span></div>
-                    <div className="prescription-status">✓ Đã chốt</div>
-                  </div>
-                ))
-              ) : (
-                <div className="prescription-empty prescription-empty-v6"><span>💊</span><div><strong>Chưa có đơn thuốc đã chốt</strong><p>Khi bác sĩ kê và xác nhận đơn, thuốc sẽ tự động xuất hiện trong lịch ăn uống + vận động.</p></div></div>
-              )}
-            </section>
+            <PrescriptionPanel prescriptions={prescriptions.filter(isConfirmedPrescription)} loading={prescriptionLoading} />
           </motion.div>
         )}
 
