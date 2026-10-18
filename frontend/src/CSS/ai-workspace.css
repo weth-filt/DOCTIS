@@ -82,15 +82,17 @@
 .aiw-prompts button > svg { margin-left: auto; flex: 0 0 auto; font-size: 15px; transform: rotate(45deg); transition: transform .17s; }
 .ai-workspace .aiw-prompts button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgb(8 49 44 / 7%); }
 .aiw-prompts button:hover > svg { transform: translate(2px, -2px) rotate(45deg); }
-.aiw-message { max-width: min(760px, 94%); margin: 0 0 23px; animation: aiw-message-arrive .18s ease-out both; }
-.aiw-message.is-user { margin-left: auto; max-width: min(640px, 86%); }
+/* The shared conversation-message class is also an animation hook. Doctor
+   chat styles must not turn this label + bubble into a horizontal row. */
+.ai-workspace .aiw-message { display: flex; flex-direction: column; align-items: flex-start; width: 100%; min-width: 0; max-width: none; margin: 0 0 23px; animation: aiw-message-arrive .18s ease-out both; }
+.ai-workspace .aiw-message.is-user { align-items: flex-end; margin-inline: 0; }
 .aiw-message-label { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; padding: 0 2px 7px; color: var(--aiw-muted); font-size: 10px; }
 .aiw-message-label > span { color: var(--aiw-ink); font-weight: 700; }
 .aiw-message-label time { font-size: 9px; }
 .aiw-message-label small { padding: 2px 6px; background: var(--aiw-soft); border-radius: 6px; color: var(--care-link, #087d7f); font-size: 9px; }
 .aiw-message.is-user .aiw-message-label { justify-content: flex-end; }
-.aiw-message-bubble { min-width: 0; padding: 16px 19px; border: 1px solid var(--aiw-line); border-radius: 4px 17px 17px 17px; background: var(--aiw-soft); color: var(--aiw-ink); box-shadow: 0 3px 10px rgb(8 49 44 / 3%); font-size: 13px; line-height: 1.9; overflow-wrap: anywhere; }
-.aiw-message.is-user .aiw-message-bubble { border-color: transparent; border-radius: 17px 4px 17px 17px; background: var(--care-button, #087d7f); color: var(--care-on-primary, #fff); }
+.ai-workspace .aiw-message-bubble { width: fit-content; max-width: min(760px, 94%); min-width: 0; padding: 16px 19px; border: 1px solid var(--aiw-line); border-radius: 4px 17px 17px 17px; background: var(--aiw-soft); color: var(--aiw-ink); box-shadow: 0 3px 10px rgb(8 49 44 / 3%); font-size: 13px; line-height: 1.9; overflow-wrap: anywhere; }
+.ai-workspace .aiw-message.is-user .aiw-message-bubble { max-width: min(640px, 86%); border-color: transparent; border-radius: 17px 4px 17px 17px; background: var(--care-button, #087d7f); color: var(--care-on-primary, #fff); }
 .aiw-message-text, .aiw-message-bubble .assistant-response { white-space: pre-wrap; }
 .aiw-message-state { display: flex; align-items: flex-start; gap: 5px; margin-top: 6px; color: var(--aiw-muted); font-size: 10px; line-height: 1.6; }
 .aiw-message-state.is-error { color: var(--care-danger, #b94459); }
@@ -188,9 +190,9 @@
   .aiw-chat-header h2 { font-size: 13px; }
   .aiw-eyebrow { font-size: 8px; }
   .aiw-message-pane { padding: 19px 13px; }
-  .aiw-message { max-width: 98%; margin-bottom: 21px; }
-  .aiw-message.is-user { max-width: 92%; }
-  .aiw-message-bubble { padding: 13px 14px; font-size: 13px; }
+  .ai-workspace .aiw-message { margin-bottom: 21px; }
+  .ai-workspace .aiw-message-bubble { max-width: 98%; padding: 13px 14px; font-size: 13px; }
+  .ai-workspace .aiw-message.is-user .aiw-message-bubble { max-width: 92%; }
   .aiw-welcome-art { margin-bottom: 16px; transform: scale(.88); }
   .aiw-welcome > p { font-size: 11px; line-height: 1.8; }
   .aiw-welcome h3 { font-size: 23px; }
