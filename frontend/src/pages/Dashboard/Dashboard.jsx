@@ -1,4 +1,7 @@
 import { ConversationBack, ConversationNotice, useConversationViewport } from "../../components/ConversationViewport";
+import useSavedCarePlan from "../../components/useSavedCarePlan";
+import { careDaysToWeek, weekToCareDays, careSnapshotChanged, vietnamDay } from "../../utils/savedCarePlan";
+import "../../CSS/saved-care-plan.css";
 import PrescriptionPanel from "../../components/PrescriptionPanel";
 import HealthAnalytics from "../../components/HealthAnalytics";
 import CareScene from "../../components/CareScene";
@@ -295,12 +298,11 @@ export default function Dashboard() {
   const [allergySelect, setAllergySelect] = useState("");
 
   // Dinh dưỡng
-  const [nutritionPlan, setNutritionPlan] = useState(null);
-  const [nutritionLoading, setNutritionLoading] = useState(false);
+
   const [activeDay, setActiveDay] = useState(0);
 
   // Kế hoạch chăm sóc hằng ngày
-  const [careWeek, setCareWeek] = useState([]);
+
   const [doctorCarePlan, setDoctorCarePlan] = useState(null);
 
   // Nhắc qua email cho từng hoạt động trong kế hoạch chăm sóc.
@@ -337,6 +339,7 @@ export default function Dashboard() {
   const doctorAttachmentInputRef = useRef(null);
   const fileInputRef = useRef(null);
   const profileRef = useRef({});
+  const [savedCareProfile, setSavedCareProfile] = useState(null);
 
   useEffect(() => {
     profileRef.current = profile;
@@ -395,6 +398,7 @@ export default function Dashboard() {
     try {
       const res = await API.get("/profile");
       const profileData = res.data?.profile || res.data || {};
+      setSavedCareProfile(profileData);
 
       setProfile((prev) => ({
         ...prev,
@@ -711,13 +715,13 @@ export default function Dashboard() {
     if (!Number(latest?.systolic) || !Number(latest?.diastolic)) {
       missing.push("Huyết áp");
     }
-    if (!String(profile.allergies || "").trim()) missing.push("Dị ứng");
-    if (!String(profile.chronicDiseases || "").trim()) {
+    if (!String(savedCareProfile?.allergies || "").trim()) missing.push("Dị ứng đã lưu");
+    if (!String(savedCareProfile?.chronicDiseases || "").trim()) {
       missing.push("Bệnh nền hiện tại");
     }
 
     return missing;
-  }, [latest, profile.allergies, profile.chronicDiseases]);
+  }, [latest, savedCareProfile]);
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
@@ -878,91 +882,30 @@ export default function Dashboard() {
     }));
   }, []);
 
-  const handleGeneratePlan = () => {
+  const savedCare = useSavedCarePlan();
+  const nutritionPlan = savedCare.plan;
+  const nutritionLoading = savedCare.saving;
+  const careWeek = useMemo(() => careDaysToWeek(savedCare.plan?.days), [savedCare.plan]);
+  const [deferredCareSnapshot, setDeferredCareSnapshot] = useState("");
+  const careSnapshotKey = JSON.stringify([latest?._id,latest?.updatedAt,savedCareProfile?.allergies,savedCareProfile?.chronicDiseases]);
+  const careNeedsRefresh = nutritionPlan && careSnapshotChanged(nutritionPlan.inputSnapshot, latest, savedCareProfile) && deferredCareSnapshot !== careSnapshotKey;
+  const careExpired = nutritionPlan?.endDate && vietnamDay() > nutritionPlan.endDate;
+
+  const handleGeneratePlan = async () => {
+    if (savedCare.loading || savedCare.saving || !savedCare.ready) return;
     if (nutritionMissingFields.length > 0) {
-      alert(
-        `Không thể tạo kế hoạch. Vui lòng cập nhật đầy đủ thông tin sau:\n\n- ${nutritionMissingFields.join(
-          "\n- "
-        )}\n\nBMI / Glucose / Huyết áp: cập nhật tại mục "Thông tin sức khỏe".\nDị ứng / Bệnh nền: cập nhật tại mục "Hồ sơ bệnh nhân".`
-      );
+      alert('Vui lòng cập nhật: ' + nutritionMissingFields.join(', ') + '.');
       return;
     }
-
-    setNutritionLoading(true);
-    window.setTimeout(async () => {
-      const plan = generateNutritionPlan({ latest, profile });
-      const week = buildCareWeek(plan, prescriptions);
-      setNutritionPlan(plan);
-      setCareWeek(week);
-      setActiveDay(0);
-      const days = week.map((day, dayIndex) => ({
-        dayIndex,
-        label: day.label || `Ngày ${dayIndex + 1}`,
-        status: "draft",
-        items: [
-          ...(day.meals || []).filter((item) => item.text).map((item) => ({
-            id: item.id,
-            type: "MEAL",
-            time: item.time,
-            title: item.label,
-            description: item.text,
-          })),
-          ...(day.exercise ? [{
-            id: day.exercise.id,
-            type: "EXERCISE",
-            time: day.exercise.time || "16:30",
-            title: day.exercise.title || "Vận động nhẹ",
-            description: day.exercise.duration || "",
-          }] : []),
-          ...(day.medications || []).map((item) => ({
-            id: item.id,
-            type: "MEDICATION",
-            time: item.time || "08:00",
-            title: item.title,
-            description: item.description || "",
-          })),
-        ],
-      }));
-
-      try {
-        await API.post("/care-plans/my", { days });
-      } catch (error) {
-        if (process.env.NODE_ENV !== "production") console.error("SAVE GENERATED CARE PLAN ERROR =", error);
-        alert("Kế hoạch đã tạo trên màn hình nhưng chưa đồng bộ được với bác sĩ. Hãy kiểm tra kết nối rồi tạo lại kế hoạch.");
-      } finally {
-        setNutritionLoading(false);
-      }
-    }, 900);
+    if (nutritionPlan && !window.confirm('Tạo lại kế hoạch chăm sóc? Kế hoạch hiện tại và tiến độ sẽ được lưu vào lịch sử, rồi thay bằng kế hoạch mới.')) return;
+    const generated = generateNutritionPlan({ latest, profile: savedCareProfile });
+    const days = weekToCareDays(buildCareWeek(generated, prescriptions));
+    if (await savedCare.create(days, {healthRecordId:latest?._id || null,allergies:savedCareProfile?.allergies || "",chronicDiseases:savedCareProfile?.chronicDiseases || ""})) { setActiveDay(0);setDeferredCareSnapshot(""); }
   };
+  const toggleCareActivity = savedCare.toggle;
 
-  useEffect(() => {
-    if (nutritionPlan?.days?.length) {
-      setCareWeek(buildCareWeek(nutritionPlan, prescriptions));
-    }
-  }, [nutritionPlan, prescriptions, buildCareWeek]);
-
-  const toggleCareActivity = (dayIndex, activityId) => {
-    setCareWeek((prev) =>
-      prev.map((day, index) => {
-        if (index !== dayIndex) return day;
-        const update = (items) =>
-          items.map((item) =>
-            item.id === activityId ? { ...item, done: !item.done } : item
-          );
-        return {
-          ...day,
-          meals: update(day.meals || []),
-          medications: update(day.medications || []),
-          exercise: day.exercise?.id === activityId
-            ? { ...day.exercise, done: !day.exercise.done }
-            : day.exercise,
-        };
-      })
-    );
-  };
-
-  const handleEmailReminder = async (day, item, dayIndex = activeDay) => {
-    const activityId = `${day?.label || "day"}-${item?.id || item?.time}`;
+  const handleEmailReminder = async (day, item) => {
+    const activityId = `${nutritionPlan?._id}:${day?.date}:${item?.id || item?.time}`;
     const email = String(profile?.email || user?.email || "").trim();
 
     if (!email) {
@@ -974,16 +917,17 @@ export default function Dashboard() {
       alert("Hoạt động này chưa có giờ để tạo nhắc nhở.");
       return;
     }
+    if (!day?.date) {
+      alert("Kế hoạch cũ chưa có ngày bắt đầu. Hãy tạo kế hoạch mới trước khi bật nhắc email.");
+      return;
+    }
 
     if (emailRemindedIds.has(activityId) || reminderSendingId === activityId) return;
 
     setReminderSendingId(activityId);
 
     try {
-      const scheduledDate = new Date();
-      scheduledDate.setHours(0, 0, 0, 0);
-      scheduledDate.setDate(scheduledDate.getDate() + Number(dayIndex || 0));
-      const scheduleDate = [scheduledDate.getFullYear(), String(scheduledDate.getMonth() + 1).padStart(2, "0"), String(scheduledDate.getDate()).padStart(2, "0")].join("-");
+      const scheduleDate = day.date;
       await API.post("/reminders/create", {
         title: `${item.title || item.label || "Hoạt động chăm sóc"} — ${day?.label || "Kế hoạch chăm sóc"}`,
         description: item.text || item.description || "Nhắc nhở trong kế hoạch chăm sóc hằng ngày.",
@@ -1146,6 +1090,7 @@ export default function Dashboard() {
       };
 
       setProfile(mergedProfile);
+      setSavedCareProfile(mergedProfile);
 
       const oldUser = safeUserFromStorage();
       const updatedUser = {
@@ -1803,6 +1748,7 @@ export default function Dashboard() {
         {mobileMenuOpen && <span className="studio-close-on-select" aria-hidden="true" />}
 
       <main ref={screenRef} className={`studio-content ${menu === "doctor-chat" ? "is-conversation" : ""}`}>
+        {["health", "analytics"].includes(menu) && careNeedsRefresh && <div className="care-refresh-banner"><p>Chỉ số của bạn đã thay đổi. Cập nhật kế hoạch chăm sóc?</p><div><button type="button" className="care-persistence-button" onClick={() => setMenu("care-plan")}>Cập nhật kế hoạch</button><button type="button" className="care-persistence-button" onClick={() => setDeferredCareSnapshot(careSnapshotKey)}>Để sau</button></div></div>}
         {menu === "dashboard" && <PatientOverview
           displayName={displayName} latest={latest} data={data} risk={risk}
           analysisData={analysisData} nextAppointment={nextAppointment}
@@ -2751,12 +2697,19 @@ export default function Dashboard() {
                 type="button"
                 className="generate-plan-btn care-generate-v6"
                 onClick={handleGeneratePlan}
-                disabled={nutritionLoading || nutritionMissingFields.length > 0}
+                disabled={savedCare.loading || !savedCare.ready || !!savedCare.pendingItem || nutritionLoading || nutritionMissingFields.length > 0}
               >
                 <span>{nutritionLoading ? "Đang xây dựng..." : nutritionPlan ? "Tạo lại kế hoạch" : "Tạo kế hoạch 7 ngày"}</span>
                 <b>{nutritionLoading ? "•••" : "✦"}</b>
               </button>
             </section>
+
+            {savedCare.loading && <p role="status" className="care-save-feedback">Đang tải kế hoạch đã lưu…</p>}
+            {savedCare.error && <div role="alert" className="care-save-feedback" data-error="true">{savedCare.error} {!savedCare.ready && <button type="button" className="care-persistence-button" onClick={savedCare.load}>Thử tải lại</button>}</div>}
+            {savedCare.notice && <p role="status" className="care-save-feedback">{savedCare.notice}</p>}
+            {nutritionPlan && <p className="care-save-feedback">Kế hoạch đã lưu · {nutritionPlan.startDate || 'Ngày bắt đầu chưa được lưu'}{nutritionPlan.endDate ? ' → ' + nutritionPlan.endDate : ''}. Tiến độ được đồng bộ sau mỗi thao tác.</p>}
+            {careNeedsRefresh && <div className="care-refresh-banner"><p>Chỉ số của bạn đã thay đổi. Cập nhật kế hoạch chăm sóc?</p><div><button type="button" className="care-persistence-button" disabled={nutritionLoading || !!savedCare.pendingItem} onClick={handleGeneratePlan}>Cập nhật kế hoạch</button><button type="button" className="care-persistence-button" onClick={() => setDeferredCareSnapshot(careSnapshotKey)}>Để sau</button></div></div>}
+            {careExpired && <div className="care-refresh-banner"><p>Chu kỳ 7 ngày đã kết thúc. Kế hoạch và tiến độ cũ vẫn được giữ; bạn có thể tạo kế hoạch mới khi sẵn sàng.</p><button type="button" className="care-persistence-button" disabled={nutritionLoading || !!savedCare.pendingItem} onClick={handleGeneratePlan}>Tạo kế hoạch mới</button></div>}
 
             <section className="care-health-strip-v6">
               <div className="care-health-card bmi">
@@ -2776,12 +2729,12 @@ export default function Dashboard() {
               </div>
               <div className="care-health-card allergy">
                 <span className="care-health-icon">🛡️</span>
-                <div><small>Dị ứng</small><strong>{profile.allergies || "Chưa cập nhật"}</strong></div>
+                <div><small>Dị ứng</small><strong>{savedCareProfile?.allergies || "Chưa cập nhật"}</strong></div>
                 <em>Đã lưu</em>
               </div>
               <div className="care-health-card chronic">
                 <span className="care-health-icon">🫀</span>
-                <div><small>Bệnh nền</small><strong>{profile.chronicDiseases || "Không có"}</strong></div>
+                <div><small>Bệnh nền</small><strong>{savedCareProfile?.chronicDiseases || "Chưa cập nhật"}</strong></div>
                 <em>Hồ sơ</em>
               </div>
             </section>
@@ -2845,17 +2798,17 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <CareWeekGallery days={careWeek} activeDay={activeDay} onSelectDay={setActiveDay} onToggleActivity={toggleCareActivity} />
+                <CareWeekGallery days={careWeek} activeDay={activeDay} onSelectDay={setActiveDay} onToggleActivity={toggleCareActivity} pending={!!savedCare.pendingItem || savedCare.saving} />
               </section>
             )}
 
-            {!nutritionPlan && !nutritionLoading && (
+            {savedCare.ready && !nutritionPlan && !nutritionLoading && (
               <section className="care-empty-v6">
                 <div className="care-empty-orb">✦</div>
                 <span className="care-section-kicker">BẮT ĐẦU HÔM NAY</span>
                 <h3>Tạo lịch chăm sóc 7 ngày của riêng bạn</h3>
                 <p>DOCTIS sẽ kết hợp dữ liệu sức khỏe gần nhất, hồ sơ dị ứng/bệnh nền và đơn thuốc đã chốt để tạo một lịch dễ theo dõi.</p>
-                <button type="button" className="generate-plan-btn" onClick={handleGeneratePlan} disabled={nutritionMissingFields.length > 0}>✨ Bắt đầu tạo kế hoạch</button>
+                <button type="button" className="generate-plan-btn" onClick={handleGeneratePlan} disabled={!savedCare.ready || nutritionMissingFields.length > 0}>✨ Bắt đầu tạo kế hoạch</button>
               </section>
             )}
 
@@ -2883,7 +2836,7 @@ export default function Dashboard() {
                     ...(careWeek[activeDay].medications || []).map((item) => ({ ...item, kind: "medication" })),
                     careWeek[activeDay].exercise ? { ...careWeek[activeDay].exercise, kind: "exercise", description: careWeek[activeDay].exercise.duration } : null,
                   ].filter(Boolean).sort((a, b) => String(a.time).localeCompare(String(b.time))).map((item) => {
-                    const reminderId = `${careWeek[activeDay]?.label || "day"}-${item.id || item.time}`;
+                    const reminderId = `${nutritionPlan?._id}:${careWeek[activeDay]?.date}:${item.id || item.time}`;
                     const sent = emailRemindedIds.has(reminderId);
                     return (
                       <div className={`care-detail-row-v6 ${item.kind} ${item.done ? "completed" : ""}`} key={`${item.id}-${item.time}`}>
@@ -2895,10 +2848,10 @@ export default function Dashboard() {
                           {item.source === "DOCTOR" && <small>👨‍⚕️ Theo đơn bác sĩ</small>}
                         </div>
                         <div className="care-detail-actions-v6">
-                          <button type="button" className={`care-reminder-btn ${sent ? "sent" : ""}`} onClick={() => handleEmailReminder(careWeek[activeDay], item, activeDay)} disabled={reminderSendingId === reminderId}>
+                          <button type="button" className={`care-reminder-btn ${sent ? "sent" : ""}`} title={!careWeek[activeDay]?.date ? "Tạo lại kế hoạch để đặt ngày nhắc chính xác" : undefined} onClick={() => handleEmailReminder(careWeek[activeDay], item)} disabled={!careWeek[activeDay]?.date || reminderSendingId === reminderId}>
                             <FaBell /> {reminderSendingId === reminderId ? "Đang tạo..." : sent ? "Đã bật email" : "Nhắc email"}
                           </button>
-                          <button type="button" className="care-done-btn" onClick={() => toggleCareActivity(activeDay, item.id)}>{item.done ? "✓ Đã xong" : "Đánh dấu xong"}</button>
+                          <button type="button" className="care-done-btn" disabled={!!savedCare.pendingItem || savedCare.saving} onClick={() => toggleCareActivity(activeDay, item.id)}>{item.done ? "✓ Đã xong" : "Đánh dấu xong"}</button>
                         </div>
                       </div>
                     );
@@ -2907,6 +2860,9 @@ export default function Dashboard() {
               </section>
             )}
 
+            <details className="care-history-panel" onToggle={event => {if(event.currentTarget.open) savedCare.loadHistory();}}><summary>Lịch sử kế hoạch chăm sóc</summary>
+              {savedCare.historyLoading ? <p role="status">Đang tải lịch sử…</p> : !savedCare.history.length ? <p>Chưa có kế hoạch lưu trữ.</p> : savedCare.history.map(plan => <article key={plan._id}><strong>{plan.startDate || 'Kế hoạch trước'}{plan.endDate ? ' → ' + plan.endDate : ''}</strong><p>{(plan.days || []).flatMap(d => d.items || []).filter(i => i.done).length} việc đã hoàn thành. Bản lưu chỉ để xem lại.</p><details><summary>Xem nội dung</summary>{(plan.days || []).map(day => <div key={day.dayIndex}><h4>{day.label}</h4><ul>{(day.items || []).map(item => <li key={item.id}>{item.done ? '✓ ' : ''}{item.time} · {item.title} — {item.description}</li>)}</ul></div>)}</details></article>)}
+            </details>
             <PrescriptionPanel prescriptions={prescriptions.filter(isConfirmedPrescription)} loading={prescriptionLoading} />
           </motion.div>
         )}

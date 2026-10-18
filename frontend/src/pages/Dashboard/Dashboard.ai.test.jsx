@@ -50,6 +50,7 @@ const originalElementScrollTo = HTMLElement.prototype.scrollTo;
 const originalMatchMedia = window.matchMedia;
 const READ_FIXTURES = {
   "/care-plans/my": null,
+  "/care-plans/current": null,
   "/health/history": [{ _id: "test-reading", createdAt: "2026-10-16T08:00:00.000Z", height: 170, weight: 65, bmi: 22.49, glucose: 100, systolic: 120, diastolic: 80, heartRate: 75 }],
   "/health/advices": [],
   "/appointments/patient": [],

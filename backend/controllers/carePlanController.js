@@ -1,5 +1,7 @@
 const CarePlan = require("../models/CarePlan");
 const User = require("../models/User");
+const { createCarePlanPersistence } = require("../services/carePlanPersistence");
+const generatedPlans = createCarePlanPersistence();
 
 const {
   requireAssignedDoctor,
@@ -48,7 +50,7 @@ exports.getDoctorPatientCarePlan = async (req, res) => {
       source: "DOCTOR",
     })
       .sort({ updatedAt: -1 })
-      .lean() || await CarePlan.findOne({ patientId, source: "AI" })
+      .lean() || await CarePlan.findOne({ patientId, source: "AI", archivedAt: null, isCurrent: { $ne: false } })
         .sort({ updatedAt: -1 })
         .lean();
 
@@ -178,39 +180,42 @@ exports.saveDoctorCarePlan = async (req, res) => {
 // ======================================================
 exports.saveMyGeneratedCarePlan = async (req, res) => {
   try {
-    if (req.user?.role !== "user") {
-      return res.status(403).json({ msg: "Chỉ bệnh nhân mới lưu kế hoạch cá nhân." });
-    }
-
-    const days = req.body?.days;
-    if (!Array.isArray(days) || days.length === 0) {
-      return res.status(400).json({ msg: "Kế hoạch cần có danh sách ngày." });
-    }
-
-    const patient = await User.findById(req.user.id).select("_id doctorId role").lean();
-    if (!patient || patient.role !== "user") {
-      return res.status(404).json({ msg: "Không tìm thấy hồ sơ bệnh nhân." });
-    }
-
-    const plan = await CarePlan.findOneAndUpdate(
-      { patientId: patient._id, source: "AI" },
-      {
-        patientId: patient._id,
-        doctorId: patient.doctorId || null,
-        source: "AI",
-        status: "draft",
-        days,
-        doctorNote: "",
-        confirmedAt: null,
-      },
-      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
-    );
-
-    return res.status(201).json(plan);
+    if (!patientOnly(req, res)) return;
+    return res.status(201).json(await generatedPlans.create(req.user.id, req.body));
   } catch (err) {
-    console.error("SAVE PATIENT GENERATED CARE PLAN ERROR =", err);
-    return res.status(500).json({ msg: err.message || "Không thể lưu kế hoạch cá nhân." });
+    return generatedPlanError(res, err);
   }
+};
+
+const patientOnly = (req, res) => {
+  if (req.user?.role !== "user") { res.status(403).json({ msg: "Chỉ bệnh nhân mới quản lý kế hoạch cá nhân." }); return false; }
+  if (typeof req.user.id !== "string" || !/^[a-f\d]{24}$/i.test(req.user.id)) { res.status(400).json({ msg: "Không xác định được tài khoản hợp lệ." }); return false; }
+  return true;
+};
+const generatedPlanError = (res, err) => {
+  if (err.status && err.code) return res.status(err.status).json({ code: err.code, msg: err.message, ...(err.currentPlan ? { currentPlan: err.currentPlan } : {}) });
+  console.error("GENERATED CARE PLAN ERROR =", err.name || "Error");
+  return res.status(500).json({ code: "CARE_PLAN_UNAVAILABLE", msg: "Chưa thể đồng bộ kế hoạch. Vui lòng thử lại." });
+};
+exports.getMyCurrentGeneratedCarePlan = async (req, res) => {
+  try {
+    if (!patientOnly(req, res)) return;
+    const plan = await generatedPlans.current(req.user.id);
+    if (!plan) return res.status(404).json({ code: "NO_CURRENT_PLAN", msg: "Chưa có kế hoạch cá nhân hiện hành." });
+    return res.json(plan);
+  } catch (err) { return generatedPlanError(res, err); }
+};
+exports.getMyCarePlanHistory = async (req, res) => {
+  try {
+    if (!patientOnly(req, res)) return;
+    return res.json(await generatedPlans.history(req.user.id));
+  } catch (err) { return generatedPlanError(res, err); }
+};
+exports.updateMyCarePlanItem = async (req, res) => {
+  try {
+    if (!patientOnly(req, res)) return;
+    return res.json(await generatedPlans.toggle(req.user.id, req.params.itemId, req.body));
+  } catch (err) { return generatedPlanError(res, err); }
 };
 
 // ======================================================
@@ -225,6 +230,7 @@ exports.getMyConfirmedCarePlan = async (req, res) => {
     const plan = await CarePlan.findOne({
       patientId: req.user.id,
       status: "confirmed",
+      archivedAt: null,
     })
       .sort({
         confirmedAt: -1,
@@ -271,6 +277,8 @@ exports.getMyMobileCarePlan = async (req, res) => {
     const plan = doctorPlan || await CarePlan.findOne({
       patientId: req.user.id,
       source: "AI",
+      archivedAt: null,
+      isCurrent: { $ne: false },
     }).sort({ updatedAt: -1 }).lean();
 
     if (!plan) {

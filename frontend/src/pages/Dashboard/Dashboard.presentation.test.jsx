@@ -50,6 +50,7 @@ const originalMatchMedia = window.matchMedia;
 const appointmentDate = new Date(new Date().getFullYear(), new Date().getMonth(), 10, 9, 30).toISOString();
 const READ_FIXTURES = {
   "/care-plans/my": null,
+  "/care-plans/current": null,
   "/health/history": [{ _id: "test-reading", createdAt: "2026-10-16T08:00:00.000Z", height: 170, weight: 65, bmi: 22.49, glucose: 100, systolic: 120, diastolic: 80, heartRate: 75 }],
   "/health/advices": [],
   "/appointments/patient": [{ _id: "test-appointment", appointmentDate, doctorId: { fullName: "Bác sĩ kiểm thử" }, type: "Tái khám đã lưu", status: "approved", note: "Ghi chú lịch hẹn kiểm thử" }],
