@@ -114,11 +114,14 @@ app.use(
 // Reuse the connection while the function instance stays warm.
 let mongoConnectionPromise;
 const connectMongoForVercel = async (req, res, next) => {
-  if (!process.env.VERCEL || !req.path.startsWith("/api/")) {
+  // Vercel can normalize a request path before handing it to Express, so a
+  // req.path prefix check can silently skip MongoDB on API requests.
+  if (!process.env.VERCEL) {
     return next();
   }
 
-  if (!process.env.MONGO_URI) {
+  const mongoUri = process.env.MONGO_URI?.trim();
+  if (!mongoUri) {
     return res.status(503).json({
       success: false,
       msg: "Máy chủ chưa được cấu hình MONGO_URI.",
@@ -126,13 +129,22 @@ const connectMongoForVercel = async (req, res, next) => {
   }
 
   try {
-    if (mongoose.connection.readyState === 1) return next();
-    if (!mongoConnectionPromise) {
-      mongoConnectionPromise = mongoose.connect(process.env.MONGO_URI, {
-        serverSelectionTimeoutMS: 10000,
-      });
+    if (mongoose.connection.readyState !== 1) {
+      // A warm serverless instance can lose a connection after a promise has
+      // already resolved. Clear that promise and allow the next request to retry.
+      if (mongoose.connection.readyState === 0) {
+        mongoConnectionPromise = undefined;
+      }
+      if (!mongoConnectionPromise) {
+        mongoConnectionPromise = mongoose.connect(mongoUri, {
+          serverSelectionTimeoutMS: 10000,
+        });
+      }
+      await mongoConnectionPromise;
     }
-    await mongoConnectionPromise;
+    if (mongoose.connection.readyState !== 1) {
+      throw new Error("MongoDB connection is not ready.");
+    }
     return next();
   } catch (error) {
     mongoConnectionPromise = undefined;
@@ -163,10 +175,11 @@ app.use(
 
 // Lightweight endpoint for checking that the deployed API and database respond.
 app.get("/api/health", (req, res) => {
-  return res.json({
-    success: true,
+  const databaseConnected = mongoose.connection.readyState === 1;
+  return res.status(databaseConnected ? 200 : 503).json({
+    success: databaseConnected,
     api: "ok",
-    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    database: databaseConnected ? "connected" : "disconnected",
   });
 });
 

@@ -1,0 +1,9 @@
+# Local review artifacts and preview server
+ui-review/
+serve_build.js
+UI_REVIEW.md
+
+# Use Vercel environment variables and a fresh remote build
+.env*
+node_modules/
+build/

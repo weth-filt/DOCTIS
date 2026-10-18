@@ -1,4 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ConversationBack, ConversationNotice, useConversationViewport } from "../../components/ConversationViewport";
+import HealthAnalytics from "../../components/HealthAnalytics";
+import CareScene from "../../components/CareScene";
+import { Children, cloneElement, isValidElement, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import generateHealthAnalysis from "../../utils/AIAnalysis";
 import generateNutritionPlan from "../../utils/generateNutritionPlan";
 import getRiskAssessment from "../../utils/riskAssessment";
@@ -12,13 +15,10 @@ import {
   FaExclamationTriangle,
   FaTint,
   FaWeight,
-  FaHeart,
   FaEnvelope,
   FaBell,
   FaCalendarCheck,
-  FaShieldAlt,
   FaUserMd,
-  FaClock,
   FaRulerVertical,
   FaUser,
   FaCamera,
@@ -34,22 +34,33 @@ import {
   FaAddressBook,
   FaSave,
   FaTimes,
-  FaCircle,
   FaUtensils,
   FaCheck,
   FaCheckDouble,
   FaBars,
-  FaHome,
-  FaUserCircle,
   FaChevronDown,
 } from "react-icons/fa";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import API from "../../services/api";
-import DashboardChart from "../../components/DashboardChart";
+import PatientOverview from "../../components/PatientOverview";
+import { useConversationMotion } from "../../components/ConversationMotion";
+import { useWorkspaceMotion } from "../../components/WorkspaceMotion";
+import useLiveReducedMotion from "../../components/useLiveReducedMotion";
+import { useStudioPreferences } from "../../components/studio/StudioPreferences";
+import StudioControls from "../../components/studio/StudioControls";
+import StudioExperience from "../../components/studio/StudioExperience";
+import HeartScene from "../../components/3d/HeartScene";
+import AppointmentCalendar from "../../components/studio/AppointmentCalendar";
+import CareWeekGallery from "../../components/studio/CareWeekGallery";
+import AISuggestions from "../../components/studio/AISuggestions";
+import AIResponse from "../../components/studio/AIResponse";
+import "../../CSS/conversation-studio.css";
 import "../../CSS/dashboard.css";
 import "../../CSS/dashboard-modern.css";
 import "../../CSS/health-clarity.css";
+import "../../CSS/health-studio.css";
+import "../../CSS/patient-redesign.css";
 
 const EMPTY_FORM = {
   height: "",
@@ -58,6 +69,12 @@ const EMPTY_FORM = {
   bloodPressure: "",
   heartRate: "",
 };
+
+const createAIWelcomeMessage = () => ({
+  sender: "ai",
+  isGreeting: true,
+  text: "Chào bạn, mình là DOCTIS. Bạn muốn trao đổi về ăn uống, vận động, thuốc hay cách theo dõi chỉ số đã lưu khi sống cùng đái tháo đường type 2? Mình có thể giải thích thông tin sức khỏe và gợi ý câu hỏi cho bác sĩ; không chẩn đoán hoặc thay đổi thuốc.",
+});
 
 const normalizeDateForInput = (value) => {
   if (!value) return "";
@@ -89,6 +106,17 @@ const safeUserFromStorage = () => {
   } catch {
     return {};
   }
+};
+
+const appointmentStatusLabel = (status) => {
+  const labels = {
+    pending: "Chờ xác nhận",
+    approved: "Đã xác nhận",
+    completed: "Đã khám",
+    cancelled: "Đã hủy",
+  };
+  const key = String(status || "").toLowerCase();
+  return labels[key] || status || "Chưa cập nhật";
 };
 
 const CHRONIC_DISEASE_OPTIONS = [
@@ -220,8 +248,14 @@ const normalizePrescriptionActivities = (list) => {
 
 export default function Dashboard() {
   const [user, setUser] = useState(safeUserFromStorage);
+  const reducedMotion = useLiveReducedMotion();
+  const preferences = useStudioPreferences();
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+  const [profileReadOnly, setProfileReadOnly] = useState(false);
+  useEffect(() => { if (preferences.sidebarCollapsed) setCollapsedGroups({}); }, [preferences.sidebarCollapsed]);
 
-  const [menu, setMenu] = useState("dashboard");
+  const [menu, setMenuState] = useState("dashboard");
+  const { screenRef, navigate: setMenu } = useWorkspaceMotion(menu, setMenuState);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [data, setData] = useState([]);
   const [latest, setLatest] = useState({});
@@ -229,19 +263,17 @@ export default function Dashboard() {
   const [appointments, setAppointments] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
 
-  const [messages, setMessages] = useState([
-    {
-      sender: "ai",
-      text:
-        "Xin chào 👋 Mình là trợ lý sức khỏe DOCTIS, tập trung vào đái tháo đường type 2. Bạn có thể hỏi về theo dõi đường huyết, ăn uống, vận động, thuốc và biến chứng. Mình cung cấp thông tin tham khảo, không thay thế chẩn đoán hay hướng dẫn điều trị từ bác sĩ.",
-    },
-  ]);
+  const [messages, setMessages] = useState(() => [createAIWelcomeMessage()]);
   const [chatInput, setChatInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const aiRequestInFlightRef = useRef(false);
 
   const [profile, setProfile] = useState({});
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaveFeedback, setProfileSaveFeedback] = useState(null);
+  const [healthSaving, setHealthSaving] = useState(false);
+  const [healthSaveFeedback, setHealthSaveFeedback] = useState(null);
 
   const [doctors, setDoctors] = useState([]);
   const [doctorSearch, setDoctorSearch] = useState("");
@@ -252,6 +284,7 @@ export default function Dashboard() {
   const [doctorAttachment, setDoctorAttachment] = useState(null);
 
     const [apiErrors, setApiErrors] = useState({});
+  const [healthLoading, setHealthLoading] = useState(true);
 
   // Bệnh nền (multi-select) + Dị ứng (tag input)
   const [chronicSelected, setChronicSelected] = useState([]);
@@ -273,12 +306,13 @@ export default function Dashboard() {
   const [reminderSendingId, setReminderSendingId] = useState("");
   const [emailRemindedIds, setEmailRemindedIds] = useState(() => new Set());
 
+
   useEffect(() => {
     let active = true;
     API.get("/care-plans/my")
       .then((res) => { if (active) setDoctorCarePlan(res.data || null); })
       .catch((err) => {
-        if (active && err.response?.status !== 404) console.error("GET CONFIRMED CARE PLAN ERROR =", err);
+        if (active && err.response?.status !== 404) if (process.env.NODE_ENV !== "production") console.error("GET CONFIRMED CARE PLAN ERROR =", err);
         if (active) setDoctorCarePlan(null);
       });
     return () => { active = false; };
@@ -290,10 +324,15 @@ export default function Dashboard() {
   const [prescriptionLoading, setPrescriptionLoading] = useState(false);
   const [prescriptionError, setPrescriptionError] = useState(false);
 
-    const chatEndRef = useRef(null);
+    const chatBodyRef = useRef(null);
+  const chatStickToBottomRef = useRef(true);
   const doctorChatEndRef = useRef(null);
   const doctorChatBodyRef = useRef(null);
   const doctorChatStickToBottomRef = useRef(true);
+  useConversationMotion(doctorChatBodyRef, selectedDoctor?._id || selectedDoctor?.id, doctorMessages, doctorLoading);
+  const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
+  const doctorViewport = useConversationViewport(doctorChatBodyRef, getId(selectedDoctor), doctorMessages, menu === "doctor-chat", doctorLoading);
+  const aiViewport = useConversationViewport(chatBodyRef, "assistant", messages, menu === "ai", loading);
   const doctorAttachmentInputRef = useRef(null);
   const fileInputRef = useRef(null);
   const profileRef = useRef({});
@@ -302,17 +341,6 @@ export default function Dashboard() {
     profileRef.current = profile;
   }, [profile]);
 
-  useEffect(() => {
-    const className = "doctis-chat-active";
-
-    if (menu === "doctor-chat") {
-      document.body.classList.add(className);
-    } else {
-      document.body.classList.remove(className);
-    }
-
-    return () => document.body.classList.remove(className);
-  }, [menu]);
 
   const fetchHealth = useCallback(async () => {
     try {
@@ -328,8 +356,10 @@ export default function Dashboard() {
       setLatest(sorted[0] || {});
       setApiErrors((prev) => ({ ...prev, health: false }));
     } catch (err) {
-      console.error("FETCH HEALTH ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("FETCH HEALTH ERROR =", err);
       setApiErrors((prev) => ({ ...prev, health: true }));
+    } finally {
+      setHealthLoading(false);
     }
   }, []);
 
@@ -339,7 +369,7 @@ export default function Dashboard() {
       setAdvices(Array.isArray(res.data) ? res.data : []);
       setApiErrors((prev) => ({ ...prev, advices: false }));
     } catch (err) {
-      console.error("FETCH ADVICES ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("FETCH ADVICES ERROR =", err);
       setAdvices([]);
       setApiErrors((prev) => ({ ...prev, advices: true }));
     }
@@ -351,7 +381,7 @@ export default function Dashboard() {
       setAppointments(Array.isArray(res.data) ? res.data : []);
       setApiErrors((prev) => ({ ...prev, appointments: false }));
     } catch (err) {
-      console.error("FETCH APPOINTMENTS ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("FETCH APPOINTMENTS ERROR =", err);
       setAppointments([]);
       setApiErrors((prev) => ({ ...prev, appointments: true }));
     }
@@ -410,7 +440,7 @@ export default function Dashboard() {
 
       setApiErrors((prev) => ({ ...prev, profile: false }));
     } catch (err) {
-      console.error("FETCH PROFILE ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("FETCH PROFILE ERROR =", err);
       setApiErrors((prev) => ({ ...prev, profile: true }));
 
       if (err.response?.status === 401) {
@@ -444,7 +474,7 @@ export default function Dashboard() {
       setPrescriptions(list.length ? list : fallback);
     } catch (err) {
       // Chưa có endpoint thì giao diện vẫn hoạt động bình thường.
-      console.warn("FETCH PRESCRIPTIONS INFO =", err);
+      if (process.env.NODE_ENV !== "production") console.warn("FETCH PRESCRIPTIONS INFO =", err);
       const currentProfile = profileRef.current || {};
       const fallback = Array.isArray(currentProfile.prescriptions)
         ? currentProfile.prescriptions
@@ -471,7 +501,7 @@ export default function Dashboard() {
       setDoctors(list);
       setApiErrors((prev) => ({ ...prev, doctors: false }));
     } catch (err) {
-      console.error("FETCH DOCTORS ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("FETCH DOCTORS ERROR =", err);
 
       // Dự phòng: nếu /messages/doctors chưa sẵn sàng, dùng danh sách cơ bản.
       try {
@@ -507,9 +537,27 @@ export default function Dashboard() {
   ]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
-  
+    const chatBody = chatBodyRef.current;
+    if (!chatBody) return;
+    if (chatStickToBottomRef.current) {
+      chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: reducedMotion ? "instant" : "smooth" });
+    }
+  }, [messages, loading, reducedMotion]);
+
+  const handleAiChatScroll = (event) => {
+    aiViewport.onScroll(event);
+    const chatBody = event.currentTarget;
+    const distanceFromBottom = chatBody.scrollHeight - chatBody.scrollTop - chatBody.clientHeight;
+    chatStickToBottomRef.current = distanceFromBottom < 96;
+  };
+
+  const handleAiReplyReveal = useCallback(() => {
+    const chatBody = chatBodyRef.current;
+    // Follow only when the reader was already at the newest message. A
+    // presentation reveal must never pull someone away from older history.
+    if (chatBody && chatStickToBottomRef.current) chatBody.scrollTop = chatBody.scrollHeight;
+  }, []);
+
     useEffect(() => {
     if (menu !== "doctor-chat") return;
     const interval = setInterval(fetchDoctors, 5000);
@@ -574,12 +622,13 @@ export default function Dashboard() {
     requestAnimationFrame(() => {
       body.scrollTo({
         top: body.scrollHeight,
-        behavior: "smooth",
+        behavior: reducedMotion ? "instant" : "smooth",
       });
     });
-  }, [doctorMessages, menu]);
+  }, [doctorMessages, menu, reducedMotion]);
 
-  const handleDoctorChatScroll = () => {
+  const handleDoctorChatScroll = (event) => {
+    doctorViewport.onScroll(event);
     const body = doctorChatBodyRef.current;
     if (!body) return;
 
@@ -631,6 +680,8 @@ export default function Dashboard() {
   };
 
   const calculatedBMI = calculateBMI();
+  const enteredRisk = getRiskAssessment({ glucose:form.glucose, bmi:calculatedBMI, heartRate:form.heartRate, systolic:form.bloodPressure.split("/")[0] || "", diastolic:form.bloodPressure.split("/")[1] || "" });
+  const enteredCount = Object.values(form).filter(value => String(value).trim()).length;
 
   const risk = useMemo(() => {
     const label = getRiskAssessment(latest);
@@ -646,7 +697,7 @@ export default function Dashboard() {
     try {
       return generateHealthAnalysis(latest) || [];
     } catch (err) {
-      console.error("AI ANALYSIS ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("AI ANALYSIS ERROR =", err);
       return [];
     }
   }, [latest]);
@@ -669,10 +720,17 @@ export default function Dashboard() {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
+    setProfileSaveFeedback(null);
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
-  
+
+  const updateHealthField = (field, value) => {
+    setHealthSaveFeedback(null);
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
     const toggleChronicOption = (option) => {
+    setProfileSaveFeedback(null);
     setChronicSelected((prevSelected) => {
       let nextSelected;
 
@@ -702,6 +760,7 @@ export default function Dashboard() {
   };
 
   const handleChronicOtherChange = (value) => {
+    setProfileSaveFeedback(null);
     setChronicOther(value);
     const combined = [...chronicSelected, value.trim()]
       .filter(Boolean)
@@ -710,6 +769,7 @@ export default function Dashboard() {
   };
 
   const syncAllergyProfile = (nextTags) => {
+    setProfileSaveFeedback(null);
     setAllergyTags(nextTags);
     setProfile((prev) => ({
       ...prev,
@@ -779,6 +839,7 @@ export default function Dashboard() {
   };
 
   const markNoAllergy = () => {
+    setProfileSaveFeedback(null);
     setAllergyTags(["Không có"]);
     setAllergyInput("");
     setAllergySelect("");
@@ -865,7 +926,7 @@ export default function Dashboard() {
       try {
         await API.post("/care-plans/my", { days });
       } catch (error) {
-        console.error("SAVE GENERATED CARE PLAN ERROR =", error);
+        if (process.env.NODE_ENV !== "production") console.error("SAVE GENERATED CARE PLAN ERROR =", error);
         alert("Kế hoạch đã tạo trên màn hình nhưng chưa đồng bộ được với bác sĩ. Hãy kiểm tra kết nối rồi tạo lại kế hoạch.");
       } finally {
         setNutritionLoading(false);
@@ -940,7 +1001,7 @@ export default function Dashboard() {
 
       alert(`Đã bật nhắc qua email ${email} cho ${item.time}.`);
     } catch (err) {
-      console.error("SEND CARE EMAIL REMINDER ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("SEND CARE EMAIL REMINDER ERROR =", err);
       alert(
         err.response?.data?.msg ||
           err.response?.data?.message ||
@@ -1040,6 +1101,7 @@ export default function Dashboard() {
     }
 
     setProfileSaving(true);
+    setProfileSaveFeedback(null);
 
     try {
       const payload = {
@@ -1134,15 +1196,13 @@ export default function Dashboard() {
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setUser(updatedUser);
 
-      alert("Cập nhật hồ sơ thành công!");
+      setProfileSaveFeedback({ type: "success", text: "Hồ sơ đã được lưu." });
     } catch (err) {
-      console.error("SAVE PROFILE ERROR =", err);
-
-      alert(
-        err.response?.data?.msg ||
-          err.response?.data?.message ||
-          "Cập nhật hồ sơ thất bại."
-      );
+      if (process.env.NODE_ENV !== "production") console.error("SAVE PROFILE ERROR =", err);
+      setProfileSaveFeedback({
+        type: "error",
+        text: err.response?.data?.msg || err.response?.data?.message || "Cập nhật hồ sơ thất bại. Vui lòng thử lại.",
+      });
     } finally {
       setProfileSaving(false);
     }
@@ -1194,6 +1254,8 @@ export default function Dashboard() {
         return;
       }
 
+      setHealthSaving(true);
+      setHealthSaveFeedback(null);
       const res = await API.post("/health/add", {
         height,
         weight,
@@ -1206,25 +1268,32 @@ export default function Dashboard() {
       setForm(EMPTY_FORM);
       await fetchHealth();
 
-      alert(
-        `Đã lưu dữ liệu sức khỏe.\nBMI của bạn: ${
-          res.data?.bmi ?? calculatedBMI
-        }`
-      );
+      setHealthSaveFeedback({
+        type: "success",
+        text: `Đã lưu dữ liệu sức khỏe. BMI: ${res.data?.bmi ?? calculatedBMI}`,
+      });
     } catch (err) {
-      console.error("SAVE HEALTH ERROR =", err);
-
-      alert(
-        err.response?.data?.msg ||
-          err.response?.data?.message ||
-          "Lưu dữ liệu thất bại."
-      );
+      if (process.env.NODE_ENV !== "production") console.error("SAVE HEALTH ERROR =", err);
+      setHealthSaveFeedback({
+        type: "error",
+        text: err.response?.data?.msg || err.response?.data?.message || "Lưu dữ liệu thất bại. Vui lòng thử lại.",
+      });
+    } finally {
+      setHealthSaving(false);
     }
+  };
+
+  const startNewAIConversation = () => {
+    if (aiRequestInFlightRef.current) return;
+    setMessages([createAIWelcomeMessage()]);
   };
 
   const sendMessage = async () => {
     const userText = chatInput.trim();
-    if (!userText || loading) return;
+    if (!userText || aiRequestInFlightRef.current) return;
+    // React state updates may be batched across Enter/click events. Lock the
+    // request immediately so the same question cannot be submitted twice.
+    aiRequestInFlightRef.current = true;
 
     const userMsg = {
       sender: "user",
@@ -1239,47 +1308,55 @@ export default function Dashboard() {
       // Send only turns that existed before this question. The API adds the
       // current question itself, so including userMsg here would duplicate it.
       const history = messages
-        .filter((msg) => !msg.isError && (msg.sender === "user" || msg.sender === "ai"))
+        .filter((msg) => !msg.isGreeting && !msg.isError && !msg.isFailed && (msg.sender === "user" || msg.sender === "ai"))
         .slice(-10)
         .map((msg) => ({
           role: msg.sender === "user" ? "user" : "assistant",
           content: msg.text,
         }));
 
+      // The authenticated backend loads saved medical context. Do not pass
+      // missing values as zero or treat an unsaved health form as a record.
       const res = await API.post("/ai/analyze", {
-        glucose: latest?.glucose ?? 0,
-        bmi: latest?.bmi ?? calculatedBMI ?? 0,
-        bloodPressure: latest?.systolic
-          ? `${latest.systolic}/${latest.diastolic}`
-          : "",
-        heartRate: latest?.heartRate ?? 0,
         message: userText,
         history,
-      });
+      }, { timeout: 150000 });
+      const reply = typeof res.data?.reply === "string" ? res.data.reply.trim() : "";
+      if (!reply) {
+        throw new Error("Trợ lý AI chưa trả về nội dung hợp lệ. Vui lòng thử lại.");
+      }
 
       setMessages((prev) => [
         ...prev,
         {
           sender: "ai",
-          text:
-            res.data?.reply ||
-            "Tôi chưa nhận được phản hồi từ hệ thống.",
+          text: reply,
         },
       ]);
     } catch (err) {
-      console.error("AI CHAT ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("AI CHAT ERROR =", err);
 
+      const serverMessage = err.response?.data?.msg;
+      const errorText = typeof serverMessage === "string" && serverMessage.trim()
+        ? serverMessage.trim()
+        : err.code === "ECONNABORTED"
+        ? "Trợ lý AI phản hồi quá lâu. Vui lòng thử lại."
+        : err.message === "Trợ lý AI chưa trả về nội dung hợp lệ. Vui lòng thử lại."
+        ? err.message
+        : "Chưa kết nối được trợ lý AI. Vui lòng thử lại sau.";
+      setChatInput((current) => current || userText);
       setMessages((prev) => [
-        ...prev,
+        // Keep the question visible, but exclude this failed attempt from the
+        // provider context when the user retries or asks a new question.
+        ...prev.map((msg) => msg === userMsg ? { ...msg, isFailed: true } : msg),
         {
           sender: "ai",
-          text:
-            err.response?.data?.msg ||
-            "Chưa kết nối được trợ lý AI. Vui lòng thử lại sau.",
+          text: errorText,
           isError: true,
         },
       ]);
     } finally {
+      aiRequestInFlightRef.current = false;
       setLoading(false);
     }
   };
@@ -1338,7 +1415,7 @@ export default function Dashboard() {
           : []
       );
     } catch (err) {
-      console.error("FETCH DOCTOR MESSAGES ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("FETCH DOCTOR MESSAGES ERROR =", err);
       setDoctorMessages([]);
     } finally {
       setDoctorLoading(false);
@@ -1460,7 +1537,7 @@ export default function Dashboard() {
         );
       }
     } catch (err) {
-      console.error("SEND DOCTOR MESSAGE ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("SEND DOCTOR MESSAGE ERROR =", err);
 
       setDoctorMessages((prev) =>
         prev.filter((msg) => msg._id !== temporaryMessage._id)
@@ -1625,241 +1702,151 @@ export default function Dashboard() {
       icon: <FaCalendarCheck />,
       label: "Lịch hẹn khám",
     },
+    {
+      key: "advices",
+      icon: <FaEnvelope />,
+      label: "Lời khuyên bác sĩ",
+    },
   ];
 
-  const Card = ({ title, value, icon, status, type }) => (
-    <motion.div
-      className={`modern-card ${type || ""}`}
-      whileHover={{ y: -4, scale: 1.02 }}
-      transition={{ duration: 0.2 }}
-    >
-      <div className="card-top">
-        <div className="card-icon">{icon}</div>
-        {status && (
-          <div className={`card-status ${type || ""}`}>{status}</div>
-        )}
-      </div>
+  const navGroups = [
+    { label: "CÁ NHÂN", items: ["dashboard", "profile"] },
+    { label: "THEO DÕI SỨC KHỎE", items: ["health", "analytics", "ai"] },
+    { label: "ĐIỀU TRỊ & KẾT NỐI", items: ["care-plan", "appointments", "doctor-chat", "advices"] },
+  ];
+  const pageMeta = {
+    dashboard: ["Tổng quan sức khỏe", "Các chỉ số và hoạt động chăm sóc gần nhất của bạn."],
+    profile: ["Hồ sơ bệnh nhân", "Thông tin cá nhân, liên hệ và tiền sử y tế."],
+    health: ["Nhập dữ liệu sức khỏe", "Ghi lại chỉ số đo để cập nhật lịch sử theo dõi."],
+    analytics: ["Biểu đồ & lịch sử", "Theo dõi các lần ghi nhận sức khỏe của bạn."],
+    ai: ["DOCTIS AI", "Trao đổi về theo dõi và chăm sóc sức khỏe."],
+    "care-plan": ["Kế hoạch chăm sóc", "Lịch ăn uống, vận động và thuốc theo dữ liệu hiện có."],
+    appointments: ["Lịch hẹn khám", "Các buổi hẹn với bác sĩ phụ trách."],
+    "doctor-chat": ["Trò chuyện bác sĩ", "Trao đổi trực tiếp với bác sĩ của bạn."],
+    advices: ["Lời khuyên bác sĩ", "Tin nhắn và hướng dẫn được gửi đến bạn."],
+  };
+  const [pageTitle, pageDescription] = pageMeta[menu] || pageMeta.dashboard;
+  const displayName = profile.fullName || user?.fullName || user?.username || "Tài khoản";
+  const nextAppointment = useMemo(() => appointments
+    .filter((item) => item?.appointmentDate && new Date(item.appointmentDate).getTime() >= Date.now())
+    .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))[0] || null,
+  [appointments]);
 
-      <div className="card-title">{title}</div>
-      <div className="card-value">{value}</div>
-    </motion.div>
-  );
+
 
   return (
-    <div className="dashboard-layout doctis-v5">
-      <div className="dashboard-bg" />
-      <header className="v5-topbar">
-        <button type="button" className="v5-brand" onClick={() => { setMenu("dashboard"); setMobileMenuOpen(false); }}>
-          <span className="v5-brand-mark"><FaHeartbeat /></span>
-          <span><strong>DOCTIS</strong><small>Sức khỏe thông minh</small></span>
+    <MotionConfig reducedMotion={reducedMotion ? "always" : "never"}><div className="dashboard-layout doctis-v5 health-studio-layout" data-studio-theme={preferences.theme} data-studio-simple={preferences.simpleUI} data-sidebar-collapsed={preferences.sidebarCollapsed}>
+      <aside className={`studio-sidebar ${mobileMenuOpen ? "is-open" : ""}`} aria-label="Điều hướng DOCTIS">
+        <button type="button" className="studio-brand" onClick={() => { setMenu("dashboard"); setMobileMenuOpen(false); }}>
+          <span className="studio-brand-mark"><FaHeartbeat /></span>
+          <span><strong>DOCTIS</strong><small>HEALTH STUDIO</small></span>
         </button>
-        <nav className="v5-primary-nav" aria-label="Điều hướng chính">
-          <button className={menu === "dashboard" ? "active" : ""} onClick={() => setMenu("dashboard")}><FaHome /> Tổng quan</button>
-          <button className={menu === "profile" ? "active" : ""} onClick={() => setMenu("profile")}><FaUser /> Hồ sơ</button>
-          <button className={menu === "health" ? "active" : ""} onClick={() => setMenu("health")}><FaPlusCircle /> Sức khỏe</button>
-          <button className={menu === "care-plan" ? "active" : ""} onClick={() => setMenu("care-plan")}><FaUtensils /> Chăm sóc</button>
-          <button className={menu === "appointments" ? "active" : ""} onClick={() => setMenu("appointments")}><FaCalendarCheck /> Lịch hẹn</button>
+        <div className="studio-sidebar-caption">KHÔNG GIAN CỦA BẠN</div>
+        <nav className="studio-nav" aria-label="Điều hướng chính">
+          {navGroups.map((group) => (
+            <div className="studio-nav-group" key={group.label}>
+              <button type="button" className="studio-nav-heading studio-group-toggle" aria-expanded={!collapsedGroups[group.label]} onClick={() => setCollapsedGroups(current => ({...current,[group.label]:!current[group.label]}))}>{group.label}<FaChevronDown aria-hidden="true" /></button>
+              <motion.div className="studio-nav-group-items" initial={false} animate={{height:collapsedGroups[group.label] ? 0 : "auto",opacity:collapsedGroups[group.label] ? 0 : 1}} transition={{duration:reducedMotion ? 0 : .2}} inert={!!collapsedGroups[group.label]}>
+              {group.items.map((key) => {
+                const item = menus.find((navItem) => navItem.key === key);
+                if (!item) return null;
+                return (
+                  <button
+                    type="button"
+                    key={item.key}
+                    className={`studio-nav-item ${menu === item.key ? "is-active" : ""}`}
+                    title={item.label}
+                    onClick={() => { setMenu(item.key); setMobileMenuOpen(false); }}
+                    aria-current={menu === item.key ? "page" : undefined}
+                  >
+                    <span className="studio-nav-icon">{item.icon}</span>
+                    <span>{item.label}</span>
+                    {menu === item.key && <motion.i layoutId="studio-nav-indicator" className="studio-nav-indicator" transition={{ type: "spring", stiffness: 420, damping: 34 }} />}
+                  </button>
+                );
+              })}
+              </motion.div>
+            </div>
+          ))}
         </nav>
-        <div className="v5-header-actions">
-          <button className="v5-notification" onClick={() => setMenu("advices")} title="Thông báo"><FaBell />{advices.length > 0 && <span>{advices.length}</span>}</button>
-          <button className="v5-account" onClick={() => setMenu("profile")} title="Tài khoản"><FaUserCircle /><span>{profile.fullName || user?.fullName || user?.username || "Tài khoản"}</span><FaChevronDown /></button>
-          <button className="v5-logout-btn" onClick={logout} title="Đăng xuất"><FaSignOutAlt /><span>Đăng xuất</span></button>
-          <button className="v5-menu-toggle" onClick={() => setMobileMenuOpen((v) => !v)} aria-label="Mở menu" aria-expanded={mobileMenuOpen} title="Mở danh mục"><FaBars /></button>
+        <div className="studio-sidebar-bottom">
+          <button type="button" className="studio-user-card" onClick={() => { setMenu("profile"); setMobileMenuOpen(false); }}>
+            <span className="studio-user-avatar">{displayName.slice(0, 1).toUpperCase()}</span>
+            <span className="studio-user-copy"><strong>{displayName}</strong><small>Hồ sơ cá nhân</small></span>
+            <FaChevronDown />
+          </button>
+          <button type="button" className="studio-logout" onClick={logout}><FaSignOutAlt /><span>Đăng xuất</span></button>
         </div>
-      </header>
-      {mobileMenuOpen && (
-        <div className="v5-drawer-backdrop" onClick={() => setMobileMenuOpen(false)}>
-          <aside className="v5-drawer" onClick={(e) => e.stopPropagation()}>
-            <div className="v5-drawer-head"><strong>DOCTIS</strong><button onClick={() => setMobileMenuOpen(false)}><FaTimes /></button></div>
-            <div className="v5-drawer-list">
-              {menus.map((item) => <button key={item.key} className={menu === item.key ? "active" : ""} onClick={() => { setMenu(item.key); setMobileMenuOpen(false); }}>{item.icon}<span>{item.label}</span></button>)}
-            </div>
-            <button className="v5-drawer-logout" onClick={logout}><FaSignOutAlt /> Đăng xuất</button>
-          </aside>
-        </div>
-      )}
+      </aside>
 
-      <main className="dashboard">
-        {menu === "dashboard" && (
-          <section className="v5-welcome-hero">
-            <div className="v5-hero-copy">
-              <span className="v5-hero-kicker">BẢNG ĐIỀU KHIỂN SỨC KHỎE CÁ NHÂN</span>
-              <h1>Xin chào,<br /><strong>{profile.fullName || user?.fullName || user?.username || "Bạn"}</strong></h1>
-              <p>Chúng tôi có thể giúp gì cho bạn hôm nay? Theo dõi chỉ số, hiểu sức khỏe và xây dựng kế hoạch chăm sóc phù hợp mỗi ngày.</p>
-              <div className="v5-hero-actions"><button onClick={() => setMenu("health")}><FaPlusCircle /> Cập nhật sức khỏe</button><button className="ghost" onClick={() => setMenu("ai")}><FaRobot /> Hỏi DOCTIS AI</button></div>
-            </div>
-            <div className="v5-hero-art">
-              <section className="v5-vitals-card" aria-label="Chỉ số sức khỏe gần nhất">
-                <div className="v5-vitals-head">
-                  <div><span>GHI NHẬN GẦN NHẤT</span><strong>{latest?.createdAt ? formatDate(latest.createdAt) : "Chưa có dữ liệu"}</strong></div>
-                  <i className={latest?.createdAt ? "is-recorded" : ""} aria-label={latest?.createdAt ? "Đã ghi nhận" : "Chưa ghi nhận"} />
-                </div>
-                <div className="v5-vitals-metrics">
-                  <div><span>Đường huyết</span><strong>{Number(latest?.glucose) > 0 ? latest.glucose : "—"}<small>{Number(latest?.glucose) > 0 ? "mg/dL" : ""}</small></strong></div>
-                  <div><span>Huyết áp</span><strong>{latest?.systolic && latest?.diastolic ? `${latest.systolic}/${latest.diastolic}` : "—"}<small>{latest?.systolic && latest?.diastolic ? "mmHg" : ""}</small></strong></div>
-                </div>
-                <svg className="v5-pulse-line" viewBox="0 0 360 46" role="img" aria-label="Đồ họa nhịp theo dõi sức khỏe">
-                  <path d="M0 25h82l13-1 9-12 13 25 13-34 15 32 12-10h24l10-1 10-12 13 24 13-35 15 34 11-9h97" />
-                </svg>
-                <p>{latest?.createdAt ? "Số liệu được lấy từ lần cập nhật sức khỏe gần nhất." : "Cập nhật chỉ số để bắt đầu theo dõi sức khỏe."}</p>
-              </section>
-            </div>
-          </section>
-        )}
-        {menu === "dashboard" && (
-          <section className="v5-quick-section">
-            <div className="v5-section-heading"><div><span className="v5-eyebrow">TRUY CẬP NHANH</span><h2>Bạn muốn làm gì hôm nay?</h2></div><span className="v5-date-pill">{new Date().toLocaleDateString("vi-VN")}</span></div>
-            <div className="v5-quick-grid">
-              {[["profile", <FaUser />, "Hồ sơ bệnh nhân", "Thông tin cá nhân & bệnh nền"],["health", <FaPlusCircle />, "Chỉ số sức khỏe", "Nhập chỉ số mới nhất"],["ai", <FaRobot />, "AI phân tích", "Hiểu rõ tình trạng sức khỏe"],["care-plan", <FaUtensils />, "Kế hoạch chăm sóc", "Ăn uống • vận động • thuốc"],["care-plan", <FaNotesMedical />, "Đơn thuốc", "Xem đơn bác sĩ đã chốt"],["doctor-chat", <FaUserMd />, "Trò chuyện bác sĩ", "Trao đổi trực tiếp với bác sĩ"]].map(([key, icon, title, desc], index) => <motion.button key={`${key}-${title}-${index}`} type="button" className="v5-quick-card" whileHover={{ y: -5 }} whileTap={{ scale: 0.98 }} onClick={() => { setMenu(key); if (title === "Đơn thuốc") window.setTimeout(() => document.querySelector(".prescription-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80); }}><span className="v5-quick-icon">{icon}</span><span><strong>{title}</strong><small>{desc}</small></span><b>→</b></motion.button>)}
-            </div>
-          </section>
-        )}
-        {menu === "dashboard" && (
-          <section className="v5-diabetes-section">
-            <div className="v5-section-heading"><div><span className="v5-eyebrow">KIẾN THỨC SỨC KHỎE</span><h2>Hiểu hơn về đái tháo đường</h2><p>Thay các ô ảnh bên dưới bằng ảnh thật của dự án khi bạn sẵn sàng.</p></div></div>
-            <div className="v5-diabetes-grid">
-              {[['/images/diabetes/diabetes-01.jpg','Kiểm soát đường huyết','Theo dõi chỉ số đều đặn và nhận biết các dấu hiệu bất thường.'],['/images/diabetes/diabetes-02.jpg','Dinh dưỡng & vận động','Ăn uống cân bằng và vận động phù hợp là một phần của chăm sóc lâu dài.'],['/images/diabetes/diabetes-03.jpg','Chăm sóc chủ động','Lưu lịch sử, kế hoạch chăm sóc và trao đổi với bác sĩ khi cần.']].map(([image,title,desc]) => <article className="v5-diabetes-card" key={image}><div className="v5-image-placeholder" style={{backgroundImage:`url(${image})`}}><span>{title}</span><small>{image}</small></div><strong>{title}</strong><p>{desc}</p></article>)}
-            </div>
-          </section>
-        )}
+      <AnimatePresence>
+        {mobileMenuOpen && <motion.button type="button" className="studio-mobile-backdrop" aria-label="Đóng menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileMenuOpen(false)} />}
+      </AnimatePresence>
+
+      <div className="studio-main-shell">
+        <header className="studio-topbar">
+          <div className="studio-topbar-title">
+            <button type="button" className="studio-menu-toggle" onClick={() => setMobileMenuOpen((open) => !open)} aria-label="Mở điều hướng" aria-expanded={mobileMenuOpen}><FaBars /></button>
+            <div><span className="studio-breadcrumb">DOCTIS <i>/</i> BỆNH NHÂN</span><h1>{pageTitle}</h1><p>{pageDescription}</p></div>
+          </div>
+          <div className="studio-topbar-actions">
+            {menu !== "dashboard" && <HeartScene compact className="patient-header-heart" bpm={latest?.heartRate} status={risk.label} busy={healthSaving || loading || nutritionLoading} />}
+            <StudioControls />
+            <span className="studio-today"><FaCalendarCheck />{new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long" })}</span>
+            <button type="button" className="studio-notification" onClick={() => setMenu("advices")} aria-label={`Lời khuyên bác sĩ${advices.length ? `, ${advices.length} mục` : ""}`}><FaBell />{advices.length > 0 && <i>{advices.length}</i>}</button>
+            <button type="button" className="studio-topbar-user" onClick={() => setMenu("profile")} aria-label={`Mở hồ sơ: ${displayName}`}><span className="studio-user-avatar">{displayName.slice(0, 1).toUpperCase()}</span><FaChevronDown /></button>
+          </div>
+        </header>
+        <StudioExperience page={menu} name={displayName} smoothScroll={menu === "dashboard"} />
+
+        {mobileMenuOpen && <span className="studio-close-on-select" aria-hidden="true" />}
+
+      <main ref={screenRef} className={`studio-content ${menu === "doctor-chat" ? "is-conversation" : ""}`}>
+        {menu === "dashboard" && <PatientOverview
+          displayName={displayName} latest={latest} data={data} risk={risk}
+          analysisData={analysisData} nextAppointment={nextAppointment}
+          nutritionPlan={nutritionPlan} loading={healthLoading} error={apiErrors.health}
+          navigate={setMenu} formatDate={formatDate} formatTime={formatTime}
+          appointmentStatusLabel={appointmentStatusLabel}
+        />}
 
         {apiErrors.profile && menu === "profile" && (
           <div className="danger-alert">
             <FaExclamationTriangle />
             <span>
-              Không tải được hồ sơ. Kiểm tra backend route
-              <strong> /api/profile</strong> và token đăng nhập.
+              Không tải được hồ sơ. Vui lòng tải lại trang hoặc thử lại sau.
             </span>
           </div>
         )}
 
-        {menu === "dashboard" && (
-          <>
-            {Number(latest?.glucose || 0) >= 240 && (
-              <div className="danger-alert">
-                <FaExclamationTriangle />
-                <span>
-                  Glucose đang ở mức rất cao. Bạn nên kiểm tra y tế sớm.
-                </span>
-              </div>
-            )}
-
-            <div className="latest-data-notice">
-              <span className="latest-data-dot" />
-              <div>
-                <strong>Dữ liệu sức khỏe gần nhất</strong>
-                <span>Toàn bộ chỉ số trên bảng điều khiển được lấy từ lần cập nhật sức khỏe gần nhất của bạn.</span>
-              </div>
-              {latest?.createdAt && (
-                <time dateTime={latest.createdAt}>
-                  Cập nhật: {formatDate(latest.createdAt)} {formatTime(latest.createdAt)}
-                </time>
-              )}
-            </div>
-
-            <div className="modern-grid">
-              <Card
-                title="Glucose"
-                value={latest?.glucose || 0}
-                icon={<FaTint />}
-                status={latest?.glucose >= 140 ? "Cao" : "Ổn định"}
-                type="danger"
-              />
-
-              <Card
-                title="BMI"
-                value={latest?.bmi || 0}
-                icon={<FaWeight />}
-                type="info"
-              />
-
-              <Card
-                title="Huyết áp"
-                value={
-                  latest?.systolic
-                    ? `${latest.systolic}/${latest.diastolic}`
-                    : "0/0"
-                }
-                icon={<FaHeart />}
-                type="pink"
-              />
-
-              <Card
-                title="Nhịp tim"
-                value={latest?.heartRate || 0}
-                icon={<FaHeartbeat />}
-                type="success"
-              />
-
-              <Card
-                title="Rủi ro"
-                value={risk.label}
-                icon={<FaShieldAlt />}
-                type="warning"
-              />
-            </div>
-
-            <div className="ai-analysis-box">
-              <div className="analysis-header">
-                <div className="analysis-avatar">🤖</div>
-                <div>
-                  <h2>AI Phân tích sức khỏe</h2>
-                  <p>
-                    Dựa trên dữ liệu sức khỏe gần nhất của bạn.
-                  </p>
-                </div>
-              </div>
-
-              <div className="analysis-grid">
-                {analysisData.length > 0 ? (
-                  analysisData.map((item, index) => (
-                    <div className="analysis-item" key={index}>
-                      <div
-                        className={`analysis-icon ${
-                          item.bg || "blue"
-                        }`}
-                      >
-                        {item.icon}
-                      </div>
-                      <div>
-                        <h4>{item.title}</h4>
-                        <p>{item.description}</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p>Chưa đủ dữ liệu để phân tích.</p>
-                )}
-              </div>
-            </div>
-          </>
-        )}
-
         {menu === "profile" && (
           <motion.div
-            className="patient-profile-page"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="studio-profile-page"
+            initial={false}
           >
-            <div className="profile-card">
+            <div className="studio-profile-card">
               <div className="profile-page-header">
                 <div>
-                  <h2>👤 Hồ sơ bệnh nhân</h2>
+                  <span className="patient-function-kicker">Hồ sơ cá nhân / DOCTIS</span>
+                  <h2>{displayName}</h2>
                   <p>
                     Thông tin cá nhân và thông tin cần thiết cho quá trình
                     khám bệnh.
                   </p>
+                  <div className="profile-mode-switch" role="group" aria-label="Chế độ hồ sơ"><button type="button" aria-pressed={profileReadOnly} disabled={profileSaving} onClick={() => setProfileReadOnly(true)}>Xem hồ sơ</button><button type="button" aria-pressed={!profileReadOnly} disabled={profileSaving} onClick={() => setProfileReadOnly(false)}>Chỉnh sửa</button></div>
                 </div>
+                <div className="profile-masthead-seal" aria-hidden="true"><FaAddressBook /><span>Thông tin<br/>chăm sóc của bạn</span></div>
               </div>
 
               <div className="profile-photo-section">
                 <div
                   className="patient-photo-box"
-                  onClick={handleAvatarClick}
+                  onClick={() => { if (!profileReadOnly) handleAvatarClick(); }}
                   role="button"
-                  tabIndex={0}
+                  tabIndex={profileReadOnly ? -1 : 0}
+                  aria-disabled={profileReadOnly}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
+                    if (!profileReadOnly && (e.key === "Enter" || e.key === " ")) {
                       handleAvatarClick();
                     }
                   }}
@@ -1889,6 +1876,8 @@ export default function Dashboard() {
                   Ảnh thẻ 4×6 • JPG, PNG • Tối đa 5MB
                 </p>
               </div>
+              <nav className="profile-section-nav" aria-label="Các phần trong hồ sơ">{["Thông tin cá nhân","Thông tin người thân","Thông tin địa chỉ","Thông tin y tế cơ bản","Người liên hệ khẩn cấp"].map((title,index) => <button type="button" key={title} onClick={() => document.getElementById(profileSectionId(title))?.scrollIntoView({behavior:reducedMotion ? "instant" : "smooth",block:"start"})}><span>{String(index+1).padStart(2,"0")}</span>{title}</button>)}</nav>
+              <fieldset className="profile-editor" disabled={profileReadOnly} aria-label={profileReadOnly ? "Hồ sơ ở chế độ xem" : "Chỉnh sửa hồ sơ"}>
 
               <ProfileSection title="Thông tin cá nhân" icon={<FaUser />}>
                 <ProfileField
@@ -2056,10 +2045,18 @@ export default function Dashboard() {
 
                 <ProfileField full label="Dị ứng *">
                   {/* Các dị ứng đã chọn */}
-                  {allergyTags.length > 0 && (
-                    <div className="allergy-selected-list">
+                  <div className="allergy-selected-list">
+                    <AnimatePresence initial={false}>
                       {allergyTags.map((tag) => (
-                        <span className="allergy-chip" key={tag}>
+                        <motion.span
+                          className="allergy-chip"
+                          key={tag}
+                          layout
+                          initial={{ opacity: 0, y: 5, scale: .96 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, scale: .94 }}
+                          transition={{ duration: .18 }}
+                        >
                           <span>{tag}</span>
                           <button
                             type="button"
@@ -2068,10 +2065,10 @@ export default function Dashboard() {
                           >
                             <FaTimes />
                           </button>
-                        </span>
+                        </motion.span>
                       ))}
-                    </div>
-                  )}
+                    </AnimatePresence>
+                  </div>
 
                   {/* Dropdown chính: thiết kế cùng kiểu với Nhóm máu */}
                   <select
@@ -2138,10 +2135,10 @@ export default function Dashboard() {
                 </ProfileField>
 
                 <ProfileField full label="Bệnh nền hiện tại *">
-                  <div className="chronic-options-grid">
+                  <div className="studio-condition-grid">
                      {CHRONIC_DISEASE_OPTIONS.map((option) => (
                       <label
-                        className={`chronic-option ${
+                        className={`studio-condition-tile ${
                           chronicSelected.includes(option) ? "selected" : ""
                         }`}
                         key={option}
@@ -2209,31 +2206,48 @@ export default function Dashboard() {
                   onClick={saveProfile}
                   disabled={profileSaving || profileLoading}
                 >
-                  <FaSave />
+                  {profileSaving ? <span className="button-spinner" aria-hidden="true" /> : <FaSave />}
                   {profileSaving ? "Đang lưu..." : "Lưu hồ sơ bệnh nhân"}
                 </button>
+                <AnimatePresence mode="wait">
+                  {profileSaveFeedback && (
+                    <motion.div
+                      key={profileSaveFeedback.type}
+                      className={`form-feedback ${profileSaveFeedback.type}`}
+                      role={profileSaveFeedback.type === "error" ? "alert" : "status"}
+                      initial={{ opacity: 0, y: 6, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: "auto" }}
+                      exit={{ opacity: 0, y: -4, height: 0 }}
+                      transition={{ duration: 0.18 }}
+                    >
+                      <span className="feedback-mark" aria-hidden="true">{profileSaveFeedback.type === "success" ? "✓" : "!"}</span>
+                      {profileSaveFeedback.text}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+              </fieldset>
             </div>
           </motion.div>
         )}
 
         {menu === "doctor-chat" && (
           <motion.div
-            className="doctor-chat-page"
-            initial={{ opacity: 0, y: 20 }}
+            className="conversation-workspace"
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="doctor-chat-container">
-              <div className="doctor-list-panel">
-                <div className="doctor-list-header">
+            <div className={`conversation-frame ${mobileConversationOpen ? "is-mobile-conversation" : ""}`}>
+              <div className="conversation-rail">
+                <div className="conversation-rail-heading">
                   <div>
-                    <h2>👨‍⚕️ Bác sĩ</h2>
+                    <h2>Hội thoại</h2>
                     <p>Chọn bác sĩ để trò chuyện</p>
                   </div>
-                  <span className="doctor-count">{doctors.length}</span>
+                  <span className="conversation-count">{doctors.length}</span>
                 </div>
 
-                <div className="doctor-search">
+                <div className="conversation-search">
                   <FaSearch />
                   <input
                     type="text"
@@ -2252,7 +2266,7 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                <div className="doctor-list">
+                <div className="conversation-contacts">
                   {filteredDoctors.length > 0 ? (
                     filteredDoctors.map((doctor) => {
                       const doctorId = getId(doctor);
@@ -2264,12 +2278,13 @@ export default function Dashboard() {
                         <button
                           type="button"
                           key={doctorId}
-                          className={`doctor-item ${
+                          className={`conversation-contact ${
                             isSelected ? "selected" : ""
                           }`}
-                          onClick={() => selectDoctor(doctor)}
+                          onClick={() => { selectDoctor(doctor); setMobileConversationOpen(true); }}
                         >
-                          <div className="doctor-avatar">
+                          {isSelected && <motion.i className="conversation-selection" layoutId="patient-conversation-selection" transition={{ duration: .2 }} />}
+                          <div className="conversation-avatar">
                             {doctor.avatar ? (
                               <img
                                 src={doctor.avatar}
@@ -2278,10 +2293,10 @@ export default function Dashboard() {
                             ) : (
                               <FaUserMd />
                             )}
-                            <span className="doctor-online-dot" />
+
                           </div>
 
-                                                    <div className="doctor-info">
+                                                    <div className="conversation-person">
                             <h4>{getDoctorName(doctor)}</h4>
                             <p>
                               {doctor.lastMessage ||
@@ -2292,7 +2307,7 @@ export default function Dashboard() {
                           </div>
 
                           {doctor.unread > 0 && (
-                            <span className="doctor-unread-badge">
+                            <span className="conversation-unread">
                               {doctor.unread}
                             </span>
                           )}
@@ -2300,7 +2315,7 @@ export default function Dashboard() {
                       );
                     })
                   ) : (
-                    <div className="doctor-empty">
+                    <div className="conversation-empty">
                       <FaUserMd />
                       <h4>Không tìm thấy bác sĩ</h4>
                       <p>
@@ -2311,11 +2326,12 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="doctor-message-panel">
+              <div className="conversation-pane">
                 {selectedDoctor ? (
                   <>
-                    <div className="doctor-chat-header">
-                      <div className="selected-doctor-avatar">
+                    <div className="conversation-heading">
+                      <ConversationBack onClick={() => setMobileConversationOpen(false)} />
+                      <div className="conversation-avatar">
                         {selectedDoctor.avatar ? (
                           <img
                             src={selectedDoctor.avatar}
@@ -2329,18 +2345,18 @@ export default function Dashboard() {
                       <div>
                         <h3>{getDoctorName(selectedDoctor)}</h3>
                         <p>
-                          <FaCircle />{" "}
+
                           {selectedDoctor.specialty ||
                             selectedDoctor.specialization ||
                             "Bác sĩ"}
                         </p>
                       </div>
 
-                      <div className="doctor-header-actions">
+                      <div className="conversation-actions">
                         {selectedDoctor.phone && (
                           <a
                             href={`tel:${selectedDoctor.phone}`}
-                            className="doctor-call-btn"
+                            className="conversation-call"
                             title="Gọi bác sĩ"
                           >
                             <FaPhone />
@@ -2351,11 +2367,11 @@ export default function Dashboard() {
 
                     <div
                       ref={doctorChatBodyRef}
-                      className="doctor-chat-body"
+                      className="conversation-timeline"
                       onScroll={handleDoctorChatScroll}
                     >
                       {doctorLoading ? (
-                        <div className="doctor-chat-loading">
+                        <div className="conversation-loading">
                           Đang tải cuộc trò chuyện...
                         </div>
                       ) : doctorMessages.length > 0 ? (
@@ -2365,18 +2381,18 @@ export default function Dashboard() {
                           return (
                             <div
                               key={msg._id || index}
-                              className={`doctor-message ${
+                              className={`conversation-message ${
                                 isUser ? "patient" : "doctor"
                               }`}
                             >
-                              <div className="message-bubble">
+                              <div className="conversation-bubble">
                                 {msg.content || msg.text ? (
-                                  <div className="message-content">
+                                  <div className="conversation-text">
                                     {msg.content || msg.text}
                                   </div>
                                 ) : null}
                                 {renderDoctorAttachment(msg.attachment)}
-                                <div className="message-time">
+                                <div className="conversation-time">
                                   {formatTime(msg.createdAt)}
                                   {isUser &&
                                     (msg.read ? (
@@ -2390,8 +2406,8 @@ export default function Dashboard() {
                           );
                         })
                       ) : (
-                        <div className="empty-doctor-chat">
-                          <div className="empty-chat-icon">
+                        <div className="conversation-empty">
+                          <div className="conversation-empty-icon">
                             <FaUserMd />
                           </div>
                           <h3>Bắt đầu trò chuyện</h3>
@@ -2405,7 +2421,8 @@ export default function Dashboard() {
                       <div ref={doctorChatEndRef} aria-hidden="true" />
                     </div>
 
-                    <div className="doctor-chat-composer">
+                    <ConversationNotice viewport={doctorViewport} />
+                    <div className="conversation-composer">
                       {doctorAttachment && (
                         <div className="doctor-attachment-preview">
                           <div className="doctor-attachment-preview-icon">
@@ -2441,10 +2458,10 @@ export default function Dashboard() {
                         </div>
                       )}
 
-                      <div className="doctor-chat-input">
+                      <div className="conversation-input">
                         <button
                           type="button"
-                          className="doctor-attach-btn"
+                          className="conversation-attach"
                           onClick={() =>
                             doctorAttachmentInputRef.current?.click()
                           }
@@ -2488,10 +2505,8 @@ export default function Dashboard() {
                     </div>
                   </>
                 ) : (
-                  <div className="no-doctor-selected" style={{ width: "100%", height: "100%", minHeight: "420px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "40px", boxSizing: "border-box" }}>
-                    <div className="no-doctor-icon">
-                      <FaUserMd />
-                    </div>
+                  <div className="conversation-empty" >
+                    <CareScene kind="chat" className="small" />
                     <h2>Trò chuyện với bác sĩ</h2>
                     <p>
                       Hãy chọn một bác sĩ ở danh sách bên trái để bắt đầu
@@ -2538,200 +2553,152 @@ export default function Dashboard() {
 
         {menu === "health" && (
           <motion.div
-            className="health-form"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="studio-health-form"
+            initial={false}
+            data-save-state={healthSaveFeedback?.type || "idle"}
           >
-            <div className="health-glow" />
+            <div className="health-entry-intro"><div><span className="patient-function-kicker">Ghi nhận / Sức khỏe mỗi ngày</span><h2 className="studio-form-title">Lắng nghe cơ thể,<br/><em>từng chỉ số nhỏ.</em></h2><p className="studio-form-subtitle">Nhập kết quả bạn vừa đo. Dữ liệu chỉ được ghi nhận khi lưu thành công.</p></div><div className="health-entry-progress"><svg viewBox="0 0 90 90" aria-hidden="true"><circle cx="45" cy="45" r="38"/><motion.circle cx="45" cy="45" r="38" initial={false} animate={{strokeDashoffset:238.76*(1-enteredCount/5)}} transition={{duration:reducedMotion ? 0 : .25}}/></svg><strong>{enteredCount}<small>/5</small></strong><span>trường đã nhập</span></div></div>
 
-            <h2 className="health-title">🩺 Nhập dữ liệu sức khỏe</h2>
-            <p className="health-subtitle">
-              Nhập các chỉ số hiện tại để theo dõi sức khỏe.
-            </p>
-
-            <div className="form-grid">
+            <section className="health-entry-group"><div className="health-entry-group-heading"><span>01</span><div><h3>Thể trạng</h3><p>Chiều cao và cân nặng để tính BMI.</p></div><FaRulerVertical aria-hidden="true" /></div><div className="form-grid">
               <HealthInput
+                id="health-height"
                 label="Chiều cao (cm)"
                 icon={<FaRulerVertical />}
                 placeholder="Ví dụ: 175"
                 type="number"
                 value={form.height}
-                onChange={(value) =>
-                  setForm((prev) => ({ ...prev, height: value }))
-                }
+                onChange={(value) => updateHealthField("height", value)}
               />
 
               <HealthInput
+                id="health-weight"
                 label="Cân nặng (kg)"
-                icon="⚖️"
+                icon={<FaWeight />}
                 placeholder="Ví dụ: 70"
                 type="number"
                 value={form.weight}
-                onChange={(value) =>
-                  setForm((prev) => ({ ...prev, weight: value }))
-                }
+                onChange={(value) => updateHealthField("weight", value)}
               />
 
-              <div className="input-card">
-                <div className="input-label">⚖️ BMI</div>
-                <div className="health-input bmi-display">
+              <div className="studio-health-field studio-bmi-field">
+                <div className="studio-field-label">BMI · Tự tính</div>
+                <div className="studio-bmi-result">
                   {calculatedBMI || "Nhập chiều cao + cân nặng"}
                 </div>
               </div>
 
-              <HealthInput
-                label="Glucose"
-                icon="🩸"
+              </div></section><section className="health-entry-group"><div className="health-entry-group-heading"><span>02</span><div><h3>Chỉ số sinh hiệu</h3><p>Ghi lại đúng đơn vị từ thiết bị đo.</p></div><FaHeartbeat aria-hidden="true" /></div><div className="form-grid"><HealthInput
+                id="health-glucose"
+                label="Glucose (mg/dL)"
+                icon={<FaTint />}
                 placeholder="Ví dụ: 90"
                 type="number"
                 value={form.glucose}
-                onChange={(value) =>
-                  setForm((prev) => ({ ...prev, glucose: value }))
-                }
+                onChange={(value) => updateHealthField("glucose", value)}
               />
 
               <HealthInput
+                id="health-blood-pressure"
                 label="Huyết áp"
-                icon="❤️"
+                icon={<FaHeartbeat />}
                 placeholder="Ví dụ: 120/80"
                 type="text"
                 value={form.bloodPressure}
-                onChange={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    bloodPressure: value,
-                  }))
-                }
+                onChange={(value) => updateHealthField("bloodPressure", value)}
               />
 
               <HealthInput
-                label="Nhịp tim"
-                icon="💓"
+                id="health-heart-rate"
+                label="Nhịp tim (bpm)"
+                icon={<FaHeartbeat />}
                 placeholder="Ví dụ: 80"
                 type="number"
                 value={form.heartRate}
-                onChange={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    heartRate: value,
-                  }))
-                }
+                onChange={(value) => updateHealthField("heartRate", value)}
               />
+            </div></section>
+
+            {enteredRisk !== "Chưa có dữ liệu" && <div className={`health-entry-assessment ${enteredRisk === "Nguy hiểm" ? "is-danger" : enteredRisk === "Cao" ? "is-caution" : ""}`} role="status"><FaHeartbeat/><div><span>Theo chỉ số đang nhập · chưa lưu</span><strong>{enteredRisk}</strong></div><p>Đánh giá theo quy tắc hiện có của DOCTIS. Kiểm tra lại số đo trước khi lưu.</p></div>}
+
+            {calculatedBMI && <p className="studio-form-note" role="status">BMI được tính từ chiều cao và cân nặng bạn vừa nhập.</p>}
+
+            <div className="health-save-area">
+              <span className="health-save-hint"><FaSave aria-hidden="true"/> Lưu vào lịch sử theo dõi của bạn</span>
+              <button type="button" className="studio-save-action" onClick={saveHealth} disabled={healthSaving}>
+                {healthSaving && <span className="button-spinner" aria-hidden="true" />}
+                {healthSaving ? "Đang lưu dữ liệu..." : "Lưu dữ liệu sức khỏe"}
+              </button>
+              <AnimatePresence mode="wait">
+                {healthSaveFeedback && (
+                  <motion.div
+                    key={healthSaveFeedback.type}
+                    className={`form-feedback ${healthSaveFeedback.type}`}
+                    role={healthSaveFeedback.type === "error" ? "alert" : "status"}
+                    initial={{ opacity: 0, y: 6, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                    exit={{ opacity: 0, y: -4, height: 0 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    <span className="feedback-mark" aria-hidden="true">{healthSaveFeedback.type === "success" ? "✓" : "!"}</span>
+                    {healthSaveFeedback.text}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-
-            {calculatedBMI && (
-              <div className="bmi-info-box">
-                <strong>BMI hiện tại: {calculatedBMI}</strong>
-                <br />
-                <small>
-                  BMI được tự động tính từ chiều cao và cân nặng.
-                </small>
-              </div>
-            )}
-
-            <button type="button" className="save-btn" onClick={saveHealth}>
-              🚀 Lưu dữ liệu
-            </button>
           </motion.div>
         )}
 
-        {menu === "analytics" && (
-          <>
-            <div className="chart-card">
-              <h2>📈 Biểu đồ sức khỏe</h2>
-              <DashboardChart data={data} />
-            </div>
-
-            <div className="chart-card">
-              <h2>📋 Lịch sử sức khỏe</h2>
-
-              <div className="table-responsive">
-                <table className="history-table">
-                  <thead>
-                    <tr>
-                      <th>Ngày</th>
-                      <th>Chiều cao</th>
-                      <th>Cân nặng</th>
-                      <th>BMI</th>
-                      <th>Glucose</th>
-                      <th>Huyết áp</th>
-                      <th>Nhịp tim</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {data.length > 0 ? (
-                      data.map((item, i) => (
-                        <tr key={item._id || i}>
-                          <td>{formatDate(item.createdAt)}</td>
-                          <td>{item.height} cm</td>
-                          <td>{item.weight} kg</td>
-                          <td>{item.bmi}</td>
-                          <td>{item.glucose}</td>
-                          <td>
-                            {item.systolic}/{item.diastolic}
-                          </td>
-                          <td>{item.heartRate}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="7" className="empty-table">
-                          Chưa có dữ liệu sức khỏe.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )}
+        {menu === "analytics" && <HealthAnalytics data={data} loading={healthLoading} error={apiErrors.health} />}
 
         {menu === "ai" && (
           <motion.div
-            className="chat-wrapper"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="chat-wrapper studio-assistant-workspace"
+            initial={false}
           >
             <div className="chat-header">
-              <div className="chat-assistant-mark" aria-hidden="true">✚</div>
+              <span className={`assistant-particle-orb ${loading ? "is-thinking" : ""}`} aria-hidden="true"><FaRobot/><i/><i/><i/></span>
               <div className="chat-assistant-heading">
                 <strong>Trợ lý sức khỏe DOCTIS</strong>
                 <span>Kiến thức và chăm sóc đái tháo đường type 2</span>
               </div>
-              <span className="chat-assistant-status"><i /> Kiến thức type 2</span>
+              <div className="chat-assistant-actions">
+                <span className="chat-assistant-status"><i /> Kiến thức type 2</span>
+                <button type="button" className="assistant-new-conversation" onClick={startNewAIConversation} disabled={loading} title="Bắt đầu lại hội thoại AI, giữ nguyên câu hỏi đang nhập">Cuộc trò chuyện mới</button>
+              </div>
             </div>
 
-            <div className="chat-body">
+            <div className="chat-body" ref={chatBodyRef} onScroll={handleAiChatScroll}>
+              {messages.length === 0 && !loading && <div className="assistant-empty"><CareScene kind="assistant" /></div>}
               {messages.map((msg, i) => (
                 <div
                   key={i}
                   className={
                     msg.sender === "user"
-                      ? "chat-message user"
-                      : `chat-message ai${msg.isError ? " error" : ""}`
+                      ? "chat-message user conversation-message"
+                      : `chat-message ai conversation-message${msg.isError ? " error" : ""}`
                   }
                 >
-                  {msg.text}
+                  {msg.sender === "user" ? msg.text : <AIResponse message={msg} onReveal={handleAiReplyReveal} />}
                 </div>
               ))}
 
               {loading && (
-                <div className="chat-message ai thinking">
-                  🤖 AI đang phân tích sức khỏe...
+                <div className="chat-message ai thinking" role="status">
+                  <span className="assistant-thinking-ecg" aria-hidden="true"><i/><i/><i/></span> DOCTIS đang phân tích…
                 </div>
               )}
 
-              <div ref={chatEndRef} />
             </div>
 
+            <ConversationNotice viewport={aiViewport} />
             <div className="chat-assistant-sources">
               Tham khảo: {" "}
               <a href="https://www.niddk.nih.gov/health-information/diabetes/overview/managing-diabetes/" target="_blank" rel="noreferrer">NIDDK</a>
               {" · "}
               <a href="https://diabetes.org/living-with-diabetes/hypoglycemia-low-blood-glucose/symptoms-treatment" target="_blank" rel="noreferrer">Hiệp hội Đái tháo đường Hoa Kỳ</a>
             </div>
+
+            <AISuggestions onChoose={setChatInput} disabled={loading}/>
 
             <div className="chat-input-box">
               <input
@@ -2766,16 +2733,16 @@ export default function Dashboard() {
               <div className="care-hero-glow care-hero-glow-a" />
               <div className="care-hero-glow care-hero-glow-b" />
               <div className="care-hero-main">
-                <div className="care-hero-icon"><FaUtensils /></div>
+                <CareScene kind="calendar" className="compact" />
                 <div>
                   <span className="care-kicker">DOCTIS • DAILY WELLNESS</span>
                   <h2>Kế hoạch chăm sóc hằng ngày</h2>
                   <p>Lịch 7 ngày được cá nhân hóa từ chỉ số sức khỏe, dinh dưỡng, vận động và đơn thuốc đã được bác sĩ xác nhận.</p>
                   <div className="care-hero-tags">
-                    <span>🤖 AI cá nhân hóa</span>
-                    <span>🥗 Dinh dưỡng</span>
-                    <span>🏃 Vận động</span>
-                    <span>💊 Theo đơn bác sĩ</span>
+                    <span><FaRobot /> AI cá nhân hóa</span>
+                    <span><FaUtensils /> Dinh dưỡng</span>
+                    <span><FaHeartbeat /> Vận động</span>
+                    <span><FaUserMd /> Theo đơn bác sĩ</span>
                   </div>
                 </div>
               </div>
@@ -2793,17 +2760,17 @@ export default function Dashboard() {
             <section className="care-health-strip-v6">
               <div className="care-health-card bmi">
                 <span className="care-health-icon">⚖️</span>
-                <div><small>BMI</small><strong>{latest?.bmi || 0}</strong></div>
+                <div><small>BMI</small><strong>{Number(latest?.bmi) > 0 ? latest.bmi : "—"}</strong></div>
                 <em>Theo dõi</em>
               </div>
               <div className="care-health-card glucose">
                 <span className="care-health-icon">🩸</span>
-                <div><small>Glucose</small><strong>{latest?.glucose || 0}<i> mg/dL</i></strong></div>
+                <div><small>Glucose</small><strong>{Number(latest?.glucose) > 0 ? <>{latest.glucose}<i> mg/dL</i></> : "—"}</strong></div>
                 <em>Gần nhất</em>
               </div>
               <div className="care-health-card pressure">
                 <span className="care-health-icon">💗</span>
-                <div><small>Huyết áp</small><strong>{latest?.systolic ? `${latest.systolic}/${latest.diastolic}` : "0/0"}</strong></div>
+                <div><small>Huyết áp</small><strong>{latest?.systolic && latest?.diastolic ? `${latest.systolic}/${latest.diastolic}` : "—"}</strong></div>
                 <em>mmHg</em>
               </div>
               <div className="care-health-card allergy">
@@ -2877,49 +2844,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="care-week-grid-v6">
-                  {careWeek.map((day, dayIndex) => {
-                    const activities = [
-                      ...(day.meals || []).map((item) => ({ ...item, kind: "meal" })),
-                      ...(day.medications || []).map((item) => ({ ...item, kind: "medication" })),
-                      day.exercise ? { ...day.exercise, kind: "exercise", description: day.exercise.duration } : null,
-                    ].filter(Boolean).sort((a, b) => String(a.time).localeCompare(String(b.time)));
-                    const doneCount = activities.filter((item) => item.done).length;
-                    const progress = activities.length ? Math.round((doneCount / activities.length) * 100) : 0;
-
-                    return (
-                      <article
-                        className={`care-day-card-v6 ${activeDay === dayIndex ? "active" : ""}`}
-                        key={day.label || dayIndex}
-                      >
-                        <button type="button" className="care-day-card-head" onClick={() => setActiveDay(dayIndex)}>
-                          <span className="care-day-number">{String(dayIndex + 1).padStart(2, "0")}</span>
-                          <span className="care-day-name"><b>{day.label || `Ngày ${dayIndex + 1}`}</b><small>{doneCount}/{activities.length} việc</small></span>
-                          <span className="care-day-percent">{progress}%</span>
-                        </button>
-                        <div className="care-day-progress"><span style={{ width: `${progress}%` }} /></div>
-                        <div className="care-day-items-v6">
-                          {activities.map((item) => (
-                            <button
-                              type="button"
-                              className={`care-item-v6 ${item.kind} ${item.done ? "completed" : ""}`}
-                              key={`${item.id}-${item.time}`}
-                              onClick={() => { setActiveDay(dayIndex); toggleCareActivity(dayIndex, item.id); }}
-                            >
-                              <span className="care-item-time-v6">{item.time}</span>
-                              <span className="care-item-icon-v6">{item.icon}</span>
-                              <span className="care-item-copy-v6">
-                                <b>{item.title || item.label}</b>
-                                <small>{item.text || item.description || ""}</small>
-                              </span>
-                              <span className="care-item-check-v6">{item.done ? "✓" : ""}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
+                <CareWeekGallery days={careWeek} activeDay={activeDay} onSelectDay={setActiveDay} onToggleActivity={toggleCareActivity} />
               </section>
             )}
 
@@ -3001,129 +2926,64 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {menu === "appointments" && (
-          <div className="ai-analysis-box">
-            <div className="analysis-header">
-              <div className="analysis-avatar">
-                <FaCalendarCheck />
-              </div>
-              <div>
-                <h2>Lịch hẹn khám</h2>
-                <p>Danh sách lịch hẹn với bác sĩ.</p>
-              </div>
-            </div>
-
-            <div className="analysis-grid">
-              {appointments.length > 0 ? (
-                appointments.map((item, index) => (
-                  <div
-                    className="analysis-item"
-                    key={item._id || index}
-                  >
-                    <div className="analysis-icon blue">
-                      <FaClock />
-                    </div>
-
-                    <div>
-                      <h4>{formatDate(item.appointmentDate)}</h4>
-
-                      <div className="doctor-row">
-                        <FaUserMd className="doctor-icon" />
-                        <span className="doctor-name">
-                          {item.doctorId?.fullName ||
-                            item.doctorId?.username ||
-                            "Chưa cập nhật"}
-                        </span>
-                      </div>
-
-                      <p>
-                        <strong>Giờ khám:</strong>{" "}
-                        {formatTime(item.appointmentDate)}
-                      </p>
-
-                      <p>
-                        <strong>Loại:</strong>{" "}
-                        {item.type || "Chưa cập nhật"}
-                      </p>
-
-                      <p>
-                        <strong>Trạng thái:</strong>{" "}
-                        {item.status || "Chưa cập nhật"}
-                      </p>
-
-                      {item.note && (
-                        <div className="doctor-note">
-                          <strong>Nội dung bác sĩ:</strong>
-                          <p>{item.note}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>Chưa có lịch hẹn nào.</p>
-              )}
-            </div>
-          </div>
-        )}
+        {menu === "appointments" && <AppointmentCalendar appointments={appointments} formatDate={formatDate} formatTime={formatTime} statusLabel={appointmentStatusLabel} />}
 
       </main>
-    </div>
+      </div>
+    </div></MotionConfig>
   );
+}
+
+function profileSectionId(title) {
+  return `profile-${title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g,"d").replace(/[^a-z0-9]+/g,"-")}`;
 }
 
 function ProfileSection({ title, icon, children }) {
   return (
-    <div className="profile-section">
+    <section className="studio-profile-section" id={profileSectionId(title)}>
       <div className="profile-section-title">
         {icon}
         <span>{title}</span>
       </div>
 
       <div className="profile-form-grid">{children}</div>
-    </div>
+    </section>
   );
 }
 
 function ProfileField({ label, icon, full = false, children }) {
+  const fieldId = useId();
+  const childList = Children.toArray(children);
+  const control = childList.find((child) => isValidElement(child) && ["input", "select", "textarea"].includes(child.type));
+  const controlId = control?.props.id || fieldId;
+  const labelledChildren = childList.map((child) => child === control ? cloneElement(child, { id: controlId }) : child);
   return (
-    <div className={`profile-field ${full ? "full" : ""}`}>
-      <label>{label}</label>
+    <div className={`studio-profile-field ${full ? "full" : ""}`}>
+      <label htmlFor={control ? controlId : undefined}>{label}</label>
 
       {icon ? (
-        <div className="profile-input-wrap">
+        <div className="studio-profile-control">
           {icon}
-          {children}
+          {labelledChildren}
         </div>
       ) : (
-        children
+        labelledChildren
       )}
     </div>
   );
 }
 
-function HealthInput({
-  label,
-  icon,
-  placeholder,
-  type,
-  value,
-  onChange,
-}) {
+function HealthInput({ id, label, icon, placeholder, type, value, onChange }) {
+  const suffix = { "health-height": "cm", "health-weight": "kg", "health-glucose": "mg/dL", "health-blood-pressure": "mmHg", "health-heart-rate": "bpm" }[id];
   return (
-    <div className="input-card">
-      <div className="input-label">
-        {icon}
-        {label}
+    <div className="studio-health-field" data-filled={!!String(value).trim()}>
+      <label className="studio-field-label" htmlFor={id}>{label}</label>
+      <div className="studio-field-control">
+        <span className="studio-field-icon" aria-hidden="true">{icon}</span>
+        <input id={id} className="studio-input" type={type} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
+        {suffix && <span className="studio-field-unit" aria-hidden="true">{suffix}</span>}
+        {type === "number" && <span className="health-value-stepper"><button type="button" aria-label={`Giảm ${label}`} disabled={!value || Number(value) <= 1} onClick={() => onChange(String(Number(value)-1))}>−</button><button type="button" aria-label={`Tăng ${label}`} disabled={!value || !Number.isFinite(Number(value))} onClick={() => onChange(String(Number(value)+1))}>+</button></span>}
       </div>
-
-      <input
-        className="health-input"
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
     </div>
   );
 }

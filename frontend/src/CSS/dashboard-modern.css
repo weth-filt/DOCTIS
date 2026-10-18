@@ -47,17 +47,17 @@ body { background: var(--doctis-bg); color: var(--doctis-ink); }
 .dashboard-layout.doctis-v5 .dashboard-bg,
 .dashboard-layout.doctis-v5 > .sidebar { display: none !important; }
 
-.dashboard-layout.doctis-v5 button,
-.dashboard-layout.doctis-v5 input,
-.dashboard-layout.doctis-v5 select,
-.dashboard-layout.doctis-v5 textarea { font: inherit; }
+.dashboard-layout.doctis-v5:not(.health-studio-layout) button,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) input,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) select,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) textarea { font: inherit; }
 
 /* Keep all dashboard text on the same Vietnamese-compatible font. */
 .dashboard-layout.doctis-v5,
-.dashboard-layout.doctis-v5 button,
-.dashboard-layout.doctis-v5 input,
-.dashboard-layout.doctis-v5 select,
-.dashboard-layout.doctis-v5 textarea,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) button,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) input,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) select,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) textarea,
 .dashboard-layout.doctis-v5 table,
 .dashboard-layout.doctis-v5 th,
 .dashboard-layout.doctis-v5 td {
@@ -658,14 +658,14 @@ body { background: var(--doctis-bg); color: var(--doctis-ink); }
 }
 .dashboard-layout.doctis-v5 .danger-alert { display:flex; align-items:center; gap:9px; padding:11px 13px; color:#bd5b6b; background:#fff5f6; border:1px solid #ffd8df; font-size:13px; }
 .dashboard-layout.doctis-v5 .danger-alert svg { color:#e45d70; }
-.dashboard-layout.doctis-v5 input,
-.dashboard-layout.doctis-v5 select,
-.dashboard-layout.doctis-v5 textarea { color:#263b60; background:#fff; border-color:#dfe7f2; }
-.dashboard-layout.doctis-v5 input::placeholder,
-.dashboard-layout.doctis-v5 textarea::placeholder { color:#9aa9bc; opacity:1; }
-.dashboard-layout.doctis-v5 input:focus,
-.dashboard-layout.doctis-v5 select:focus,
-.dashboard-layout.doctis-v5 textarea:focus { outline: none; border-color:#8cb0f5; box-shadow:0 0 0 4px rgba(57,119,242,.1); }
+.dashboard-layout.doctis-v5:not(.health-studio-layout) input,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) select,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) textarea { color:#263b60; background:#fff; border-color:#dfe7f2; }
+.dashboard-layout.doctis-v5:not(.health-studio-layout) input::placeholder,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) textarea::placeholder { color:#9aa9bc; opacity:1; }
+.dashboard-layout.doctis-v5:not(.health-studio-layout) input:focus,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) select:focus,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) textarea:focus { outline: none; border-color:#8cb0f5; box-shadow:0 0 0 4px rgba(57,119,242,.1); }
 .dashboard-layout.doctis-v5 .history-table { width:100%; border-collapse:collapse; }
 .dashboard-layout.doctis-v5 .history-table th { padding:10px; color:#5b7091; background:#f5f8fc; font-size:13px; text-align:left; }
 .dashboard-layout.doctis-v5 .history-table td { padding:10px; color:#526887; border-top:1px solid #e8eef6; font-size:13px; }
@@ -834,8 +834,8 @@ body { background: var(--doctis-bg); color: var(--doctis-ink); }
 /* =========================================================
    GENERIC BUTTON SAFETY — prevents browser-default controls
    ========================================================= */
-.dashboard-layout.doctis-v5 button { appearance:none; -webkit-appearance:none; }
-.dashboard-layout.doctis-v5 button:disabled { opacity:.55; cursor:not-allowed; transform:none !important; }
+.dashboard-layout.doctis-v5:not(.health-studio-layout) button { appearance:none; -webkit-appearance:none; }
+.dashboard-layout.doctis-v5:not(.health-studio-layout) button:disabled { opacity:.55; cursor:not-allowed; transform:none !important; }
 
 /* =========================================================
    ANIMATION
@@ -1716,10 +1716,10 @@ body { background: var(--doctis-bg); color: var(--doctis-ink); }
 .dashboard-layout.doctis-v5 div,
 .dashboard-layout.doctis-v5 li,
 .dashboard-layout.doctis-v5 a,
-.dashboard-layout.doctis-v5 button,
-.dashboard-layout.doctis-v5 input,
-.dashboard-layout.doctis-v5 textarea,
-.dashboard-layout.doctis-v5 select,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) button,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) input,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) textarea,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) select,
 .dashboard-layout.doctis-v5 option,
 .dashboard-layout.doctis-v5 table,
 .dashboard-layout.doctis-v5 th,
@@ -1834,9 +1834,9 @@ body { background: var(--doctis-bg); color: var(--doctis-ink); }
    FORM
    ========================================================= */
 
-.dashboard-layout.doctis-v5 input,
-.dashboard-layout.doctis-v5 textarea,
-.dashboard-layout.doctis-v5 select {
+.dashboard-layout.doctis-v5:not(.health-studio-layout) input,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) textarea,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) select {
   font-family:
     "Be Vietnam Pro",
     sans-serif !important;
@@ -1845,8 +1845,8 @@ body { background: var(--doctis-bg); color: var(--doctis-ink); }
   font-weight: 500 !important;
 }
 
-.dashboard-layout.doctis-v5 input::placeholder,
-.dashboard-layout.doctis-v5 textarea::placeholder {
+.dashboard-layout.doctis-v5:not(.health-studio-layout) input::placeholder,
+.dashboard-layout.doctis-v5:not(.health-studio-layout) textarea::placeholder {
   font-family:
     "Be Vietnam Pro",
     sans-serif !important;
@@ -1858,7 +1858,7 @@ body { background: var(--doctis-bg); color: var(--doctis-ink); }
    BUTTON
    ========================================================= */
 
-.dashboard-layout.doctis-v5 button {
+.dashboard-layout.doctis-v5:not(.health-studio-layout) button {
   font-family:
     "Be Vietnam Pro",
     sans-serif !important;

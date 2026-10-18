@@ -27,6 +27,9 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 
 import DoctorRoute from "./components/DoctorRoute";
 import AdminRoute from "./components/AdminRoute";
+import { StudioPreferencesProvider } from "./components/studio/StudioPreferences";
+import { HeartSceneProvider } from "./components/3d/HeartScene";
+import PatientWelcomeGate from "./components/studio/PatientWelcomeGate";
 
 /* =========================================================
    GLOBAL STYLES
@@ -57,11 +60,12 @@ import "./CSS/health-clarity.css";
 
 import "./CSS/admin.css";
 import "./CSS/clinical-theme.css";
+import "./CSS/studio-experience.css";
 
 
 function App() {
   return (
-    <BrowserRouter>
+    <StudioPreferencesProvider><HeartSceneProvider><BrowserRouter>
       <Routes>
 
         {/* =================================================
@@ -95,7 +99,7 @@ function App() {
 
         <Route
           path="/dashboard"
-          element={<Dashboard />}
+          element={<PatientWelcomeGate><Dashboard /></PatientWelcomeGate>}
         />
 
 
@@ -127,7 +131,7 @@ function App() {
         />
 
       </Routes>
-    </BrowserRouter>
+    </BrowserRouter></HeartSceneProvider></StudioPreferencesProvider>
   );
 }
 

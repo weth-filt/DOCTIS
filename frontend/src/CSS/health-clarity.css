@@ -42,7 +42,7 @@
    FORM
    ========================================================= */
 
-.dashboard-layout
+.dashboard-layout:not(.health-studio-layout)
   :is(
     label,
     .profile-field label,
@@ -66,8 +66,8 @@
   letter-spacing: 0 !important;
 }
 
-.dashboard-layout :is(input, select, textarea),
-.doctor-layout :is(input, select, textarea) {
+.dashboard-layout:not(.health-studio-layout) :is(input, select, textarea),
+.doctor-layout :is(input, select, textarea):not(.conversation-workspace input, .conversation-workspace textarea) {
   box-sizing: border-box;
 
   color: var(--hc-ink) !important;
@@ -91,15 +91,15 @@
     box-shadow 0.2s ease;
 }
 
-.dashboard-layout :is(input, select, textarea)::placeholder,
-.doctor-layout :is(input, select, textarea)::placeholder {
+.dashboard-layout:not(.health-studio-layout) :is(input, select, textarea)::placeholder,
+.doctor-layout :is(input, select, textarea):not(.conversation-workspace input, .conversation-workspace textarea)::placeholder {
   color: #91a1b8 !important;
 
   opacity: 1;
 }
 
-.dashboard-layout :is(input, select, textarea):focus,
-.doctor-layout :is(input, select, textarea):focus {
+.dashboard-layout:not(.health-studio-layout) :is(input, select, textarea):focus,
+.doctor-layout :is(input, select, textarea):not(.conversation-workspace input, .conversation-workspace textarea):focus {
   outline: none !important;
 
   border-color: #80a9ff !important;
@@ -207,11 +207,11 @@
    ========================================================= */
 
 .dashboard-layout .allergy-chip {
-  color: #345aa5 !important;
+  color: #176a73 !important;
 
-  background: #eaf2ff !important;
+  background: #eff8f8 !important;
 
-  border-color: #cfdeff !important;
+  border-color: #c9e4e6 !important;
 }
 
 .dashboard-layout .chronic-option {
@@ -223,11 +223,11 @@
 }
 
 .dashboard-layout .chronic-option.selected {
-  color: #2454bd !important;
+  color: #126d78 !important;
 
-  background: #eaf2ff !important;
+  background: #edf8f8 !important;
 
-  border-color: #8bb0ff !important;
+  border-color: #83bdc3 !important;
 }
 
 .dashboard-layout .allergy-help-text,
@@ -324,8 +324,8 @@
    ========================================================= */
 
 @media (max-width: 600px) {
-  .dashboard-layout :is(input, select, textarea),
-  .doctor-layout :is(input, select, textarea) {
+  .dashboard-layout:not(.health-studio-layout) :is(input, select, textarea),
+  .doctor-layout :is(input, select, textarea):not(.conversation-workspace input, .conversation-workspace textarea) {
     font-size: 16px !important;
   }
 

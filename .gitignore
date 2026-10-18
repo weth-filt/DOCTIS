@@ -13,3 +13,7 @@ backend/.env
 AI/Data.xlsx
 AI/TestData.xlsx
 AI/health_model.pkl
+
+# Local review captures may contain patient information.
+/frontend/ui-review/
+/.deploy-tmp/

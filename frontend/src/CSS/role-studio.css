@@ -1,0 +1,359 @@
+@import "./design-tokens.css";
+/* Shared interaction and depth language for clinical and administration work. */
+.role-studio { --role-ink:var(--care-ink); --role-teal:var(--care-teal); --role-line:var(--care-line); --role-paper:var(--care-paper); --doc-ink:var(--care-ink); --doc-title:var(--care-ink); --doc-text:var(--care-muted); --doc-muted:var(--care-muted); --doc-blue:var(--care-teal); --doc-line:var(--care-line); --hc-ink:var(--care-ink); --hc-title:var(--care-ink); --hc-body:var(--care-muted); --hc-muted:var(--care-muted); --hc-border:var(--care-line); --hc-field:var(--care-paper); --hc-focus:var(--care-teal); }
+.role-studio :is(button,input,select,textarea) { transition: border-color .18s, box-shadow .18s, background-color .18s, transform .18s; }
+.role-studio button:active:not(:disabled) { transform:scale(.98); }
+.role-studio :is(button,input,select,textarea):focus-visible { outline:3px solid #a9ded9; outline-offset:3px; }
+.role-studio :is(.doctor-card,.patient-card,.admin-stat-card,.admin-panel) { border-radius:16px; box-shadow:0 8px 24px #17354008; transition:transform .22s,box-shadow .22s; }
+.role-studio :is(.doctor-card,.patient-card,.admin-stat-card):hover { transform:translateY(-3px); box-shadow:0 12px 28px #17354012; }
+.role-studio .admin-hero { overflow:hidden; }
+.role-studio .admin-hero .care-scene { width:200px; }
+.role-studio .measurement-studio { margin-top:12px; }
+.role-studio .measurement-panel { box-shadow:none; }
+.role-studio .measurement-controls { align-items:end; }
+.role-studio .measurement-controls label { display:grid; gap:6px; }
+.role-studio .measurement-tabs button { position:relative; overflow:hidden; }
+.role-studio .measurement-tabs button span { position:relative; }
+.role-studio.doctor-layout, .role-studio.admin-page { display:block; min-height:100dvh; height:auto; color:var(--care-ink); background:var(--care-canvas); font-family:"Be Vietnam Pro","Segoe UI",sans-serif; }
+.role-studio::before, .role-studio::after, .role-studio .doctor-sidebar::before { display:none; }
+.role-studio .doctor-sidebar, .role-studio .admin-sidebar { position:fixed; inset:0 auto 0 0; width:240px; min-width:240px; height:100dvh; padding:24px 16px 16px; display:flex; flex-direction:column; overflow:hidden; z-index:40; background:var(--care-sidebar); border:0; box-shadow:8px 0 40px #04191a0c; color:var(--care-sidebar-ink); }
+.role-studio .doctor-sidebar > div:first-child { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; }
+.role-studio .doctor-logo { color:white; border-color:#36515c; }
+.role-studio .doctor-logo h2 { color:white; font-size:22px; }
+.role-studio .doctor-logo span { color:#9bb9c1; font-size:12px; }
+.role-studio .doctor-menu { position:relative; display:flex; align-items:center; gap:12px; width:100%; min-height:46px; padding:12px; margin:5px 0; color:var(--care-sidebar-ink); border:1px solid transparent; border-radius:11px; background:transparent; font:inherit; font-size:13px; text-align:left; }
+.role-studio .doctor-menu.active, .role-studio .admin-menu-item.is-active { color:#fff; border-color:#3b6871; background:#1b4352; box-shadow:none; }
+.role-studio .doctor-menu.active::after { display:none; }
+.role-studio .doctor-menu svg { color:#83c9c7; }
+.role-studio .doctor-menu.logout { flex:0 0 auto; margin-top:14px; color:#ecc2b9; }
+.role-studio .admin-menu { min-height:0; flex:1; overflow-y:auto; overflow-x:hidden; }
+.role-studio .admin-sidebar-footer { margin-top:auto; padding-top:12px; }
+.role-studio .admin-menu-item { position:relative; min-height:64px; padding:10px; border-radius:12px; }
+.role-studio .admin-menu-copy strong { font-size:13px; }
+.role-studio .admin-menu-copy small { font-size:11px; color:#9db7bf; }
+.role-studio .admin-menu-icon { flex-basis:34px; width:34px; height:34px; background:#244956; color:#8bd6cf; }
+.role-studio .admin-brand { padding-inline:0; }
+.role-studio .admin-security-card { background:#1b3b49; box-shadow:none; }
+.role-studio .doctor-main, .role-studio .admin-main { width:calc(100% - 240px); min-width:0; margin-left:240px; padding:24px 28px; height:auto; min-height:100dvh; overflow:visible; background:var(--care-canvas); }
+.role-studio .admin-topbar { padding:0 0 20px; margin-bottom:24px; min-height:76px; background:transparent; border:0; border-bottom:1px solid var(--care-line); box-shadow:none; }
+.role-studio .admin-topbar::before, .role-studio .admin-topbar::after { display:none; }
+.role-studio .admin-topbar h1 { font-size:26px; color:var(--care-ink); }
+.role-studio .admin-topbar p { display:none; }
+.role-studio .admin-eyebrow { color:var(--care-teal); letter-spacing:.06em; font-size:12px; }
+.role-studio .admin-panel, .role-studio .doctor-section, .role-studio .patient-card, .role-studio .doctor-card, .role-studio .admin-stat-card { background:var(--care-paper); border:1px solid var(--care-line); color:var(--care-ink); box-shadow:var(--care-shadow); border-radius:var(--care-radius); }
+.role-studio .doctor-card { min-height:150px; padding:20px; }
+.role-studio .doctor-card h2 { font-size:32px; color:var(--care-ink); }
+.role-studio .doctor-card p { font-size:15px; color:var(--care-muted); }
+.role-studio .doctor-card .card-icon { width:36px; height:36px; color:var(--care-teal); background:var(--care-accent-soft); border-radius:11px; }
+.role-studio :is(.view-btn,.approve-btn,.create-appointment-btn) { background:var(--care-button); border-color:var(--care-button); color:var(--care-on-primary); box-shadow:none; }
+.role-studio :is(.doctor-avatar,.patient-profile-card .large-avatar,.doctor-logo > svg) { background:var(--care-accent-soft); color:var(--care-ink); box-shadow:none; }
+.role-studio .patient-profile-card { border:1px solid var(--care-line); border-radius:14px; background:var(--care-paper); box-shadow:none; }
+.role-studio .patient-stat-row > div { background:var(--care-soft); border:1px solid var(--care-line); border-radius:10px; }
+.role-studio .admin-table { color:var(--care-ink); }
+.role-studio .admin-table th { padding:12px 16px; font-size:13px; background:var(--care-soft); color:var(--care-muted); border-bottom:1px solid var(--care-line); }
+.role-studio .admin-table td { padding:13px 16px; font-size:14px; border-bottom:1px solid var(--care-line); }
+.role-studio .admin-table tbody tr:hover { background:var(--care-soft); }
+.role-studio .admin-table .patient-cell strong { font-size:14px; font-weight:600; }
+.role-studio .admin-table .patient-cell small, .role-studio .admin-table .table-sub { font-size:12px; }
+.role-studio .admin-table .muted-cell { font-size:13px; }
+.role-studio .admin-table .role-badge { font-size:11px; padding:6px 9px; letter-spacing:0; }
+.role-studio .admin-table :is(.role-action,.action-primary,.action-danger) { min-height:38px; font-size:12px; padding:9px 12px; }
+.role-studio .admin-table .patient-avatar { width:38px; height:38px; border-radius:11px; color:var(--care-ink); background:var(--care-accent-soft); }
+.role-studio .section-toolbar { gap:20px; margin-bottom:24px; }
+.role-studio .section-toolbar h2 { font-size:21px; color:var(--care-ink); }
+.role-studio .section-toolbar p { font-size:14px; color:var(--care-muted); }
+.role-studio .admin-panel h3 { font-size:20px; color:var(--care-ink); }
+.role-studio :is(.toolbar-search,.doctor-select,.doctor-editor-grid input,.doctor-editor-grid select) { border:1px solid var(--care-line); border-radius:10px; background:var(--care-paper); color:var(--care-ink); box-shadow:none; }
+.role-studio .toolbar-search input { border:0; background:transparent; font-size:14px; }
+.role-studio .admin-hero { background:var(--care-navy); border:0; padding:22px 28px; min-height:170px; }
+.role-studio .admin-hero h2 { font-size:25px; color:white; }
+.role-studio .admin-hero p { color:#bed4db; font-size:14px; }
+.role-studio .admin-view > .workspace-intro + .section-toolbar h2, .role-studio .admin-view > .workspace-intro + .section-toolbar .admin-eyebrow { display:none; }
+.role-studio .admin-view > .workspace-intro + .section-toolbar { padding:0; align-items:center; }
+.role-studio .admin-view > .workspace-intro + .section-toolbar > div:first-child { flex:1; }
+.role-studio .admin-view > .workspace-intro + .section-toolbar p { margin:0; max-width:620px; }
+.role-studio .admin-topbar-user { background:var(--care-accent-soft); border:1px solid var(--care-line); color:var(--care-ink); box-shadow:none; }
+.role-studio .admin-topbar-user strong { color:var(--care-ink); }
+.role-studio .admin-topbar-user span { color:var(--care-muted); }
+.role-studio .admin-avatar, .role-studio .admin-brand-mark { background:#66cdc6; color:#0b3434; box-shadow:none; }
+.role-studio .stat-icon { background:var(--care-accent-soft); color:var(--care-teal); box-shadow:none; border-radius:12px; }
+.role-studio .admin-stat-card .stat-icon { background:var(--care-accent-soft); color:var(--care-teal); box-shadow:none; }
+.role-studio .admin-stat-card h3 { font-size:14px; font-weight:500; }
+.role-studio .admin-stat-card p { font-size:12px; }
+.role-studio .panel-link, .role-studio .panel-heading-icon, .role-studio .doctor-edit-mini { color:var(--care-teal); }
+.role-studio .role-badge.doctor { color:var(--care-ink); background:var(--care-accent-soft); border-color:#cae4df; }
+.role-studio .role-badge.admin { color:#815e43; background:#f6eee6; border-color:#ebdccb; }
+.role-studio .progress-value { stroke:#168f8b; filter:none; }
+.role-studio .doctor-mini-avatar, .role-studio .doctor-dot, .role-studio .user-preview-avatar { color:var(--care-ink); background:var(--care-accent-soft); box-shadow:none; }
+.role-studio .user-preview { border:1px solid var(--care-line); border-radius:12px; background:var(--care-soft); box-shadow:none; }
+.role-studio .user-preview span { color:var(--care-muted); }
+@media(max-width:680px) {
+  .role-studio .admin-view .section-toolbar { display:flex; flex-direction:column; align-items:stretch; gap:12px; }
+  .role-studio .toolbar-search { width:100%; min-width:0; }
+  .role-studio .assignment-panel { padding:0; border:0; background:transparent; box-shadow:none; }
+  .role-studio .assignment-table-wrap { overflow:visible; border:0; }
+  .role-studio .admin-table, .role-studio .admin-table tbody { display:block; width:100%; min-width:0; }
+  .role-studio .admin-table thead { display:none; }
+  .role-studio .admin-table tbody tr { display:grid; grid-template-columns:minmax(0,1fr); gap:0; margin:0 0 14px; padding:8px 16px; border:1px solid var(--care-line); border-radius:15px; background:var(--care-paper); box-shadow:0 4px 18px #102b3a05; }
+  .role-studio .admin-table td { display:flex; flex-direction:column; align-items:flex-start; gap:7px; width:100%; min-width:0; padding:12px 0; white-space:normal; overflow-wrap:anywhere; border-bottom:1px solid var(--care-line); }
+  .role-studio .admin-table td:last-child { border-bottom:0; }
+  .role-studio .admin-table td::before { content:attr(data-label); color:var(--care-muted); font-size:11px; font-weight:500; }
+  .role-studio .admin-table td:first-child::before { display:none; }
+  .role-studio .admin-table .doctor-select, .role-studio .admin-table .table-actions { width:100%; }
+  .role-studio .admin-table .action-primary { flex:1; min-height:40px; }
+  .role-studio .assignment-toolbar-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .role-studio .user-preview-grid { grid-template-columns:1fr; }
+}
+.role-studio .admin-patient-modal, .role-studio .admin-doctor-editor { background:var(--care-paper); color:var(--care-ink); border:1px solid var(--care-line); box-shadow:0 24px 80px #102b3a30; }
+.role-studio .admin-patient-modal :is(h2,h3,h4,strong), .role-studio .admin-doctor-editor :is(h2,h3,h4,strong) { color:var(--care-ink); }
+.role-studio .editor-input { background:var(--care-soft); border:1px solid var(--care-line); box-shadow:none; }
+.role-studio .editor-input input { border:0; background:transparent; color:var(--care-ink); }
+.role-studio .editor-input svg { color:var(--care-teal); }
+.role-studio .admin-doctor-editor { width:min(680px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); padding:24px; border-radius:20px; }
+.role-studio .doctor-editor-header h2 { font-size:25px; }
+.role-studio .doctor-editor-header p, .role-studio .doctor-editor-note { color:var(--care-muted); font-size:13px; }
+.role-studio .doctor-editor-identity { background:var(--care-accent-soft); border:1px solid var(--care-line); border-radius:14px; padding:14px; }
+.role-studio .doctor-editor-avatar { background:var(--care-accent-soft); color:var(--care-ink); box-shadow:0 5px 14px #087f8c15; }
+.role-studio .doctor-editor-identity span { color:var(--care-muted); }
+.role-studio .doctor-editor-grid label > span { color:var(--care-muted); font-size:13px; font-weight:500; }
+.role-studio .doctor-editor-grid .editor-input { min-height:46px; padding:0 12px; border:1px solid var(--care-line); background:var(--care-paper); }
+.role-studio .doctor-editor-grid .editor-input:focus-within { border-color:#168e94; box-shadow:0 0 0 3px #168e9412; }
+.role-studio .doctor-editor-grid .editor-input input { min-width:0; width:100%; height:44px; padding:0; border:0; border-radius:0; box-shadow:none; font-size:14px; outline:0; }
+.role-studio .doctor-editor-note { background:var(--care-soft); border:1px solid var(--care-line); border-radius:11px; }
+.role-studio .editor-cancel { background:var(--care-soft); color:var(--care-muted); border:1px solid var(--care-line); }
+.role-studio .modal-close { color:var(--care-muted); background:var(--care-soft); border:1px solid var(--care-line); border-radius:10px; }
+.role-studio .modal-detail-grid > div { background:var(--care-soft); border:1px solid var(--care-line); }
+.role-studio .modal-detail-grid span, .role-studio .modal-patient-head p { color:var(--care-muted); }
+.role-studio .modal-patient-avatar { color:var(--care-ink); background:var(--care-accent-soft); box-shadow:none; }
+.role-studio .modal-note { color:var(--care-muted); background:var(--care-soft); border:1px solid var(--care-line); }
+.role-studio .admin-reason-dialog { margin:auto; width:min(480px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; padding:24px; border:1px solid var(--care-line); border-radius:20px; background:var(--care-paper); color:var(--care-ink); box-shadow:0 24px 80px #102b3a30; }
+.role-studio .admin-reason-dialog h2 { margin:8px 0; font-size:23px; color:var(--care-ink); }
+.role-studio .admin-reason-dialog p { color:var(--care-muted); font-size:14px; line-height:1.7; }
+.role-studio .admin-reason-dialog label { display:block; margin:18px 0 7px; font-size:13px; }
+.role-studio .admin-reason-dialog textarea { width:100%; padding:12px; border:1px solid var(--care-line); border-radius:11px; background:var(--care-soft); color:var(--care-ink); font:inherit; font-size:14px; resize:vertical; }
+@media(max-width:640px) { .role-studio .admin-doctor-editor { padding:20px 16px; }.role-studio .doctor-editor-grid { grid-template-columns:1fr; gap:14px; }.role-studio .doctor-editor-actions { position:sticky; bottom:-20px; padding:14px 0 0; background:var(--care-paper); }.role-studio .doctor-editor-header h2 { font-size:22px; } }
+.role-studio .admin-stat-card > strong { font-size:32px; color:var(--care-ink); }
+.role-studio .admin-stat-card h3, .role-studio .admin-panel strong { color:var(--care-ink); }
+.role-studio .admin-stat-card p, .role-studio .admin-stat-card small { color:var(--care-muted); }
+.role-studio .admin-stat-card::before, .role-studio .admin-stat-card::after { display:none; }
+.role-studio .assignment-toolbar-stats > div { background:var(--care-paper); border:1px solid var(--care-line); color:var(--care-ink); border-radius:12px; }
+.role-studio .action-primary, .role-studio .role-action.primary, .role-studio .editor-save { background:var(--care-button); color:var(--care-on-primary); border:1px solid var(--care-button); box-shadow:none; }
+.role-studio .current-doctor strong, .role-studio .patient-cell strong { color:var(--care-ink); }
+.role-studio .current-doctor small, .role-studio .muted-cell, .role-studio .table-sub { color:var(--care-muted); }
+.role-studio .doctor-user-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.role-studio .role-action.edit { color:var(--care-ink); background:var(--care-accent-soft); border-color:var(--care-line); }
+.role-studio .role-action.edit:hover { color:var(--care-on-primary); background:var(--care-button); box-shadow:0 4px 12px #087f8c20; }
+.role-studio .role-action.danger, .role-studio .action-danger { color:#a84245; background:#fff0ed; border:1px solid #f1d6d0; }
+.role-studio .role-action.danger:hover, .role-studio .action-danger:hover:not(:disabled) { color:white; background:#ad454b; box-shadow:none; }
+.role-studio .admin-table .doctor-select { min-height:42px; font-size:13px; }
+.role-studio .admin-table .current-doctor strong { font-size:13px; }
+.role-studio .admin-table .current-doctor small { font-size:11px; }
+.role-studio .assignment-toolbar-stats small { font-size:12px; }
+.role-studio .patient-drawer .drawer-section { border-radius:16px; box-shadow:none; }
+.role-studio .patient-drawer { background:var(--care-canvas); color:var(--care-ink); border-left:1px solid var(--care-line); box-shadow:-12px 0 60px #102b3a25; --classic-bg:var(--care-canvas); --classic-paper:var(--care-paper); --classic-border:var(--care-line); --classic-gold:var(--care-teal); --classic-navy:var(--care-ink); }
+.role-studio .patient-drawer::before { display:none; }
+.role-studio .drawer-header { background:var(--care-paper); border-bottom:1px solid var(--care-line); box-shadow:none; }
+.role-studio .drawer-header::after { display:none; }
+.role-studio .drawer-body { background:var(--care-canvas); }
+.role-studio .patient-drawer .drawer-section { background:var(--care-paper); border:1px solid var(--care-line); padding:22px; }
+.role-studio .patient-drawer .section-kicker { color:var(--care-teal); letter-spacing:.06em; font-size:11px; }
+.role-studio .patient-drawer .section-heading h3 { color:var(--care-ink); font-size:20px; }
+.role-studio .patient-drawer .section-heading::after { display:none; }
+.role-studio .patient-drawer .profile-info { background:var(--care-soft); border:1px solid var(--care-line); border-radius:11px; box-shadow:none; }
+.role-studio .patient-drawer .profile-info span { color:var(--care-muted); font-size:12px; letter-spacing:0; }
+.role-studio .patient-drawer .profile-info strong { color:var(--care-ink); font-size:14px; overflow-wrap:anywhere; }
+.role-studio .patient-drawer .vital-card { background:var(--care-soft); border:1px solid var(--care-line); border-radius:12px; box-shadow:none; padding:16px; }
+.role-studio .patient-drawer .vital-card::before, .role-studio .patient-drawer .vital-card::after { display:none; }
+.role-studio .patient-drawer .vital-card strong { color:var(--care-ink); font-size:28px; }
+.role-studio .patient-drawer .vital-card span, .role-studio .patient-drawer .vital-card small { color:var(--care-muted); font-size:12px; }
+.role-studio .patient-drawer .history-table-wrap { border:1px solid var(--care-line); border-radius:12px; background:var(--care-paper); }
+.role-studio .patient-drawer .history-table th { background:var(--care-soft); color:var(--care-muted); font-size:12px; letter-spacing:0; padding:12px 14px; }
+.role-studio .patient-drawer .history-table td { background:var(--care-paper); color:var(--care-ink); font-size:13px; padding:12px 14px; border-bottom:1px solid var(--care-line); }
+.role-studio .patient-drawer .large-avatar { background:var(--care-accent-soft); color:var(--care-ink); border-color:var(--care-line); box-shadow:none; }
+.role-studio .patient-drawer .measurement-panel { padding:0; border:0; }
+.role-studio .patient-drawer .measurement-history { display:none; }
+.role-studio .patient-drawer .doctor-note { padding:14px 16px; border:1px solid var(--care-line); border-radius:12px; background:var(--care-soft); color:var(--care-ink); }
+.role-studio .patient-drawer .doctor-note p { color:var(--care-muted); font-size:14px; }
+.role-studio .patient-drawer .prescription-form, .role-studio .patient-drawer .advice-form { background:var(--care-soft); border:1px solid var(--care-line); border-radius:12px; padding:16px; }
+.role-studio .patient-drawer :is(.prescription-form,.advice-form) :is(input,textarea,select) { color:var(--care-ink); background:var(--care-paper); border:1px solid var(--care-line); border-radius:10px; font:inherit; font-size:14px; }
+@media(max-width:640px) { .role-studio .patient-drawer .drawer-section { padding:16px; }.role-studio .patient-drawer .profile-info-grid { grid-template-columns:1fr; }.role-studio .patient-drawer .vitals-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.role-menu-toggle, .role-menu-backdrop { display:none; }
+@media(max-width:900px) {
+  .role-studio .doctor-sidebar, .role-studio .admin-sidebar { transform:translateX(-100%); transition:transform var(--care-fast) var(--care-ease); width:240px; min-width:240px; }
+  .role-studio.role-menu-open .doctor-sidebar, .role-studio.role-menu-open .admin-sidebar { transform:none; }
+  .role-studio .doctor-main, .role-studio .admin-main { margin-left:0; width:100%; padding:18px 16px; }
+  .role-studio .role-menu-toggle { display:grid; place-items:center; flex:0 0 38px; height:38px; border:1px solid var(--care-line); border-radius:10px; background:var(--care-paper); color:var(--care-teal); font-size:20px; }
+  .role-studio .role-menu-backdrop { display:block; position:fixed; inset:0; z-index:35; border:0; background:#102b3a80; backdrop-filter:blur(3px); }
+  .role-studio .admin-brand > div:last-child, .role-studio .admin-menu-copy, .role-studio .admin-sidebar-label { display:block; }
+  .role-studio .admin-menu-item { justify-content:flex-start; }
+  .role-studio .doctor-logo > div { display:block; }
+  .role-studio .admin-logout { font-size:14px; }
+  .role-studio .admin-topbar h1 { font-size:22px; }
+  .role-studio .admin-topbar { display:grid; grid-template-columns:38px minmax(0,1fr); align-items:center; gap:12px; padding:0 0 16px; min-height:0; }
+  .role-studio .admin-topbar > div:not(.admin-topbar-user) { min-width:0; }
+  .role-studio .admin-topbar .admin-eyebrow { font-size:10px; }
+  .role-studio .admin-topbar h1 { font-size:20px; margin:4px 0 0; }
+  .role-studio .admin-topbar-user { display:none; }
+  .role-studio .admin-hero .care-scene { width:130px; }
+}
+.role-workspace-content { position:relative; min-width:0; isolation:isolate; }
+.role-workspace-content > .studio-transition-snapshot { position:absolute; inset:0; z-index:5; pointer-events:none; overflow:hidden; }
+.role-workspace-content > .studio-page-sweep { position:absolute; inset:0; z-index:6; pointer-events:none; background:linear-gradient(100deg,transparent,#9eddd4,transparent); width:40%; }
+.role-topbar { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:12px 0 20px; margin-bottom:12px; border-bottom:1px solid var(--care-line); }
+.role-topbar h1 { margin:5px 0 0; color:var(--care-ink); font-size:26px; letter-spacing:-.035em; }
+.role-topbar .eyebrow { color:var(--care-teal); font-size:12px; letter-spacing:.06em; }
+.role-topbar > div > p { display:none; }
+.role-care-intro { display:flex; align-items:center; gap:18px; padding:12px 24px; margin-bottom:20px; border-radius:18px; background:var(--care-accent-soft); }
+.role-care-intro h2 { color:var(--care-ink); font-size:22px; }
+.role-care-intro p { color:var(--care-muted); font-size:14px; }
+@media(max-width:640px) { .role-topbar h1 { font-size:20px; }.role-topbar .doctor-profile { display:none; }.role-care-intro { padding:8px 14px; } }
+@media(prefers-reduced-motion:reduce) { .role-studio *, .role-studio *::before, .role-studio *::after { animation-duration:.01ms; transition-duration:.01ms; } }
+
+/* The role workspaces share the same clinical surfaces and 3D stage as patient care. */
+.role-studio .role-header-tools { display:flex; align-items:center; justify-content:flex-end; flex:0 0 auto; gap:14px; }
+.role-heart-slot { position:relative; flex:0 0 48px; width:48px; height:48px; }
+.role-heart-slot > .heart-scene { width:100%; height:100%; }
+.role-studio .role-nav-light { position:absolute; top:13px; bottom:13px; left:-1px; width:3px; border-radius:5px; background:#5eead4; box-shadow:0 0 12px #5eead470; pointer-events:none; }
+.role-studio .doctor-menu > svg { flex:0 0 17px; }
+.role-studio .doctor-menu::before { display:none; }
+.role-studio .doctor-menu:hover, .role-studio .admin-menu-item:hover { color:var(--care-sidebar-ink); background:#164644; border-color:#36615c; box-shadow:none; transform:translateX(2px); }
+.role-studio .doctor-menu:hover > svg, .role-studio .admin-menu-item:hover .admin-menu-icon { transform:translateY(-2px); transition:transform .18s var(--care-ease); }
+.role-studio .doctor-main, .role-studio .admin-main { background:radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--care-aqua) 9%,transparent),transparent 38%),var(--care-canvas); }
+.role-overview-stage { position:relative; isolation:isolate; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(190px,.75fr) minmax(225px,.8fr); align-items:center; gap:24px; min-height:300px; padding:32px; margin-bottom:22px; border:1px solid color-mix(in srgb,var(--care-aqua) 18%,var(--care-hero)); border-radius:26px; color:#ecfaf5; background:radial-gradient(ellipse at 65% 20%,#5eead421,transparent 45%),linear-gradient(130deg,var(--care-hero),#0b292b); box-shadow:0 18px 44px #04191a14; overflow:hidden; }
+.role-overview-stage::before { content:""; position:absolute; z-index:-1; inset:0; pointer-events:none; opacity:.2; background-image:radial-gradient(#b2e8da 1px,transparent 1px); background-size:23px 23px; mask-image:linear-gradient(90deg,transparent,black); }
+.role-stage-copy { position:relative; z-index:2; min-width:0; }
+.role-stage-eyebrow { display:block; color:#8fdbcd; font-size:10px; font-weight:600; letter-spacing:.14em; line-height:1.5; }
+.role-stage-copy h2 { margin:14px 0 16px; color:#f2faf6; font-family:var(--care-heading-font,Georgia,serif); font-size:clamp(24px,2.35vw,36px); font-weight:500; line-height:1.24; letter-spacing:-.04em; }
+.role-stage-copy h2 em { color:#a2e6d5; font-weight:400; }
+.role-stage-copy > p { max-width:390px; margin:0; color:#b9d6cf; font-size:13px; line-height:1.8; }
+.role-stage-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:22px; }
+.role-stage-actions button { display:flex; align-items:center; gap:9px; min-height:42px; padding:10px 13px; border:1px solid #7bd7c338; border-radius:11px; background:#71dac8; color:#083739; font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+.role-stage-actions button + button { color:#d3f3ea; background:transparent; }
+.role-stage-actions button:hover { transform:translateY(-2px); box-shadow:0 7px 18px #04191a35; }
+.role-stage-actions button > span { margin-left:4px; transition:transform .18s; }
+.role-stage-actions button:hover > span { transform:translate(2px,-2px); }
+.role-stage-object { position:relative; display:flex; align-items:center; justify-content:center; align-self:stretch; min-height:236px; perspective:800px; }
+.role-stage-object > .heart-scene { position:relative; width:100%; min-width:0; height:240px; z-index:1; }
+.role-orbit { position:absolute; left:50%; top:47%; width:96%; height:60%; border:1px solid #90e4d32e; border-radius:50%; transform:translate(-50%,-50%) rotate(-33deg); pointer-events:none; }
+.role-orbit-two { width:78%; height:80%; transform:translate(-50%,-50%) rotate(33deg); opacity:.5; }
+.role-scene-caption { position:absolute; bottom:0; color:#95c8be; font-size:8px; line-height:1.6; letter-spacing:.1em; text-align:center; }
+.role-stage-agenda { padding:22px; border:1px solid #90e4d327; border-radius:20px; background:#ffffff07; box-shadow:inset 0 1px 0 #ffffff0a,0 18px 30px #031f2420; backdrop-filter:blur(12px); }
+.role-stage-agenda > button { display:flex; align-items:center; gap:11px; width:100%; padding:16px 0; border:0; border-bottom:1px solid #c2ead619; background:transparent; color:#ecfaf5; text-align:left; font:inherit; cursor:pointer; }
+.role-stage-agenda > button > span:nth-child(2) { flex:1; min-width:0; }
+.role-stage-agenda strong { display:block; color:#eef8f4; font-size:12px; font-weight:500; line-height:1.6; }
+.role-stage-agenda small { display:block; margin-top:3px; color:#9dbfb9; font-size:10px; line-height:1.5; }
+.role-stage-agenda > p { display:flex; align-items:flex-start; gap:8px; margin:13px 0 0; color:#9dbfb9; font-size:10px; line-height:1.7; }
+.role-stage-agenda > p > svg { flex:0 0 12px; margin-top:2px; }
+.role-priority-icon { display:grid; place-items:center; flex:0 0 32px; height:32px; border-radius:10px; color:#a4dfd1; background:#a4dfd116; }
+.role-priority-icon.attention { color:#f7cb8c; background:#f7cb8c15; }
+.role-studio .doctor-grid { gap:13px; margin:0 0 24px; }
+.role-studio .doctor-card { display:grid; grid-template-columns:36px minmax(0,1fr); column-gap:12px; align-items:center; min-height:110px; padding:18px; background:linear-gradient(135deg,var(--care-paper),var(--care-soft)); border-radius:19px; box-shadow:var(--care-shadow); }
+.role-studio .doctor-card .card-icon { grid-column:1; grid-row:1 / 4; margin:0; }
+.role-studio .doctor-card h2 { grid-column:2; margin:0; font-size:27px; line-height:1.2; }
+.role-studio .doctor-card p { grid-column:2; margin:3px 0; font-size:12px; line-height:1.4; }
+.role-studio .doctor-card .card-caption { grid-column:2; color:var(--care-muted); font-size:10px; }
+.role-studio :is(.patient-table,.patient-monitor-box,.appointment-box,.insight-panel,.patient-profile-card,.alert-card,.appointment-row,.mini-patient,.prescription-card,.care-plan-editor,.care-plan-card) { color:var(--care-ink); background:var(--care-paper); border:1px solid var(--care-line); border-radius:20px; box-shadow:var(--care-shadow); }
+.role-studio :is(.patient-table,.patient-monitor-box,.appointment-box) { padding:23px; }
+.role-studio :is(.patient-profile-card,.alert-card,.appointment-patient) { transition:transform .2s var(--care-ease),box-shadow .2s; }
+.role-studio .patient-profile-card:hover, .role-studio .alert-card:hover { transform:translateY(-3px); border-color:color-mix(in srgb,var(--care-teal) 35%,var(--care-line)); box-shadow:0 14px 30px #04191a0d; }
+.role-studio :is(.table-top,.appointment-header) { align-items:center; gap:16px; }
+.role-studio .table-tools { display:flex; align-items:center; gap:12px; }
+.role-studio .table-top .care-scene.compact { width:76px; flex:0 0 76px; }
+.role-studio :is(.table-top h2,.appointment-header h2,.insight-panel h2) { color:var(--care-ink); font-size:20px; letter-spacing:-.025em; }
+.role-studio :is(.table-top p,.patient-profile-top p,.appointment-header p,.appointment-main span,.appointment-main p,.mini-patient-info span,.insight-panel > p,.care-plan-card p,.prescription-note) { color:var(--care-muted); font-size:13px; line-height:1.7; }
+.role-studio :is(.patient-profile-top h3,.appointment-main strong,.mini-patient-info strong,.prescription-head h4,.care-plan-card h4) { color:var(--care-ink); }
+.role-studio :is(.tool-stat,.soft-btn,.close-btn,.reminder-btn,.appointment-patient,.insight-list > div,.prescription-editor,.care-day-card,.care-plan-editor,.care-plan-item,.medicine-row,.drawer-tabs button) { color:var(--care-ink); background:var(--care-soft); border:1px solid var(--care-line); box-shadow:none; }
+.role-studio :is(.soft-btn,.reminder-btn):hover { color:var(--care-teal); background:var(--care-accent-soft); }
+.role-studio :is(.large-avatar,.mini-avatar,.appointment-date-icon,.prescription-icon) { color:var(--care-teal); background:var(--care-accent-soft); border:1px solid var(--care-line); box-shadow:3px 4px 0 color-mix(in srgb,var(--care-teal) 10%,transparent); }
+.role-studio .patient-profile-card { padding:18px; }
+.role-studio .patient-profile-top { gap:12px; }
+.role-studio .patient-stat-row { gap:8px; }
+.role-studio .patient-stat-row > div { padding:12px 10px; }
+.role-studio .patient-stat-row span { color:var(--care-muted); font-size:10px; }
+.role-studio .patient-stat-row b { color:var(--care-ink); font-size:17px; }
+.role-studio .patient-card-actions { border-top:1px solid var(--care-line); padding-top:14px; }
+.role-studio .insight-panel { background:linear-gradient(130deg,var(--care-paper),var(--care-soft)); }
+.role-studio .insight-panel::before, .role-studio .prescription-card::before { display:none; }
+.role-studio .insight-list > div { border-radius:11px; font-size:12px; }
+.role-studio .appointment-patient { border-radius:15px; }
+.role-studio .appointment-patient.selected { color:var(--care-ink); border-color:var(--care-teal); background:var(--care-accent-soft); }
+.role-studio :is(.appointment-input,.prescription-form,.care-plan-editor,.advice-form) :is(input,select,textarea) { border:1px solid var(--care-line); color:var(--care-ink); background:var(--care-paper); border-radius:11px; font-size:14px; box-shadow:none; }
+.role-studio .appointment-status, .role-studio .risk { box-shadow:none; font-size:10px; font-weight:600; }
+.role-studio :is(.risk.high,.risk.critical,.appointment-status.cancelled) { color:var(--care-danger); background:color-mix(in srgb,var(--care-danger) 10%,var(--care-paper)); border-color:color-mix(in srgb,var(--care-danger) 20%,var(--care-line)); }
+.role-studio .risk.normal { color:var(--care-teal); background:var(--care-accent-soft); }
+.role-studio .appointment-status.pending { color:var(--care-warning); background:color-mix(in srgb,var(--care-warning) 10%,var(--care-paper)); }
+.role-studio .appointment-status.approved, .role-studio .appointment-status.completed { color:var(--care-teal); background:var(--care-accent-soft); }
+.role-studio .alert-icon { color:var(--care-warning); background:color-mix(in srgb,var(--care-warning) 9%,var(--care-paper)); box-shadow:none; }
+.role-studio .alert-content p { color:var(--care-muted); }
+.role-studio .care-plan-editor { margin-top:16px; }
+.role-studio .patient-drawer :is(.care-plan-table-wrap,.medicine-editor-row,.advice-editor) { border:1px solid var(--care-line); border-radius:13px; background:var(--care-soft); color:var(--care-ink); }
+.role-studio .patient-drawer .care-plan-table :is(th,td) { color:var(--care-ink); border-color:var(--care-line); background:var(--care-paper); }
+.role-studio .patient-drawer .care-plan-table thead th, .role-studio .patient-drawer .care-plan-table .care-plan-day-cell { color:var(--care-muted); background:var(--care-soft); }
+.role-studio .patient-drawer :is(.care-plan-activity-title,.medicine-name strong,.editor-title h4,.drawer-title h2) { color:var(--care-ink); }
+.role-studio .patient-drawer :is(.care-plan-caption,.care-plan-description,.care-plan-summary,.medicine-row > span,.prescription-head span,.data-time) { color:var(--care-muted); }
+.role-studio .patient-drawer :is(.care-plan-review-note,.plan-status,.care-plan-type,.care-plan-row-status,.care-plan-time,.care-plan-add,.medicine-number) { color:var(--care-teal); background:var(--care-accent-soft); border-color:var(--care-line); }
+.role-studio .patient-drawer :is(.care-plan-table,.care-plan-edit-footer,.advice-editor) :is(input,select,textarea) { color:var(--care-ink); background:var(--care-paper); border:1px solid var(--care-line); border-radius:9px; box-shadow:none; }
+.role-studio .patient-drawer .appointment-input label { color:var(--care-muted); }
+/* Legacy clinical form rules use important colors; keep those rules on semantic surfaces. */
+.role-studio.doctor-layout :is(label,.field-label,.form-grid label) { color:var(--care-muted)!important; }
+.role-studio .patient-drawer .care-plan-table :is(th,td) { color:var(--care-ink)!important; border-color:var(--care-line)!important; background:var(--care-paper)!important; }
+.role-studio .patient-drawer .care-plan-table thead th, .role-studio .patient-drawer .care-plan-table .care-plan-day-cell { color:var(--care-muted)!important; background:var(--care-soft)!important; }
+.role-studio .patient-drawer .care-plan-table tbody tr:hover td { background:var(--care-soft)!important; }
+.role-studio .patient-drawer :is(.care-plan-day-cell strong,.care-plan-activity-title,.care-plan-empty-row td) { color:var(--care-ink)!important; }
+.role-studio .patient-drawer :is(.care-plan-table input,.care-plan-table select,.care-plan-edit-footer > textarea) { color:var(--care-ink)!important; border-color:var(--care-line)!important; background:var(--care-paper)!important; }
+.role-studio .doctor-profile h4 { color:var(--care-ink); }
+.role-studio .doctor-profile span { color:var(--care-muted); }
+.role-studio .admin-panel, .role-studio .admin-stat-card { border-radius:20px; background:linear-gradient(150deg,var(--care-paper),var(--care-soft)); box-shadow:var(--care-shadow); }
+.role-studio .admin-panel :is(.panel-heading,.user-preview) { border-color:var(--care-line); }
+.role-studio :is(.panel-kicker,.section-kicker) { color:var(--care-teal); }
+.role-studio :is(.admin-panel h3,.assignment-progress h4,.doctor-load-info strong,.user-preview strong,.protected-label) { color:var(--care-ink); }
+.role-studio :is(.assignment-progress-copy p,.mini-legend,.doctor-load-info span,.doctor-load-count span,.admin-security-card span) { color:var(--care-muted); }
+.role-studio .doctor-load-row { border-color:var(--care-line); }
+.role-studio .admin-table th { color:var(--care-muted); }
+.role-studio .admin-table tbody tr:hover { background:var(--care-soft); }
+.role-studio .role-badge.admin { color:var(--care-warning); background:color-mix(in srgb,var(--care-warning) 10%,var(--care-paper)); border-color:var(--care-line); }
+.role-studio .role-action.danger, .role-studio .action-danger { color:var(--care-danger); background:color-mix(in srgb,var(--care-danger) 8%,var(--care-paper)); border-color:color-mix(in srgb,var(--care-danger) 20%,var(--care-line)); }
+.role-studio .admin-error { border:1px solid color-mix(in srgb,var(--care-danger) 25%,var(--care-line)); color:var(--care-danger); background:var(--care-paper); box-shadow:var(--care-shadow); }
+.role-studio .admin-error button { color:inherit; }
+.role-studio .progress-track { stroke:var(--care-line); }
+.care-network-map { padding:18px; min-width:0; border:1px solid #b1e8da24; border-radius:20px; background:#d1fff809; box-shadow:0 20px 35px #021a1d20; }
+.care-network-center { display:grid; grid-template-columns:35px auto; align-items:center; justify-content:center; gap:2px 10px; }
+.care-network-center > svg { grid-row:1 / 3; width:35px; height:35px; padding:9px; border-radius:12px; color:#a0e8d9; background:#a0e8d91a; box-shadow:3px 4px 0 #021a1d28; }
+.care-network-center strong { font-size:28px; font-weight:500; line-height:1.1; color:#e8faf3; }
+.care-network-center > span { font-size:9px; color:#aed2c8; }
+.care-network-paths { position:relative; display:flex; justify-content:center; height:35px; padding-top:7px; }
+.care-network-paths i { display:block; width:30%; height:28px; border-top:1px solid #8bd8c55c; border-left:1px solid #8bd8c55c; border-radius:12px 0 0 0; }
+.care-network-paths i + i { border-left:0; border-right:1px solid #8bd8c55c; border-radius:0 12px 0 0; }
+.care-network-endpoints { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.care-network-endpoints > div { position:relative; display:grid; justify-items:center; padding:13px 7px 11px; border:1px solid #b1e8da21; border-radius:13px; background:#031f2429; }
+.care-network-endpoints strong { font-size:23px; font-weight:500; color:#e9faf4; }
+.care-network-endpoints > div > span:last-child { color:#aed2c8; font-size:9px; margin-top:4px; }
+.network-dot { position:absolute; top:-3px; width:5px; height:5px; border-radius:50%; background:#7cddc7; box-shadow:0 0 10px #7cddc760; }
+.network-dot.waiting { background:#f2c281; box-shadow:0 0 10px #f2c28150; }
+.role-studio[data-studio-simple="true"] :is(.role-orbit,.role-overview-stage::before) { display:none; }
+.role-studio[data-studio-simple="true"] :is(.doctor-card,.patient-card,.patient-profile-card,.admin-stat-card,.alert-card,.role-stage-actions button):hover { transform:none; }
+.role-studio[data-studio-simple="true"] :is(.doctor-menu,.admin-menu-item,.user-preview):hover, .role-studio[data-studio-simple="true"] .doctor-menu:hover > svg, .role-studio[data-studio-simple="true"] .admin-menu-item:hover .admin-menu-icon { transform:none; }
+.role-studio[data-studio-simple="true"] *, .role-studio[data-studio-simple="true"] *::before, .role-studio[data-studio-simple="true"] *::after { animation:none; transition:none; scroll-behavior:auto; }
+@media(min-width:901px) {
+  .role-studio[data-sidebar-collapsed="true"] :is(.doctor-sidebar,.admin-sidebar) { width:84px; min-width:84px; padding-inline:14px; }
+  .role-studio[data-sidebar-collapsed="true"] :is(.doctor-main,.admin-main) { width:calc(100% - 84px); margin-left:84px; }
+  .role-studio[data-sidebar-collapsed="true"] :is(.doctor-logo > div,.admin-brand > div:last-child,.admin-sidebar-label,.admin-security-card,.admin-menu-arrow,.admin-menu-copy,.role-menu-label) { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .role-studio[data-sidebar-collapsed="true"] :is(.doctor-logo,.admin-brand,.doctor-menu,.admin-menu-item) { justify-content:center; padding-inline:0; }
+  .role-studio[data-sidebar-collapsed="true"] .admin-logout { font-size:0; justify-content:center; }
+  .role-studio[data-sidebar-collapsed="true"] .admin-logout svg { font-size:17px; }
+  .role-studio[data-sidebar-collapsed="true"] .menu-badge { position:absolute; top:3px; right:0; min-width:14px; font-size:8px; }
+  .role-studio[data-sidebar-collapsed="true"] .admin-menu-badge { position:absolute; top:3px; right:0; }
+}
+@media(max-width:1250px) { .role-overview-stage { grid-template-columns:minmax(0,1fr) 190px; padding:26px; gap:18px; }.role-stage-agenda,.care-network-map { grid-column:1 / -1; }.role-stage-agenda { display:grid; grid-template-columns:1fr 1fr; gap:0 22px; padding:16px 20px; }.role-stage-agenda > .role-stage-eyebrow,.role-stage-agenda > p { grid-column:1 / -1; }.care-network-map { display:grid; grid-template-columns:1fr 60px 1.25fr; align-items:center; }.care-network-paths { transform:rotate(-90deg); width:70px; }.role-stage-copy h2 { font-size:29px; } }
+@media(max-width:900px) { .role-studio .admin-topbar { grid-template-columns:38px minmax(0,1fr) auto; gap:10px; }.role-studio .admin-topbar .role-header-tools { display:flex; }.role-studio .role-header-tools { gap:8px; }.role-topbar > div:not(.role-header-tools) { flex:1; min-width:0; }.role-studio .doctor-profile { display:none; } }
+@media(max-width:640px) {
+  .role-overview-stage { grid-template-columns:minmax(0,1fr) 95px; padding:22px 18px; border-radius:21px; gap:14px; min-height:0; }
+  .role-heart-slot { display:none; }
+  .role-stage-copy h2 { margin:11px 0; font-size:25px; }.role-stage-copy > p { font-size:12px; }.role-stage-eyebrow { font-size:8px; }
+  .role-stage-copy { grid-column:1; }.role-stage-object { grid-column:2; align-self:start; min-height:125px; margin-top:16px; }.role-stage-object > .heart-scene { height:135px; }.role-scene-caption { display:none; }
+  .role-stage-actions { gap:8px; margin-top:16px; }.role-stage-actions button { min-height:40px; padding:9px 10px; font-size:11px; }.role-stage-actions button > span { display:none; }
+  .role-stage-agenda { padding:14px; display:block; }.role-stage-agenda > button { padding:12px 0; }.role-stage-agenda > p { font-size:9px; }
+  .care-network-map { padding:14px 10px; grid-template-columns:1fr 35px 1.25fr; }.care-network-center { grid-template-columns:1fr; justify-items:center; gap:5px; }.care-network-center > svg { grid-row:auto; }.care-network-center strong { font-size:24px; }.care-network-center > span { text-align:center; font-size:8px; }.care-network-paths { width:45px; }.care-network-endpoints { gap:7px; }.care-network-endpoints strong { font-size:20px; }.care-network-endpoints > div > span:last-child { font-size:8px; text-align:center; }
+  .role-studio .doctor-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }.role-studio .doctor-card { padding:13px; gap:6px 8px; grid-template-columns:28px minmax(0,1fr); }.role-studio .doctor-card .card-icon { width:28px; height:28px; font-size:13px; }.role-studio .doctor-card h2 { font-size:23px; }.role-studio .doctor-card p { font-size:11px; }.role-studio .doctor-card .card-caption { font-size:8px; }
+  .role-studio :is(.patient-table,.patient-monitor-box,.appointment-box) { padding:16px; border-radius:17px; }.role-studio .table-top .care-scene.compact { width:56px; flex-basis:56px; }.role-studio .table-top h2 { font-size:18px; }.role-studio .table-top p { font-size:12px; }.role-studio .tool-stat { font-size:10px; padding:7px; }.role-studio .patient-profile-card { padding:15px; }.role-studio .patient-profile-top { flex-wrap:wrap; }.role-studio .patient-stat-row { grid-template-columns:repeat(2,minmax(0,1fr)); }.role-studio .appointment-row { flex-wrap:wrap; }.role-studio .appointment-actions { flex-basis:100%; justify-content:flex-end; }.role-studio .admin-topbar h1 { font-size:20px; }
+}

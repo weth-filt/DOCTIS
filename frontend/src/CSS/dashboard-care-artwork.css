@@ -1,0 +1,25 @@
+.dashboard-care-artwork {
+  width: 100%;
+  max-width: 580px;
+  min-width: 0;
+  margin-inline: auto;
+  pointer-events: none;
+  user-select: none;
+  isolation: isolate;
+}
+
+.dashboard-care-artwork > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-care-artwork *,
+  .dashboard-care-artwork *::before,
+  .dashboard-care-artwork *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

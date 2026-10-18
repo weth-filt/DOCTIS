@@ -1,3 +1,13 @@
+import { ConversationBack, ConversationNotice, useConversationViewport } from "../../components/ConversationViewport";
+import CareScene from "../../components/CareScene";
+import { useWorkspaceMotion } from "../../components/WorkspaceMotion";
+import HealthAnalytics from "../../components/HealthAnalytics";
+import HeartScene from "../../components/3d/HeartScene";
+import { STUDIO_PREFERENCES_KEY, useStudioPreferences } from "../../components/studio/StudioPreferences";
+import StudioControls from "../../components/studio/StudioControls";
+import StudioExperience from "../../components/studio/StudioExperience";
+import useLiveReducedMotion from "../../components/useLiveReducedMotion";
+import "../../CSS/role-studio.css";
 import "../../CSS/doctor.css";
 
 import {
@@ -32,21 +42,14 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  LineChart,
-  Line
-} from "recharts";
 
 import API from "../../services/api";
+import { MotionConfig, motion } from "framer-motion";
+import { useConversationMotion } from "../../components/ConversationMotion";
+import "../../CSS/conversation-studio.css";
 import getRiskAssessment from "../../utils/riskAssessment";
 
+const ROLE_PAGE_ORDER = ["overview", "patients", "messages", "appointment", "alerts"];
 const authConfig = () => {
   const user = JSON.parse(localStorage.getItem("user") || "null");
   return {
@@ -117,6 +120,8 @@ const initialMedicine = () => ({
 
 export default function DoctorDashboard() {
   const nav = useNavigate();
+  const prefs = useStudioPreferences();
+  const reducedMotion = useLiveReducedMotion();
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
   const [patients, setPatients] = useState([]);
@@ -124,7 +129,10 @@ export default function DoctorDashboard() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [patientLoading, setPatientLoading] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeMenu, setActiveMenu] = useState("overview");
+  const [activeMenu, setActiveMenuState] = useState("overview");
+  const [roleNavOpen, setRoleNavOpen] = useState(false);
+  const { screenRef, navigate: navigateDoctor } = useWorkspaceMotion(activeMenu, setActiveMenuState, ROLE_PAGE_ORDER);
+  const setActiveMenu = next => { navigateDoctor(next); setRoleNavOpen(false); };
 
   const [adviceData, setAdviceData] = useState({ title: "", message: "" });
   const [appointmentData, setAppointmentData] = useState({
@@ -147,6 +155,10 @@ export default function DoctorDashboard() {
   const messageAreaRef = useRef(null);
   const messageAttachmentInputRef = useRef(null);
   const messageStickToBottomRef = useRef(true);
+  useConversationMotion(messageAreaRef, selectedChat?._id, messages, messageLoading);
+
+  const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
+  const messageViewport = useConversationViewport(messageAreaRef, selectedChat?._id, messages, activeMenu === "messages", messageLoading);
 
   // Prescription
   const [prescriptions, setPrescriptions] = useState([]);
@@ -165,7 +177,9 @@ export default function DoctorDashboard() {
   const [carePlanSaving, setCarePlanSaving] = useState(false);
 
   const logout = () => {
+    const presentationPreferences = localStorage.getItem(STUDIO_PREFERENCES_KEY);
     localStorage.clear();
+    if (presentationPreferences) localStorage.setItem(STUDIO_PREFERENCES_KEY, presentationPreferences);
     nav("/");
   };
 
@@ -174,7 +188,7 @@ export default function DoctorDashboard() {
       const res = await API.get("/appointments/doctor", authConfig());
       setAppointments(res.data || []);
     } catch (err) {
-      console.error("GET DOCTOR APPOINTMENTS ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("GET DOCTOR APPOINTMENTS ERROR =", err);
     }
   }, []);
 
@@ -184,7 +198,7 @@ export default function DoctorDashboard() {
       const res = await API.get("/doctor/patients", authConfig());
       setPatients(res.data || []);
     } catch (err) {
-      console.error("GET PATIENTS ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("GET PATIENTS ERROR =", err);
     } finally {
       setLoading(false);
     }
@@ -195,7 +209,7 @@ export default function DoctorDashboard() {
       const res = await API.get("/messages/patients", authConfig());
       setMessagePatients(res.data || []);
     } catch (err) {
-      console.error("GET MESSAGE PATIENTS ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("GET MESSAGE PATIENTS ERROR =", err);
     }
   }, []);
 
@@ -241,7 +255,7 @@ export default function DoctorDashboard() {
         ));
       } catch (err) {
         // Giữ nguyên nội dung đang xem nếu mạng tạm thời gián đoạn.
-        console.warn("REFRESH CHAT ERROR =", err?.message || err);
+        if (process.env.NODE_ENV !== "production") console.warn("REFRESH CHAT ERROR =", err?.message || err);
       } finally {
         inFlight = false;
       }
@@ -301,7 +315,7 @@ export default function DoctorDashboard() {
       setCarePlanDays(emptyCarePlanDays(plan?.days));
       setCarePlanNote(plan?.doctorNote || "");
     } catch (err) {
-      console.error("OPEN PATIENT ERROR =", err);
+      if (process.env.NODE_ENV !== "production") console.error("OPEN PATIENT ERROR =", err);
     } finally {
       setPatientLoading(false);
     }
@@ -486,6 +500,7 @@ export default function DoctorDashboard() {
   }, [messages, selectedChat, activeMenu, scrollMessagesToBottom]);
 
   const handleMessageAreaScroll = (e) => {
+    messageViewport.onScroll(e);
     const el = e.currentTarget;
     const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
     messageStickToBottomRef.current = distance < 120;
@@ -587,7 +602,7 @@ export default function DoctorDashboard() {
       link.remove();
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      console.error("DOWNLOAD ATTACHMENT ERROR =", error);
+      if (process.env.NODE_ENV !== "production") console.error("DOWNLOAD ATTACHMENT ERROR =", error);
       window.open(url, "_blank", "noopener,noreferrer");
     }
   };
@@ -689,6 +704,7 @@ export default function DoctorDashboard() {
   const openChat = async (patient) => {
     setSelectedChat(patient);
     messageStickToBottomRef.current = true;
+    setMobileConversationOpen(true);
     setMessageAttachment(null);
     setMessageLoading(true);
 
@@ -806,7 +822,7 @@ export default function DoctorDashboard() {
       scrollMessagesToBottom("smooth");
     }, 50);
   } catch (err) {
-    console.error(
+    if (process.env.NODE_ENV !== "production") console.error(
       "SEND MESSAGE ERROR =",
       err
     );
@@ -962,20 +978,6 @@ export default function DoctorDashboard() {
     selectedPatient?.healthData ||
     [];
 
-  const chartData = [...patientHistory].map((item, index) => ({
-    day: item.createdAt
-      ? new Date(item.createdAt).toLocaleDateString("vi-VN", {
-          day: "2-digit",
-          month: "2-digit"
-        })
-      : `Lần ${index + 1}`,
-    glucose: Number(item.glucose || 0),
-    bmi: Number(item.bmi || 0),
-    heartRate: Number(item.heartRate || 0),
-    systolic: Number(item.systolic || 0),
-    diastolic: Number(item.diastolic || 0)
-  }));
-
   const latest = selectedPatient?.latestHealth || {};
 
   const profileFields = [
@@ -1002,7 +1004,8 @@ export default function DoctorDashboard() {
   ];
 
   return (
-    <div className="doctor-layout">
+    <MotionConfig reducedMotion={reducedMotion ? "always" : "never"}><div className={`doctor-layout role-studio ${roleNavOpen ? "role-menu-open" : ""}`} data-studio-theme={prefs.theme} data-studio-simple={prefs.simpleUI} data-sidebar-collapsed={prefs.sidebarCollapsed}>
+      <StudioExperience page={`doctor-${activeMenu}`} name={currentUser?.fullName || currentUser?.username || "Bác sĩ"} />
       <aside className="doctor-sidebar">
         <div>
           <div className="doctor-logo">
@@ -1021,7 +1024,8 @@ export default function DoctorDashboard() {
             }}
           >
             <FaHeartbeat />
-            Tổng quan
+            <span className="role-menu-label">Tổng quan</span>
+            {activeMenu === "overview" && <motion.i className="role-nav-light" layoutId="doctor-navigation-light" />}
           </button>
 
           <button
@@ -1032,7 +1036,8 @@ export default function DoctorDashboard() {
             }}
           >
             <FaUserInjured />
-            Bệnh nhân
+            <span className="role-menu-label">Bệnh nhân</span>
+            {activeMenu === "patients" && <motion.i className="role-nav-light" layoutId="doctor-navigation-light" />}
             {highRisk.length > 0 && <b className="menu-badge">{highRisk.length}</b>}
           </button>
 
@@ -1044,7 +1049,8 @@ export default function DoctorDashboard() {
             }}
           >
             <FaComments />
-            Nhắn tin bệnh nhân
+            <span className="role-menu-label">Nhắn tin bệnh nhân</span>
+            {activeMenu === "messages" && <motion.i className="role-nav-light" layoutId="doctor-navigation-light" />}
             {messagePatients.some((p) => p.unread > 0) && (
               <b className="menu-badge">!</b>
             )}
@@ -1058,7 +1064,8 @@ export default function DoctorDashboard() {
             }}
           >
             <FaCalendarAlt />
-            Lịch hẹn
+            <span className="role-menu-label">Lịch hẹn</span>
+            {activeMenu === "appointment" && <motion.i className="role-nav-light" layoutId="doctor-navigation-light" />}
           </button>
 
           <button
@@ -1069,20 +1076,23 @@ export default function DoctorDashboard() {
             }}
           >
             <FaBell />
-            Cảnh báo AI
+            <span className="role-menu-label">Cảnh báo AI</span>
+            {activeMenu === "alerts" && <motion.i className="role-nav-light" layoutId="doctor-navigation-light" />}
           </button>
         </div>
 
         <button className="doctor-menu logout" onClick={logout}>
           <FaSignOutAlt />
-          Đăng xuất
+          <span className="role-menu-label">Đăng xuất</span>
         </button>
       </aside>
 
-      <main className={`doctor-main ${activeMenu === "messages" ? "doctor-main-messages" : ""}`}>
-        <header className="doctor-header">
+      {roleNavOpen && <button className="role-menu-backdrop" type="button" aria-label="Close menu" onClick={() => setRoleNavOpen(false)} />}
+      <main className={`doctor-main ${activeMenu === "messages" ? "doctor-main-messages studio-doctor-messages" : ""}`}>
+        <header className={activeMenu === "messages" ? "conversation-page-heading" : "role-topbar"}>
+          <button className="role-menu-toggle" type="button" onClick={() => setRoleNavOpen(v => !v)} aria-label="Menu" aria-expanded={roleNavOpen}>☰</button>
           <div>
-            <div className="eyebrow">
+            <div className={activeMenu === "messages" ? "conversation-page-kicker" : "eyebrow"}>
               <span className="pulse-dot" />
               DOCTIS · CLINICAL WORKSPACE
             </div>
@@ -1103,8 +1113,8 @@ export default function DoctorDashboard() {
             </p>
           </div>
 
-          <div className="doctor-profile">
-            <div className="doctor-avatar">
+          <div className="role-header-tools">{activeMenu !== "overview" && <div className="role-heart-slot"><HeartScene compact status="neutral" /></div>}<StudioControls /><div className={activeMenu === "messages" ? "conversation-account" : "doctor-profile"}>
+            <div className={activeMenu === "messages" ? "conversation-avatar" : "doctor-avatar"}>
               {String(currentUser?.fullName || currentUser?.username || "D")
                 .charAt(0)
                 .toUpperCase()}
@@ -1114,11 +1124,18 @@ export default function DoctorDashboard() {
               <span>Doctor • Bác sĩ phụ trách</span>
             </div>
           </div>
+          </div>
         </header>
 
+        <div ref={screenRef} className={`role-workspace-content ${activeMenu === "messages" ? "is-role-conversation" : ""}`}>
         {/* ================= OVERVIEW ================= */}
         {activeMenu === "overview" && (
           <>
+            <section className="role-overview-stage clinical-overview-stage">
+              <div className="role-stage-copy"><span className="role-stage-eyebrow">KHÔNG GIAN CHĂM SÓC</span><h2>Mỗi kết nối,<br /><em>một bước chăm sóc.</em></h2><p>Theo dõi những thay đổi mới nhất và tiếp tục kế hoạch của bệnh nhân trong một không gian.</p><div className="role-stage-actions"><button type="button" onClick={() => setActiveMenu("patients")}><FaUserInjured /> Hồ sơ bệnh nhân <span aria-hidden="true">↗</span></button><button type="button" onClick={() => setActiveMenu("appointment")}><FaCalendarAlt /> Xem lịch hẹn</button></div></div>
+              <div className="role-stage-object"><span className="role-orbit role-orbit-one" /><span className="role-orbit role-orbit-two" /><HeartScene compact status="neutral" /><span className="role-scene-caption">DOCTIS · CHĂM SÓC KẾT NỐI</span></div>
+              <div className="role-stage-agenda"><span className="role-stage-eyebrow">ƯU TIÊN CỦA BẠN</span><button type="button" onClick={() => setActiveMenu("alerts")}><span className="role-priority-icon attention"><FaExclamationTriangle /></span><span><strong>{highRisk.length} bệnh nhân cần chú ý</strong><small>Dựa trên đánh giá hiện có</small></span><span aria-hidden="true">↗</span></button><button type="button" onClick={() => setActiveMenu("appointment")}><span className="role-priority-icon"><FaCalendarAlt /></span><span><strong>{todayAppointments.length} cuộc hẹn hôm nay</strong><small>Xem thời gian và trạng thái</small></span><span aria-hidden="true">↗</span></button><p><FaNotesMedical /> Dữ liệu được giữ trong hồ sơ bệnh nhân.</p></div>
+            </section>
             <section className="doctor-grid">
               <div className="doctor-card blue">
                 <div className="card-icon"><FaUserInjured /></div>
@@ -1244,6 +1261,7 @@ export default function DoctorDashboard() {
               </div>
               <div className="table-tools">
                 <span className="tool-stat">{patients.length} bệnh nhân</span>
+                <CareScene kind="profile" className="compact" />
               </div>
             </div>
 
@@ -1296,9 +1314,9 @@ export default function DoctorDashboard() {
 
         {/* ================= MESSAGES ================= */}
         {activeMenu === "messages" && (
-          <section className="messaging-shell messenger-v2">
-            <aside className="conversation-sidebar">
-              <div className="conversation-title">
+          <section className={`conversation-workspace conversation-frame clinician-conversation ${mobileConversationOpen ? "is-mobile-conversation" : ""}`}>
+            <aside className="conversation-rail">
+              <div className="conversation-rail-heading">
                 <div>
                   <h2>Đoạn chat</h2>
                   <span>{messagePatients.length} cuộc trò chuyện</span>
@@ -1306,7 +1324,7 @@ export default function DoctorDashboard() {
                 <FaComments />
               </div>
 
-              <div className="message-search">
+              <div className="conversation-search">
                 <FaSearch />
                 <input
                   value={messageSearch}
@@ -1315,19 +1333,20 @@ export default function DoctorDashboard() {
                 />
               </div>
 
-              <div className="conversation-list">
+              <div className="conversation-contacts">
                 {filteredMessagePatients.map((p) => (
                   <button
-                    className={`conversation-item ${
+                    className={`conversation-contact ${
                       selectedChat?._id === p._id ? "selected" : ""
                     }`}
                     key={p._id}
                     onClick={() => openChat(p)}
                   >
-                    <div className="chat-avatar">
+                    {selectedChat?._id === p._id && <motion.i className="conversation-selection" layoutId="doctor-conversation-selection" transition={{ duration: .2 }} />}
+                    <div className="conversation-avatar">
                       {getPatientName(p).charAt(0).toUpperCase()}
                     </div>
-                    <div className="conversation-content">
+                    <div className="conversation-person">
                       <strong>{getPatientName(p)}</strong>
                       <span>{p.lastMessage || "Chưa có tin nhắn"}</span>
                     </div>
@@ -1346,17 +1365,17 @@ export default function DoctorDashboard() {
                 ))}
 
                 {filteredMessagePatients.length === 0 && (
-                  <div className="empty-chat-list">
+                  <div className="conversation-empty">
                     Không tìm thấy bệnh nhân.
                   </div>
                 )}
               </div>
             </aside>
 
-            <div className="chat-window">
+            <div className="conversation-pane">
               {!selectedChat ? (
-                <div className="chat-empty">
-                  <div className="chat-empty-icon"><FaComments /></div>
+                <div className="conversation-empty">
+                  <CareScene kind="chat" className="small" />
                   <h2>Chọn một bệnh nhân</h2>
                   <p>
                     Chọn bệnh nhân bên trái để bắt đầu hoặc tiếp tục cuộc trò chuyện.
@@ -1364,9 +1383,10 @@ export default function DoctorDashboard() {
                 </div>
               ) : (
                 <>
-                  <div className="chat-header messenger-chat-header">
-                    <div className="chat-user">
-                      <div className="chat-avatar big">
+                  <div className="conversation-heading">
+                    <ConversationBack onClick={() => setMobileConversationOpen(false)} />
+                    <div className="conversation-person-heading">
+                      <div className="conversation-avatar">
                         {getPatientName(selectedChat).charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -1385,7 +1405,7 @@ export default function DoctorDashboard() {
 
                   <div
                     ref={messageAreaRef}
-                    className="messages-area messenger-messages-area"
+                    className="conversation-timeline"
                     onScroll={handleMessageAreaScroll}
                   >
                     {messageLoading ? (
@@ -1394,7 +1414,7 @@ export default function DoctorDashboard() {
                         Đang tải tin nhắn...
                       </div>
                     ) : messages.length === 0 ? (
-                      <div className="chat-empty compact">
+                      <div className="conversation-empty">
                         <FaEnvelope />
                         <p>Chưa có tin nhắn. Hãy gửi lời chào cho bệnh nhân.</p>
                       </div>
@@ -1412,13 +1432,13 @@ export default function DoctorDashboard() {
                         return (
                           <div key={message._id || index}>
                             {showDate && (
-                              <div className="message-date-divider">
+                              <div className="conversation-date">
                                 <span>{currentDate}</span>
                               </div>
                             )}
 
-                            <div className={`message-row ${mine ? "mine" : "theirs"}`}>
-                              <div className="message-bubble messenger-bubble">
+                            <div className={`conversation-message ${mine ? "mine" : "theirs"}`}>
+                              <div className="conversation-bubble">
                                 {message.content && (
                                   <p>{message.content}</p>
                                 )}
@@ -1472,10 +1492,11 @@ export default function DoctorDashboard() {
                     </div>
                   )}
 
-                  <div className="message-composer messenger-composer">
+                  <ConversationNotice viewport={messageViewport} />
+                  <div className="conversation-input">
                     <button
                       type="button"
-                      className="message-attach-btn"
+                      className="conversation-attach"
                       onClick={() => messageAttachmentInputRef.current?.click()}
                       title="Gửi ảnh hoặc tệp"
                       aria-label="Gửi ảnh hoặc tệp"
@@ -1504,7 +1525,7 @@ export default function DoctorDashboard() {
                     />
 
                     <button
-                      className="send-message-btn messenger-send-btn"
+                      className="conversation-send"
                       disabled={
                         sendingMessage ||
                         (!messageText.trim() && !messageAttachment)
@@ -1530,6 +1551,7 @@ export default function DoctorDashboard() {
                   <h2>Chọn bệnh nhân để tạo lịch</h2>
                   <p>Lịch hẹn sẽ được gửi về tài khoản bệnh nhân.</p>
                 </div>
+                <CareScene kind="calendar" className="compact" />
               </div>
 
               <div className="appointment-patient-grid">
@@ -1693,6 +1715,7 @@ export default function DoctorDashboard() {
                 <h2>Cảnh báo AI</h2>
                 <p>Ưu tiên bệnh nhân có chỉ số bất thường để bác sĩ kiểm tra hồ sơ.</p>
               </div>
+              <CareScene kind="chart" className="compact" />
             </div>
 
             <div className="alert-grid">
@@ -1725,6 +1748,7 @@ export default function DoctorDashboard() {
             </div>
           </section>
         )}
+        </div>
       </main>
 
       {/* ================= PATIENT DETAIL DRAWER ================= */}
@@ -1868,61 +1892,7 @@ export default function DoctorDashboard() {
                   </div>
                 </section>
 
-                {/* Charts */}
-                <section className="drawer-section">
-                  <div className="section-heading">
-                    <div>
-                      <span className="section-kicker">04 · TRENDS</span>
-                      <h3>Diễn biến chỉ số</h3>
-                    </div>
-                  </div>
-
-                  <div className="chart-grid">
-                    <div className="doctor-chart">
-                      <h4><FaHeartbeat /> Glucose</h4>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <AreaChart data={chartData} margin={{ top: 8, right: 18, bottom: 8, left: 4 }}>
-                          <defs>
-                            <linearGradient id="doctorGlucoseGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#3977f2" stopOpacity={0.35} />
-                              <stop offset="100%" stopColor="#3977f2" stopOpacity={0} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="day" tick={{ fill: "#68818b", fontSize: 11 }} tickMargin={8} minTickGap={24} padding={{ left: 12, right: 18 }} />
-                          <YAxis />
-                          <Tooltip />
-                          <Area
-                            type="monotone"
-                            dataKey="glucose"
-                            stroke="#3977f2"
-                            fill="url(#doctorGlucoseGradient)"
-                            strokeWidth={3}
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    <div className="doctor-chart">
-                      <h4><FaChartLine /> BMI</h4>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <LineChart data={chartData} margin={{ top: 8, right: 18, bottom: 8, left: 4 }}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="day" tick={{ fill: "#68818b", fontSize: 11 }} tickMargin={8} minTickGap={24} padding={{ left: 12, right: 18 }} />
-                          <YAxis />
-                          <Tooltip />
-                          <Line
-                            type="monotone"
-                            dataKey="bmi"
-                            stroke="#8068ee"
-                            strokeWidth={3}
-                            dot={{ r: 3 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </section>
+                <section className="drawer-section"><HealthAnalytics data={patientHistory} loading={patientLoading} /></section>
 
                 {/* Care plan */}
                 <section className="drawer-section">
@@ -2281,6 +2251,6 @@ export default function DoctorDashboard() {
           </aside>
         </div>
       )}
-    </div>
+    </div></MotionConfig>
   );
 }

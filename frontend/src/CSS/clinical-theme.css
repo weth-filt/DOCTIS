@@ -240,12 +240,12 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
 .dashboard-layout.doctis-v5 .v5-diabetes-card:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(23,50,72,.08) !important; }
 .dashboard-layout.doctis-v5 .v5-quick-card::after { display: none !important; }
 .dashboard-layout.doctis-v5 .v5-quick-icon { color: var(--rx-primary) !important; background: #eaf5f7 !important; border-radius: 12px !important; }
-.dashboard-layout.doctis-v5 input,
+.dashboard-layout.doctis-v5 input:not(.studio-input),
 .dashboard-layout.doctis-v5 textarea,
 .dashboard-layout.doctis-v5 select,
-.admin-page input,
-.admin-page textarea,
-.admin-page select,
+.admin-page:not(.role-studio) input,
+.admin-page:not(.role-studio) textarea,
+.admin-page:not(.role-studio) select,
 .auth-card input,
 .auth-card .input {
   color: var(--rx-ink) !important;
@@ -259,18 +259,18 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
 .dashboard-layout.doctis-v5 input:focus,
 .dashboard-layout.doctis-v5 textarea:focus,
 .dashboard-layout.doctis-v5 select:focus,
-.admin-page input:focus,
-.admin-page textarea:focus,
-.admin-page select:focus,
+.admin-page:not(.role-studio) input:focus,
+.admin-page:not(.role-studio) textarea:focus,
+.admin-page:not(.role-studio) select:focus,
 .auth-card input:focus,
 .auth-card .input:focus { border-color: var(--rx-primary) !important; box-shadow: 0 0 0 3px rgba(8,127,140,.14) !important; }
 .dashboard-layout.doctis-v5 table th,
-.admin-page .admin-table th { color: #49636f !important; background: #edf3f5 !important; font-weight: 700 !important; }
+.admin-page:not(.role-studio) .admin-table th { color: #49636f !important; background: #edf3f5 !important; font-weight: 700 !important; }
 .dashboard-layout.doctis-v5 table td,
-.admin-page .admin-table td { border-color: #e4eaed !important; }
+.admin-page:not(.role-studio) .admin-table td { border-color: #e4eaed !important; }
 
 /* Doctor workspace: calm clinical palette, existing physician tools remain intact. */
-.doctor-layout {
+.doctor-layout:not(.role-studio) {
   --doc-ink: #173248;
   --doc-title: #173248;
   --doc-text: #5c7382;
@@ -284,14 +284,14 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   color: var(--rx-ink) !important;
   background: var(--rx-bg) !important;
 }
-.doctor-layout::after,
-.doctor-sidebar::before,
-.doctor-layout .doctor-main:not(.doctor-main-messages)::before { display: none !important; }
-.doctor-sidebar { background: #fff !important; border-color: var(--rx-line) !important; box-shadow: none !important; }
-.doctor-layout .doctor-main { background: transparent !important; }
+.doctor-layout:not(.role-studio)::after,
+.doctor-layout:not(.role-studio) .doctor-sidebar::before,
+.doctor-layout:not(.role-studio) .doctor-main:not(.doctor-main-messages)::before { display: none !important; }
+.doctor-layout:not(.role-studio) .doctor-sidebar { background: #fff !important; border-color: var(--rx-line) !important; box-shadow: none !important; }
+.doctor-layout:not(.role-studio) .doctor-main { background: transparent !important; }
 
 /* Admin: a dark instrument rail against a bright working surface. */
-.admin-page {
+.admin-page:not(.role-studio) {
   --admin-text: #173248;
   --admin-muted: #647887;
   --admin-soft: #7d8f99;
@@ -307,55 +307,55 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   background: var(--rx-bg) !important;
   font-family: "Be Vietnam Pro", "Segoe UI", sans-serif !important;
 }
-.admin-page::before { display: none !important; }
-.admin-page .admin-sidebar {
+.admin-page:not(.role-studio)::before { display: none !important; }
+.admin-page:not(.role-studio) .admin-sidebar {
   color: #dce9ee !important;
   background: #173248 !important;
   border-right: 1px solid #25465a !important;
   box-shadow: none !important;
 }
-.admin-page .admin-brand strong { color: #fff !important; }
-.admin-page .admin-brand span,
-.admin-page .admin-sidebar-label { color: #a6bdc8 !important; }
-.admin-page .admin-brand-mark { color: #fff !important; background: var(--admin-primary) !important; border-radius: 12px !important; box-shadow: none !important; }
-.admin-page .admin-menu-item { color: #c0d0d7 !important; border-radius: 10px !important; }
-.admin-page .admin-menu-copy small { color: #95aeb9 !important; }
-.admin-page .admin-menu-item:hover,
-.admin-page .admin-menu-item.is-active {
+.admin-page:not(.role-studio) .admin-brand strong { color: #fff !important; }
+.admin-page:not(.role-studio) .admin-brand span,
+.admin-page:not(.role-studio) .admin-sidebar-label { color: #a6bdc8 !important; }
+.admin-page:not(.role-studio) .admin-brand-mark { color: #fff !important; background: var(--admin-primary) !important; border-radius: 12px !important; box-shadow: none !important; }
+.admin-page:not(.role-studio) .admin-menu-item { color: #c0d0d7 !important; border-radius: 10px !important; }
+.admin-page:not(.role-studio) .admin-menu-copy small { color: #95aeb9 !important; }
+.admin-page:not(.role-studio) .admin-menu-item:hover,
+.admin-page:not(.role-studio) .admin-menu-item.is-active {
   color: #fff !important;
   background: #244b60 !important;
   box-shadow: inset 3px 0 var(--rx-cyan) !important;
 }
-.admin-page .admin-menu-item.is-active .admin-menu-copy small { color: #bbd8e0 !important; }
-.admin-page .admin-menu-icon,
-.admin-page .admin-menu-item.is-active .admin-menu-icon { color: var(--admin-primary) !important; background: transparent !important; }
-.admin-page .admin-security-card { color: #dce9ee !important; background: #203f52 !important; border-color: #31576a !important; border-radius: 14px !important; }
-.admin-page .admin-security-card strong { color: #fff !important; }
-.admin-page .admin-security-card span { color: #afc2cb !important; }
-.admin-page .admin-logout { color: #f2cac2 !important; background: #244253 !important; border-color: #385769 !important; border-radius: 10px !important; }
-.admin-page .admin-main { color: var(--rx-ink) !important; background: transparent !important; }
-.admin-page .admin-topbar,
-.admin-page .admin-panel,
-.admin-page .admin-stat-card,
-.admin-page .admin-patient-modal,
-.admin-page .admin-doctor-editor {
+.admin-page:not(.role-studio) .admin-menu-item.is-active .admin-menu-copy small { color: #bbd8e0 !important; }
+.admin-page:not(.role-studio) .admin-menu-icon,
+.admin-page:not(.role-studio) .admin-menu-item.is-active .admin-menu-icon { color: var(--admin-primary) !important; background: transparent !important; }
+.admin-page:not(.role-studio) .admin-security-card { color: #dce9ee !important; background: #203f52 !important; border-color: #31576a !important; border-radius: 14px !important; }
+.admin-page:not(.role-studio) .admin-security-card strong { color: #fff !important; }
+.admin-page:not(.role-studio) .admin-security-card span { color: #afc2cb !important; }
+.admin-page:not(.role-studio) .admin-logout { color: #f2cac2 !important; background: #244253 !important; border-color: #385769 !important; border-radius: 10px !important; }
+.admin-page:not(.role-studio) .admin-main { color: var(--rx-ink) !important; background: transparent !important; }
+.admin-page:not(.role-studio) .admin-topbar,
+.admin-page:not(.role-studio) .admin-panel,
+.admin-page:not(.role-studio) .admin-stat-card,
+.admin-page:not(.role-studio) .admin-patient-modal,
+.admin-page:not(.role-studio) .admin-doctor-editor {
   color: var(--rx-ink) !important;
   background: #fff !important;
   border: 1px solid var(--rx-line) !important;
   border-radius: 18px !important;
   box-shadow: var(--rx-shadow) !important;
 }
-.admin-page .admin-topbar { border: 0 !important; box-shadow: none !important; }
-.admin-page .admin-topbar h1,
-.admin-page .admin-hero h2,
-.admin-page .admin-stat-card h3,
-.admin-page .admin-panel h2,
-.admin-page .admin-panel h3 { color: var(--rx-ink) !important; }
-.admin-page .admin-topbar p,
-.admin-page .admin-stat-card p { color: var(--rx-muted) !important; }
-.admin-page .admin-hero { background: #eaf3f6 !important; border-color: #dce8ec !important; box-shadow: none !important; }
-.admin-page .admin-hero::before { display: none !important; }
-.admin-page button { box-shadow: none !important; }
+.admin-page:not(.role-studio) .admin-topbar { border: 0 !important; box-shadow: none !important; }
+.admin-page:not(.role-studio) .admin-topbar h1,
+.admin-page:not(.role-studio) .admin-hero h2,
+.admin-page:not(.role-studio) .admin-stat-card h3,
+.admin-page:not(.role-studio) .admin-panel h2,
+.admin-page:not(.role-studio) .admin-panel h3 { color: var(--rx-ink) !important; }
+.admin-page:not(.role-studio) .admin-topbar p,
+.admin-page:not(.role-studio) .admin-stat-card p { color: var(--rx-muted) !important; }
+.admin-page:not(.role-studio) .admin-hero { background: #eaf3f6 !important; border-color: #dce8ec !important; box-shadow: none !important; }
+.admin-page:not(.role-studio) .admin-hero::before { display: none !important; }
+.admin-page:not(.role-studio) button { box-shadow: none !important; }
 
 /* Authentication and account recovery use the same precise, high-contrast system. */
 .auth-container {
@@ -396,8 +396,8 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
 .auth-card a { color: var(--rx-primary-dark) !important; }
 
 .dashboard-layout.doctis-v5 :focus-visible,
-.doctor-layout :focus-visible,
-.admin-page :focus-visible,
+.doctor-layout:not(.role-studio) :focus-visible,
+.admin-page:not(.role-studio) :focus-visible,
 .auth-container :focus-visible {
   outline: 3px solid rgba(53,196,216,.45) !important;
   outline-offset: 2px !important;
@@ -415,12 +415,217 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   .dashboard-layout.doctis-v5 .v5-hero-art { display: none !important; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dashboard-layout.doctis-v5 *, .doctor-layout *, .admin-page *, .auth-container * {
+  .dashboard-layout.doctis-v5 *, .doctor-layout:not(.role-studio) *, .admin-page:not(.role-studio) *, .auth-container * {
     scroll-behavior: auto !important;
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
+}
+
+/* Small, consistent interaction feedback across real patient/doctor/admin controls. */
+.dashboard-layout.doctis-v5:not(.health-studio-layout) button,
+.doctor-layout:not(.role-studio) button,
+.admin-page:not(.role-studio) button {
+  transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease, border-color .16s ease, color .16s ease;
+}
+.dashboard-layout.doctis-v5:not(.health-studio-layout) button:active,
+.doctor-layout:not(.role-studio) button:active,
+.admin-page:not(.role-studio) button:active { transform: scale(.985); }
+.dashboard-layout.doctis-v5 input,
+.dashboard-layout.doctis-v5 textarea,
+.dashboard-layout.doctis-v5 select,
+.doctor-layout:not(.role-studio) input,
+.doctor-layout:not(.role-studio) textarea,
+.doctor-layout:not(.role-studio) select,
+.admin-page:not(.role-studio) input,
+.admin-page:not(.role-studio) textarea,
+.admin-page:not(.role-studio) select {
+  transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+.dashboard-layout.doctis-v5 input:focus,
+.dashboard-layout.doctis-v5 textarea:focus,
+.dashboard-layout.doctis-v5 select:focus,
+.doctor-layout:not(.role-studio) input:focus,
+.doctor-layout:not(.role-studio) textarea:focus,
+.doctor-layout:not(.role-studio) select:focus,
+.admin-page:not(.role-studio) input:focus,
+.admin-page:not(.role-studio) textarea:focus,
+.admin-page:not(.role-studio) select:focus { box-shadow: 0 0 0 3px rgba(8,127,140,.12); }
+.dashboard-layout.doctis-v5 .v5-primary-nav button.active { transition: color .16s ease, background-color .16s ease, box-shadow .16s ease; }
+.dashboard-layout.doctis-v5 .v5-primary-nav button { position: relative; }
+.dashboard-layout.doctis-v5 .patient-tab-indicator { position: absolute; right: 12px; bottom: -2px; left: 12px; height: 3px; border-radius: 99px; background: var(--rx-primary); pointer-events: none; }
+.dashboard-layout.doctis-v5 .v5-image-placeholder { background-position: center; background-size: cover; }
+.dashboard-layout.doctis-v5 .v5-image-placeholder > span { display: none; }
+.dashboard-layout.doctis-v5 .chat-body { overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; }
+.dashboard-layout.doctis-v5 .form-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.dashboard-layout.doctis-v5 .analysis-item .doctor-row .doctor-name { color: #25485d; font-weight: 750; overflow-wrap: anywhere; }
+.dashboard-layout.doctis-v5 .care-health-card.allergy strong,
+.dashboard-layout.doctis-v5 .care-health-card.chronic strong {
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.dashboard-layout.doctis-v5 .profile-card,
+.dashboard-layout.doctis-v5 .health-form,
+.dashboard-layout.doctis-v5 .chart-card,
+.dashboard-layout.doctis-v5 .ai-analysis-box,
+.dashboard-layout.doctis-v5 .chat-wrapper,
+.dashboard-layout.doctis-v5 .care-plan-page,
+.dashboard-layout.doctis-v5 .doctor-chat-container,
+.dashboard-layout.doctis-v5 .appointment-card {
+  animation: rx-panel-enter .2s ease-out both;
+}
+.dashboard-layout.doctis-v5 .v5-welcome-hero,
+.dashboard-layout.doctis-v5 .v5-quick-section,
+.dashboard-layout.doctis-v5 .v5-diabetes-section,
+.dashboard-layout.doctis-v5 .patient-profile-page,
+.dashboard-layout.doctis-v5 .doctor-chat-page,
+.dashboard-layout.doctis-v5 .chat-wrapper,
+.dashboard-layout.doctis-v5 .care-plan-page,
+.dashboard-layout.doctis-v5 .ai-analysis-box,
+.dashboard-layout.doctis-v5 .chart-card,
+.doctor-layout:not(.role-studio) .doctor-main > .doctor-grid,
+.doctor-layout:not(.role-studio) .doctor-main > .patient-table,
+.doctor-layout:not(.role-studio) .doctor-main > .appointment-page,
+.doctor-layout:not(.role-studio) .doctor-main > .messaging-shell {
+  animation: rx-slide-fade .28s cubic-bezier(.22,1,.36,1) both;
+}
+.dashboard-layout.doctis-v5 .v5-diabetes-section { animation-delay: .045s; }
+.dashboard-layout.doctis-v5 .v5-diabetes-card { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.dashboard-layout.doctis-v5 .v5-diabetes-card:hover { transform: translateY(-3px); box-shadow: 0 12px 26px rgba(23,50,72,.09); }
+.dashboard-layout.doctis-v5 .v5-image-placeholder { transition: background-size .25s ease, filter .2s ease; }
+.dashboard-layout.doctis-v5 .v5-diabetes-card:hover .v5-image-placeholder { filter: saturate(1.06); }
+.doctor-layout:not(.role-studio) .doctor-main .doctor-grid > .doctor-card,
+.doctor-layout:not(.role-studio) .doctor-main .patient-grid > .patient-profile-card,
+.doctor-layout:not(.role-studio) .doctor-main .alert-grid > * { animation: rx-section-enter .24s ease both; }
+.doctor-layout:not(.role-studio) .doctor-main .doctor-grid > .doctor-card:nth-child(2),
+.doctor-layout:not(.role-studio) .doctor-main .patient-grid > .patient-profile-card:nth-child(2),
+.doctor-layout:not(.role-studio) .doctor-main .alert-grid > *:nth-child(2) { animation-delay: .04s; }
+.doctor-layout:not(.role-studio) .doctor-main .doctor-grid > .doctor-card:nth-child(3),
+.doctor-layout:not(.role-studio) .doctor-main .patient-grid > .patient-profile-card:nth-child(3),
+.doctor-layout:not(.role-studio) .doctor-main .alert-grid > *:nth-child(3) { animation-delay: .08s; }
+.doctor-layout:not(.role-studio) .doctor-main .doctor-grid > .doctor-card:nth-child(4),
+.doctor-layout:not(.role-studio) .doctor-main .patient-grid > .patient-profile-card:nth-child(4),
+.doctor-layout:not(.role-studio) .doctor-main .alert-grid > *:nth-child(4) { animation-delay: .12s; }
+.admin-page:not(.role-studio) .admin-menu-item .admin-menu-icon,
+.doctor-layout:not(.role-studio) .doctor-menu svg { transition: transform .18s ease, color .18s ease; }
+.admin-page:not(.role-studio) .admin-menu-item:hover .admin-menu-icon,
+.doctor-layout:not(.role-studio) .doctor-menu:hover svg { transform: translateX(2px); }
+.admin-page:not(.role-studio) .admin-stat-card,
+.admin-page:not(.role-studio) .admin-panel,
+.admin-page:not(.role-studio) .user-preview,
+.admin-page:not(.role-studio) .assignment-toolbar-stats > div { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.admin-page:not(.role-studio) .admin-panel:hover,
+.admin-page:not(.role-studio) .user-preview:hover,
+.admin-page:not(.role-studio) .assignment-toolbar-stats > div:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(23,50,72,.075); }
+.doctor-layout:not(.role-studio) .patient-table tbody tr { transition: background-color .16s ease, box-shadow .16s ease; }
+.doctor-layout:not(.role-studio) .patient-table tbody tr:hover { background-color: #f3f9fa; }
+.doctor-layout:not(.role-studio) .doctor-main .patient-table button svg { transition: transform .16s ease; }
+.doctor-layout:not(.role-studio) .doctor-main .patient-table button:hover svg { transform: translateY(-1px); }
+.dashboard-layout.doctis-v5 .profile-photo-section {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 18px;
+  margin: 0 0 18px;
+  padding: 0 0 18px;
+  border-bottom: 1px solid var(--rx-line);
+}
+.dashboard-layout.doctis-v5 .patient-photo-box {
+  width: 104px;
+  height: 132px;
+  flex: 0 0 104px;
+  border-radius: 14px;
+  box-shadow: 0 5px 16px rgba(23,50,72,.08);
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.dashboard-layout.doctis-v5 .patient-photo-box img { animation: rx-photo-reveal .24s ease both; }
+.dashboard-layout.doctis-v5 .patient-photo-box:hover { transform: translateY(-2px); border-color: var(--rx-primary); box-shadow: 0 10px 22px rgba(8,127,140,.14); }
+.dashboard-layout.doctis-v5 .profile-photo-section .photo-note { margin: 0; max-width: 260px; line-height: 1.6; }
+.dashboard-layout.doctis-v5 .profile-section {
+  animation: rx-section-enter .24s ease both;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.dashboard-layout.doctis-v5 .profile-section:nth-of-type(3) { animation-delay: .03s; }
+.dashboard-layout.doctis-v5 .profile-section:nth-of-type(4) { animation-delay: .07s; }
+.dashboard-layout.doctis-v5 .profile-section:nth-of-type(5) { animation-delay: .11s; }
+.dashboard-layout.doctis-v5 .profile-section:nth-of-type(6) { animation-delay: .15s; }
+.dashboard-layout.doctis-v5 .profile-section:nth-of-type(7) { animation-delay: .19s; }
+.dashboard-layout.doctis-v5 .profile-section:hover { border-color: #cbdde3; box-shadow: 0 7px 18px rgba(23,50,72,.045); }
+.dashboard-layout.doctis-v5 .profile-section-title svg,
+.dashboard-layout.doctis-v5 .v5-quick-icon,
+.dashboard-layout.doctis-v5 .v5-quick-card > b { transition: transform .18s ease, color .18s ease; }
+.dashboard-layout.doctis-v5 .profile-section-title svg,
+.dashboard-layout.doctis-v5 .patient-photo-box .photo-placeholder svg { color: var(--rx-primary); }
+.dashboard-layout.doctis-v5 .v5-quick-card:hover .v5-quick-icon { transform: scale(1.07) rotate(-3deg); }
+.dashboard-layout.doctis-v5 .v5-quick-card:hover > b { transform: translateX(3px); }
+.dashboard-layout.doctis-v5 .profile-section-title svg { transition: transform .18s ease; }
+.dashboard-layout.doctis-v5 .profile-section:hover .profile-section-title svg { transform: translateY(-1px); }
+.dashboard-layout.doctis-v5 .allergy-chip { transition: transform .16s ease, background-color .16s ease, border-color .16s ease; }
+.dashboard-layout.doctis-v5 .allergy-chip:hover { transform: translateY(-1px); border-color: #8cbcc1; }
+.dashboard-layout.doctis-v5 .chronic-option { transition: color .16s ease, background-color .16s ease, border-color .16s ease, transform .16s ease; }
+.dashboard-layout.doctis-v5 .chronic-option:hover { transform: translateY(-1px); }
+.dashboard-layout.doctis-v5 .chronic-option input { accent-color: var(--rx-primary); }
+.dashboard-layout.doctis-v5 .health-form .input-card {
+  animation: rx-section-enter .25s ease both;
+  transition: border-color .17s ease, background-color .17s ease, box-shadow .17s ease, transform .17s ease;
+}
+.dashboard-layout.doctis-v5 .health-form .input-card:nth-child(2) { animation-delay: .035s; }
+.dashboard-layout.doctis-v5 .health-form .input-card:nth-child(3) { animation-delay: .07s; }
+.dashboard-layout.doctis-v5 .health-form .input-card:nth-child(4) { animation-delay: .105s; }
+.dashboard-layout.doctis-v5 .health-form .input-card:nth-child(5) { animation-delay: .14s; }
+.dashboard-layout.doctis-v5 .health-form .input-card:nth-child(6) { animation-delay: .175s; }
+.dashboard-layout.doctis-v5 .health-form .input-card:focus-within { border-color: #80bcc3; background: #fff; box-shadow: 0 0 0 3px rgba(8,127,140,.09); transform: translateY(-1px); }
+.dashboard-layout.doctis-v5 .chronic-option input { transition: transform .16s ease; }
+.dashboard-layout.doctis-v5 .chronic-option input:checked { transform: scale(1.08); }
+.dashboard-layout.doctis-v5 .health-form .bmi-display { border: 1px solid #cde5e8; color: #126d78; background: #edf8f8; }
+.dashboard-layout.doctis-v5 .profile-save-btn,
+.dashboard-layout.doctis-v5 .health-save-area .save-btn {
+  background: linear-gradient(135deg, #0b939b, #08747d);
+  box-shadow: 0 7px 17px rgba(8,127,140,.18);
+  transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+.dashboard-layout.doctis-v5 .profile-save-btn:hover:not(:disabled),
+.dashboard-layout.doctis-v5 .health-save-area .save-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(8,127,140,.24); filter: saturate(1.06); }
+.dashboard-layout.doctis-v5 .health-save-area,
+.dashboard-layout.doctis-v5 .profile-save-area { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; }
+.dashboard-layout.doctis-v5 .health-save-area { margin-top: 15px; }
+.dashboard-layout.doctis-v5 .form-feedback { display: flex; align-items: center; gap: 8px; min-height: 38px; padding: 8px 12px; border: 1px solid transparent; border-radius: 11px; font-size: 13px; font-weight: 650; }
+.dashboard-layout.doctis-v5 .form-feedback.success { color: #176b55; border-color: #cce9dc; background: #f0faf5; }
+.dashboard-layout.doctis-v5 .form-feedback.error { color: #a43e42; border-color: #f2d4d4; background: #fff5f5; }
+.dashboard-layout.doctis-v5 .feedback-mark { display: grid; width: 20px; height: 20px; flex: 0 0 20px; place-items: center; border-radius: 50%; color: #fff; background: currentColor; font-size: 12px; }
+.dashboard-layout.doctis-v5 .form-feedback.success .feedback-mark { color: #fff; background: #16856b; }
+.dashboard-layout.doctis-v5 .form-feedback.error .feedback-mark { color: #fff; background: #c64747; }
+.dashboard-layout.doctis-v5 .button-spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.45); border-top-color: #fff; border-radius: 50%; animation: rx-spinner .7s linear infinite; }
+.dashboard-layout.doctis-v5 .profile-save-btn:disabled,
+.dashboard-layout.doctis-v5 .save-btn:disabled { opacity: .78; cursor: wait; transform: none; }
+.dashboard-layout.doctis-v5 .v5-drawer-backdrop { animation: rx-backdrop-in .18s ease both; }
+.dashboard-layout.doctis-v5 .v5-drawer { animation: rx-drawer-in .26s cubic-bezier(.2,.8,.2,1) both; }
+.admin-page:not(.role-studio) .stat-live { display: none; }
+@keyframes rx-panel-enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes rx-section-enter { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes rx-slide-fade { from { opacity: 0; transform: translate3d(10px,5px,0); } to { opacity: 1; transform: translate3d(0,0,0); } }
+@keyframes rx-spinner { to { transform: rotate(360deg); } }
+@keyframes rx-photo-reveal { from { opacity: 0; transform: scale(1.02); } to { opacity: 1; transform: scale(1); } }
+@keyframes rx-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rx-drawer-in { from { opacity: .8; transform: translateX(18px); } to { opacity: 1; transform: translateX(0); } }
+@media (max-width: 900px) {
+  .dashboard-layout.doctis-v5 .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .dashboard-layout.doctis-v5 .form-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  .dashboard-layout.doctis-v5 .profile-photo-section { gap: 12px; }
+  .dashboard-layout.doctis-v5 .patient-photo-box { width: 84px; height: 106px; flex-basis: 84px; }
+  .dashboard-layout.doctis-v5 .profile-save-area,
+  .dashboard-layout.doctis-v5 .health-save-area { align-items: stretch; flex-direction: column; }
+  .dashboard-layout.doctis-v5 .form-feedback { width: 100%; }
 }
 
 /* Signature dashboard composition: real recent readings beside the welcome. */
@@ -1083,7 +1288,7 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
 }
 
 /* Physician workspace: a distinctive clinical command surface. */
-.doctor-layout {
+.doctor-layout:not(.role-studio) {
   --doc-ink: #173748 !important;
   --doc-title: #153447 !important;
   --doc-text: #587481 !important;
@@ -1099,7 +1304,7 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
     radial-gradient(ellipse at 60% 55%,rgba(96,115,215,.045),transparent 45%),
     #f1f6f7 !important;
 }
-.doctor-sidebar {
+.doctor-layout:not(.role-studio) .doctor-sidebar {
   width: 268px !important;
   padding: 24px 17px !important;
   color: #e4f0f2 !important;
@@ -1109,26 +1314,26 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   border-right: 1px solid rgba(186,226,226,.12) !important;
   box-shadow: 10px 0 34px rgba(18,54,67,.10) !important;
 }
-.doctor-sidebar::before {
+.doctor-layout:not(.role-studio) .doctor-sidebar::before {
   display: block !important;
   opacity: .55;
   background: radial-gradient(circle,rgba(45,194,189,.2),transparent 70%) !important;
 }
-.doctor-logo {
+.doctor-layout:not(.role-studio) .doctor-logo {
   margin: 0 2px 24px !important;
   padding: 6px 7px 22px !important;
   border-bottom-color: rgba(205,231,235,.14) !important;
 }
-.doctor-logo svg {
+.doctor-layout:not(.role-studio) .doctor-logo svg {
   width: 46px !important;
   height: 46px !important;
   color: #fff !important;
   background: linear-gradient(145deg,#41d0c4,#1786a0 74%,#5968c9) !important;
   box-shadow: 0 9px 24px rgba(42,182,185,.22) !important;
 }
-.doctor-logo h2 { color: #f4fbfc !important; font-size: 18px !important; letter-spacing: -.04em !important; }
-.doctor-logo span { color: #9bb9c1 !important; letter-spacing: .12em !important; }
-.doctor-menu {
+.doctor-layout:not(.role-studio) .doctor-logo h2 { color: #f4fbfc !important; font-size: 18px !important; letter-spacing: -.04em !important; }
+.doctor-layout:not(.role-studio) .doctor-logo span { color: #9bb9c1 !important; letter-spacing: .12em !important; }
+.doctor-layout:not(.role-studio) .doctor-menu {
   min-height: 52px !important;
   margin: 5px 0 !important;
   padding: 13px 14px !important;
@@ -1138,41 +1343,41 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   font-size: 13px !important;
   transition: transform .22s ease,background .22s ease,border-color .22s ease,color .22s ease !important;
 }
-.doctor-menu svg { color: #81a7ae !important; }
-.doctor-menu:hover {
+.doctor-layout:not(.role-studio) .doctor-menu svg { color: #81a7ae !important; }
+.doctor-layout:not(.role-studio) .doctor-menu:hover {
   transform: translateX(3px) !important;
   color: #f2ffff !important;
   background: rgba(255,255,255,.07) !important;
   box-shadow: none !important;
 }
-.doctor-menu:hover svg { color: #63ddd3 !important; }
-.doctor-menu.active {
+.doctor-layout:not(.role-studio) .doctor-menu:hover svg { color: #63ddd3 !important; }
+.doctor-layout:not(.role-studio) .doctor-menu.active {
   color: #fff !important;
   border-color: rgba(107,223,215,.16) !important;
   background: linear-gradient(105deg,rgba(37,166,167,.34),rgba(46,109,150,.2)) !important;
   box-shadow: inset 3px 0 #5fddd2,0 8px 20px rgba(5,24,34,.12) !important;
 }
-.doctor-menu.active svg { color: #7be4db !important; }
-.doctor-menu.active::after { background: linear-gradient(90deg,transparent,rgba(129,241,233,.15),transparent) !important; }
-.doctor-menu .menu-badge { color: #fff !important; background: #cb6470 !important; }
-.doctor-menu.active .menu-badge { color: #173748 !important; background: #c3f1e9 !important; }
-.doctor-menu.logout {
+.doctor-layout:not(.role-studio) .doctor-menu.active svg { color: #7be4db !important; }
+.doctor-layout:not(.role-studio) .doctor-menu.active::after { background: linear-gradient(90deg,transparent,rgba(129,241,233,.15),transparent) !important; }
+.doctor-layout:not(.role-studio) .doctor-menu .menu-badge { color: #fff !important; background: #cb6470 !important; }
+.doctor-layout:not(.role-studio) .doctor-menu.active .menu-badge { color: #173748 !important; background: #c3f1e9 !important; }
+.doctor-layout:not(.role-studio) .doctor-menu.logout {
   margin-top: auto !important;
   color: #f1c5c5 !important;
   border-color: rgba(241,197,197,.13) !important;
   background: rgba(185,75,83,.1) !important;
 }
-.doctor-menu.logout:hover { background: rgba(185,75,83,.2) !important; }
-.doctor-main {
+.doctor-layout:not(.role-studio) .doctor-menu.logout:hover { background: rgba(185,75,83,.2) !important; }
+.doctor-layout:not(.role-studio) .doctor-main {
   width: calc(100% - 268px) !important;
   margin-left: 268px !important;
-  padding: 30px clamp(22px,3.2vw,48px) 60px !important;
+  padding: 30px clamp(22px,3.2vw,48px) 60px;
 }
-.doctor-main:not(.doctor-main-messages)::before {
+.doctor-layout:not(.role-studio) .doctor-main:not(.doctor-main-messages)::before {
   display: block !important;
   opacity: .55;
 }
-.doctor-header {
+.doctor-layout:not(.role-studio) .doctor-header {
   min-height: 184px !important;
   margin-bottom: 25px !important;
   padding: 30px clamp(24px,3vw,40px) !important;
@@ -1184,8 +1389,8 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   box-shadow: 0 18px 40px rgba(21,64,79,.15) !important;
   animation: doc-enter .56s cubic-bezier(.2,.75,.25,1) both;
 }
-.doctor-header > div:first-child { z-index: 2; }
-.doctor-header::before {
+.doctor-layout:not(.role-studio) .doctor-header > div:first-child { z-index: 2; }
+.doctor-layout:not(.role-studio) .doctor-header::before {
   top: auto !important;
   right: 8% !important;
   bottom: -210px !important;
@@ -1194,7 +1399,7 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   border: 1px solid rgba(112,230,224,.18) !important;
   box-shadow: 0 0 0 22px rgba(112,230,224,.045),0 0 0 48px rgba(112,230,224,.027) !important;
 }
-.doctor-header::after {
+.doctor-layout:not(.role-studio) .doctor-header::after {
   top: 28px !important;
   right: 37% !important;
   width: 44px !important;
@@ -1202,17 +1407,17 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   border: 1px solid rgba(133,232,226,.26) !important;
   box-shadow: 0 0 0 9px rgba(133,232,226,.045) !important;
 }
-.doctor-header:hover { transform: translateY(-2px) !important; border-color: rgba(111,223,218,.42) !important; box-shadow: 0 22px 46px rgba(21,64,79,.19) !important; }
-.doctor-header .eyebrow {
+.doctor-layout:not(.role-studio) .doctor-header:hover { transform: translateY(-2px) !important; border-color: rgba(111,223,218,.42) !important; box-shadow: 0 22px 46px rgba(21,64,79,.19) !important; }
+.doctor-layout:not(.role-studio) .doctor-header .eyebrow {
   color: #9be9e2 !important;
   border-color: rgba(155,233,226,.2) !important;
   background: rgba(8,32,45,.23) !important;
   letter-spacing: .14em !important;
 }
-.doctor-header .pulse-dot { background: #79e6bd !important; box-shadow: 0 0 0 4px rgba(121,230,189,.12) !important; }
-.doctor-header h1 { color: #f3fbfc !important; font-size: clamp(28px,3vw,39px) !important; letter-spacing: -.045em !important; }
-.doctor-header p { max-width: 620px !important; color: #bfd6dc !important; line-height: 1.75 !important; }
-.doctor-profile {
+.doctor-layout:not(.role-studio) .doctor-header .pulse-dot { background: #79e6bd !important; box-shadow: 0 0 0 4px rgba(121,230,189,.12) !important; }
+.doctor-layout:not(.role-studio) .doctor-header h1 { color: #f3fbfc !important; font-size: clamp(28px,3vw,39px) !important; letter-spacing: -.045em !important; }
+.doctor-layout:not(.role-studio) .doctor-header p { max-width: 620px !important; color: #bfd6dc !important; line-height: 1.75 !important; }
+.doctor-layout:not(.role-studio) .doctor-profile {
   z-index: 2 !important;
   padding: 11px 14px !important;
   border: 1px solid rgba(220,244,244,.16) !important;
@@ -1221,12 +1426,12 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   box-shadow: 0 10px 25px rgba(6,30,43,.11) !important;
   backdrop-filter: blur(10px) !important;
 }
-.doctor-profile:hover { transform: translateY(-2px) !important; border-color: rgba(220,244,244,.3) !important; }
-.doctor-avatar { color: #123c4b !important; background: linear-gradient(145deg,#c4f5e9,#88d8dc) !important; box-shadow: 0 0 0 4px rgba(255,255,255,.09),0 8px 18px rgba(7,29,42,.16) !important; }
-.doctor-profile h4 { color: #f4fbfc !important; }
-.doctor-profile span { color: #c0d9de !important; }
-.doctor-grid { gap: 15px !important; margin-bottom: 22px !important; }
-.doctor-card {
+.doctor-layout:not(.role-studio) .doctor-profile:hover { transform: translateY(-2px) !important; border-color: rgba(220,244,244,.3) !important; }
+.doctor-layout:not(.role-studio) .doctor-avatar { color: #123c4b !important; background: linear-gradient(145deg,#c4f5e9,#88d8dc) !important; box-shadow: 0 0 0 4px rgba(255,255,255,.09),0 8px 18px rgba(7,29,42,.16) !important; }
+.doctor-layout:not(.role-studio) .doctor-profile h4 { color: #f4fbfc !important; }
+.doctor-layout:not(.role-studio) .doctor-profile span { color: #c0d9de !important; }
+.doctor-layout:not(.role-studio) .doctor-grid { gap: 15px !important; margin-bottom: 22px !important; }
+.doctor-layout:not(.role-studio) .doctor-card {
   min-height: 170px !important;
   padding: 20px 21px !important;
   border-radius: 15px 15px 15px 4px !important;
@@ -1235,90 +1440,90 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   box-shadow: 0 8px 22px rgba(24,68,82,.055) !important;
   animation: doc-enter .52s cubic-bezier(.2,.75,.25,1) both;
 }
-.doctor-card:nth-child(2) { animation-delay: .07s; }
-.doctor-card:nth-child(3) { animation-delay: .14s; }
-.doctor-card:nth-child(4) { animation-delay: .21s; }
-.doctor-card::after { width: 118px !important; height: 118px !important; right: -48px !important; bottom: -54px !important; opacity: .07 !important; }
-.doctor-card:hover { transform: translateY(-5px) !important; border-color: #b8d7da !important; box-shadow: 0 17px 33px rgba(24,68,82,.1) !important; }
-.doctor-card .card-icon { border-radius: 12px !important; }
-.doctor-card h2 { font-size: 34px !important; letter-spacing: -.05em !important; }
-.doctor-card p { color: #476574 !important; font-size: 12px !important; }
-.doctor-card .card-caption { color: #8ba0a7 !important; }
+.doctor-layout:not(.role-studio) .doctor-card:nth-child(2) { animation-delay: .07s; }
+.doctor-layout:not(.role-studio) .doctor-card:nth-child(3) { animation-delay: .14s; }
+.doctor-layout:not(.role-studio) .doctor-card:nth-child(4) { animation-delay: .21s; }
+.doctor-layout:not(.role-studio) .doctor-card::after { width: 118px !important; height: 118px !important; right: -48px !important; bottom: -54px !important; opacity: .07 !important; }
+.doctor-layout:not(.role-studio) .doctor-card:hover { transform: translateY(-5px) !important; border-color: #b8d7da !important; box-shadow: 0 17px 33px rgba(24,68,82,.1) !important; }
+.doctor-layout:not(.role-studio) .doctor-card .card-icon { border-radius: 12px !important; }
+.doctor-layout:not(.role-studio) .doctor-card h2 { font-size: 34px !important; letter-spacing: -.05em !important; }
+.doctor-layout:not(.role-studio) .doctor-card p { color: #476574 !important; font-size: 12px !important; }
+.doctor-layout:not(.role-studio) .doctor-card .card-caption { color: #8ba0a7 !important; }
 .doctor-appointment-list,
-.doctor-main .patient-table,
-.doctor-main .insight-panel {
+.doctor-layout:not(.role-studio) .doctor-main .patient-table,
+.doctor-layout:not(.role-studio) .doctor-main .insight-panel {
   border: 1px solid #dce8ea !important;
   border-radius: 17px !important;
   background: rgba(255,255,255,.96) !important;
   box-shadow: 0 9px 25px rgba(24,68,82,.055) !important;
 }
-.doctor-main .patient-table:hover,
-.doctor-main .patient-monitor-box:hover,
-.doctor-main .appointment-box:hover { transform: translateY(-2px); border-color: #c2dade !important; box-shadow: 0 15px 34px rgba(24,68,82,.085) !important; }
-.doctor-main .table-top h2 { color: #173d4d !important; font-size: 17px !important; letter-spacing: -.025em !important; }
-.doctor-main .table-top h2::after { background: linear-gradient(90deg,#30bbb1,#5473ce) !important; }
-.doctor-main .mini-patient {
+.doctor-layout:not(.role-studio) .doctor-main .patient-table:hover,
+.doctor-layout:not(.role-studio) .doctor-main .patient-monitor-box:hover,
+.doctor-layout:not(.role-studio) .doctor-main .appointment-box:hover { transform: translateY(-2px); border-color: #c2dade !important; box-shadow: 0 15px 34px rgba(24,68,82,.085) !important; }
+.doctor-layout:not(.role-studio) .doctor-main .table-top h2 { color: #173d4d !important; font-size: 17px !important; letter-spacing: -.025em !important; }
+.doctor-layout:not(.role-studio) .doctor-main .table-top h2::after { background: linear-gradient(90deg,#30bbb1,#5473ce) !important; }
+.doctor-layout:not(.role-studio) .doctor-main .mini-patient {
   border-color: #e1ebec !important;
   border-radius: 12px !important;
   background: linear-gradient(100deg,#fff,#f9fcfc) !important;
   transition: transform .2s ease,border-color .2s ease,box-shadow .2s ease !important;
 }
-.doctor-main .mini-patient:hover { transform: translateY(-2px) !important; border-color: #b9dadd !important; box-shadow: 0 9px 20px rgba(25,78,89,.08) !important; }
-.doctor-main .mini-avatar,
-.doctor-main .large-avatar { color: #fff !important; background: linear-gradient(145deg,#30b8ae,#237da2 75%,#596dd2) !important; box-shadow: 0 5px 14px rgba(35,126,151,.19) !important; }
-.doctor-main .mini-patient-info strong,
-.doctor-main .patient-profile-card h3 { color: #214451 !important; }
-.doctor-main .patient-profile-card {
+.doctor-layout:not(.role-studio) .doctor-main .mini-patient:hover { transform: translateY(-2px) !important; border-color: #b9dadd !important; box-shadow: 0 9px 20px rgba(25,78,89,.08) !important; }
+.doctor-layout:not(.role-studio) .doctor-main .mini-avatar,
+.doctor-layout:not(.role-studio) .doctor-main .large-avatar { color: #fff !important; background: linear-gradient(145deg,#30b8ae,#237da2 75%,#596dd2) !important; box-shadow: 0 5px 14px rgba(35,126,151,.19) !important; }
+.doctor-layout:not(.role-studio) .doctor-main .mini-patient-info strong,
+.doctor-layout:not(.role-studio) .doctor-main .patient-profile-card h3 { color: #214451 !important; }
+.doctor-layout:not(.role-studio) .doctor-main .patient-profile-card {
   border-color: #dce8ea !important;
   border-radius: 15px 15px 15px 4px !important;
   box-shadow: 0 7px 20px rgba(24,68,82,.045) !important;
   transition: transform .22s ease,border-color .22s ease,box-shadow .22s ease !important;
 }
-.doctor-main .patient-profile-card:hover { transform: translateY(-4px) !important; border-color: #b6d8da !important; box-shadow: 0 14px 28px rgba(24,68,82,.09) !important; }
-.doctor-main .insight-panel {
+.doctor-layout:not(.role-studio) .doctor-main .patient-profile-card:hover { transform: translateY(-4px) !important; border-color: #b6d8da !important; box-shadow: 0 14px 28px rgba(24,68,82,.09) !important; }
+.doctor-layout:not(.role-studio) .doctor-main .insight-panel {
   background:
     radial-gradient(circle at 100% 0,rgba(119,117,221,.12),transparent 33%),
     linear-gradient(145deg,#fff,#f7fbfc) !important;
 }
-.doctor-main .insight-panel h2 { color: #173d4d !important; }
-.doctor-main .insight-panel .panel-kicker { color: #168c91 !important; letter-spacing: .12em !important; }
-.doctor-main .insight-list > div { border-color: #e2ebec !important; border-radius: 10px !important; background: rgba(255,255,255,.72) !important; }
-.doctor-main .risk { border-radius: 999px !important; }
+.doctor-layout:not(.role-studio) .doctor-main .insight-panel h2 { color: #173d4d !important; }
+.doctor-layout:not(.role-studio) .doctor-main .insight-panel .panel-kicker { color: #168c91 !important; letter-spacing: .12em !important; }
+.doctor-layout:not(.role-studio) .doctor-main .insight-list > div { border-color: #e2ebec !important; border-radius: 10px !important; background: rgba(255,255,255,.72) !important; }
+.doctor-layout:not(.role-studio) .doctor-main .risk { border-radius: 999px !important; }
 @keyframes doc-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 1100px) {
-  .doctor-sidebar { width: 235px !important; }
-  .doctor-main { width: calc(100% - 235px) !important; margin-left: 235px !important; }
-  .doctor-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .doctor-layout:not(.role-studio) .doctor-sidebar { width: 235px !important; }
+  .doctor-layout:not(.role-studio) .doctor-main { width: calc(100% - 235px) !important; margin-left: 235px !important; }
+  .doctor-layout:not(.role-studio) .doctor-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
 }
 @media (max-width: 760px) {
-  .doctor-sidebar { width: 72px !important; padding: 16px 8px !important; }
-  .doctor-sidebar .doctor-logo { justify-content: center !important; padding: 4px 0 17px !important; }
-  .doctor-sidebar .doctor-logo > div,
-  .doctor-sidebar .doctor-menu:not(.logout) { font-size: 0 !important; }
-  .doctor-sidebar .doctor-menu { justify-content: center !important; gap: 0 !important; padding: 12px 5px !important; }
-  .doctor-sidebar .doctor-menu svg { width: 20px !important; }
-  .doctor-sidebar .doctor-menu .menu-badge { position: absolute; top: 2px; right: 3px; min-width: 16px; height: 16px; font-size: 8px; }
-  .doctor-sidebar .doctor-menu.logout { font-size: 0 !important; justify-content: center !important; padding: 12px 5px !important; }
-  .doctor-main { width: calc(100% - 72px) !important; margin-left: 72px !important; padding: 18px 14px 40px !important; }
-  .doctor-header { min-height: 170px !important; align-items: flex-start !important; padding: 22px 18px !important; }
-  .doctor-header h1 { max-width: 70%; font-size: 27px !important; }
-  .doctor-header p { max-width: 72%; font-size: 12px !important; }
-  .doctor-profile { position: absolute !important; right: 14px !important; bottom: 14px !important; padding: 7px 9px !important; }
-  .doctor-profile .doctor-avatar { width: 32px !important; height: 32px !important; }
-  .doctor-profile h4 { font-size: 10px !important; }
-  .doctor-profile span { font-size: 9px !important; }
+  .doctor-layout:not(.role-studio) .doctor-sidebar { width: 72px !important; padding: 16px 8px !important; }
+  .doctor-layout:not(.role-studio) .doctor-sidebar .doctor-logo { justify-content: center !important; padding: 4px 0 17px !important; }
+  .doctor-layout:not(.role-studio) .doctor-sidebar .doctor-logo > div,
+  .doctor-layout:not(.role-studio) .doctor-sidebar .doctor-menu:not(.logout) { font-size: 0 !important; }
+  .doctor-layout:not(.role-studio) .doctor-sidebar .doctor-menu { justify-content: center !important; gap: 0 !important; padding: 12px 5px !important; }
+  .doctor-layout:not(.role-studio) .doctor-sidebar .doctor-menu svg { width: 20px !important; }
+  .doctor-layout:not(.role-studio) .doctor-sidebar .doctor-menu .menu-badge { position: absolute; top: 2px; right: 3px; min-width: 16px; height: 16px; font-size: 8px; }
+  .doctor-layout:not(.role-studio) .doctor-sidebar .doctor-menu.logout { font-size: 0 !important; justify-content: center !important; padding: 12px 5px !important; }
+  .doctor-layout:not(.role-studio) .doctor-main { width: calc(100% - 72px) !important; margin-left: 72px !important; padding: 18px 14px 40px; }
+  .doctor-layout:not(.role-studio) .doctor-header { min-height: 170px !important; align-items: flex-start !important; padding: 22px 18px !important; }
+  .doctor-layout:not(.role-studio) .doctor-header h1 { max-width: 70%; font-size: 27px !important; }
+  .doctor-layout:not(.role-studio) .doctor-header p { max-width: 72%; font-size: 12px !important; }
+  .doctor-layout:not(.role-studio) .doctor-profile { position: absolute !important; right: 14px !important; bottom: 14px !important; padding: 7px 9px !important; }
+  .doctor-layout:not(.role-studio) .doctor-profile .doctor-avatar { width: 32px !important; height: 32px !important; }
+  .doctor-layout:not(.role-studio) .doctor-profile h4 { font-size: 10px !important; }
+  .doctor-layout:not(.role-studio) .doctor-profile span { font-size: 9px !important; }
   .dashboard-split { grid-template-columns: 1fr !important; }
 }
 @media (max-width: 480px) {
-  .doctor-grid { gap: 9px !important; }
-  .doctor-card { min-height: 148px !important; padding: 14px !important; }
-  .doctor-header { display: block !important; min-height: 215px !important; }
-  .doctor-header h1 { max-width: 100%; }
-  .doctor-header p { max-width: 100%; padding-bottom: 50px; }
-  .doctor-profile { right: 12px !important; bottom: 10px !important; }
+  .doctor-layout:not(.role-studio) .doctor-grid { gap: 9px !important; }
+  .doctor-layout:not(.role-studio) .doctor-card { min-height: 148px !important; padding: 14px !important; }
+  .doctor-layout:not(.role-studio) .doctor-header { display: block !important; min-height: 215px !important; }
+  .doctor-layout:not(.role-studio) .doctor-header h1 { max-width: 100%; }
+  .doctor-layout:not(.role-studio) .doctor-header p { max-width: 100%; padding-bottom: 50px; }
+  .doctor-layout:not(.role-studio) .doctor-profile { right: 12px !important; bottom: 10px !important; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .doctor-layout *, .doctor-layout *::before, .doctor-layout *::after {
+  .doctor-layout:not(.role-studio) *, .doctor-layout:not(.role-studio) *::before, .doctor-layout:not(.role-studio) *::after {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
@@ -1490,3 +1695,25 @@ body { color: var(--rx-ink); background: var(--rx-bg); }
   .patient-drawer .care-plan-toolbar { align-items: flex-start !important; }
   .patient-drawer .care-plan-save-actions > button { flex: 1 1 100%; }
 }
+
+/* Keep idle screens calm; reserve continuous motion for real loading actions. */
+.dashboard-layout.doctis-v5 .latest-data-dot,
+.dashboard-layout.doctis-v5 .v5-vitals-head i.is-recorded,
+.dashboard-layout.doctis-v5 .v5-eyebrow::before,
+.dashboard-layout.doctis-v5 .v5-hero-orb::after,
+.dashboard-layout.doctis-v5 .v5-sticker,
+.dashboard-layout.doctis-v5 .v5-hero-art::before,
+.dashboard-layout.doctis-v5 .v5-hero-art::after,
+.dashboard-layout.doctis-v5 .analysis-avatar,
+.dashboard-layout.doctis-v5 .doctor-chat-header p svg,
+.dashboard-layout.doctis-v5 .care-empty-orb,
+.doctor-layout:not(.role-studio)::before,
+.doctor-layout:not(.role-studio) .doctor-sidebar::before,
+.doctor-layout:not(.role-studio) .doctor-menu.active::after,
+.doctor-layout:not(.role-studio) .doctor-header::before,
+.doctor-layout:not(.role-studio) .doctor-header .pulse-dot {
+  animation: none;
+}
+.dashboard-layout.doctis-v5 .chat-wrapper { animation-duration: .28s; }
+.dashboard-layout.doctis-v5 .doctor-chat-page { animation-duration: .28s; }
+.dashboard-layout.doctis-v5 .modern-card { animation-duration: .25s; }

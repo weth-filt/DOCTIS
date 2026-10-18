@@ -1,0 +1,5 @@
+.care-scene { flex: 0 0 auto; width: 230px; max-width: 100%; perspective: 700px; pointer-events: none; }
+.care-scene svg { display: block; width: 100%; height: auto; overflow: visible; }.care-scene-object { transform-origin: 50% 65%; transform: rotate(-7deg) skewY(2deg); }.care-scene-foreground { transform: translateY(1px) rotate(6deg); transform-origin: 75% 75%; }
+.care-scene.small { width: 150px; }.care-scene.hero { width: 220px; }.care-scene-profile .care-scene-object { transform: rotate(-8deg); }.care-scene-calendar .care-scene-object { transform: rotate(7deg); }.care-scene-chat .care-scene-object, .care-scene-assistant .care-scene-object { transform: rotate(-4deg); }
+.care-scene.compact { width:92px; }
+@media (max-width: 600px) { .care-scene.hero { width: 130px; }.care-scene.small { width: 110px; } }

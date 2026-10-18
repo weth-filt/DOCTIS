@@ -2,8 +2,37 @@
 
 Vercel sẽ cấp URL dạng `https://ten-du-an.vercel.app`. Vì API cần Express và dữ liệu cần MongoDB, triển khai thành hai Vercel project từ cùng một GitHub repository riêng tư:
 
-- `doctis-api`: thư mục gốc (Root Directory) là `backend`.
-- `doctis-web`: thư mục gốc là `frontend`.
+- `doctis` (`doctis.vercel.app`): Root Directory `backend`, API Express.
+- `doctis-frontend` (`doctis-frontend.vercel.app`): Root Directory `frontend`, web CRA.
+- `doctis-mobile`: project Expo/web riêng đang có; giữ cấu hình `mobile/vercel.json`.
+
+`frontend/vercel.json` đặt build/output cho CRA và fallback về `index.html` khi
+mở trực tiếp `/dashboard`, `/doctor`, `/admin`. Không đổi root project API sang
+`mobile` hoặc dùng cấu hình Expo cho web CRA.
+
+## AI production — lựa chọn đã xác nhận ngày 18/10/2026
+
+Người dùng chọn **Gemini cloud cho website Vercel**; bản local vẫn giữ Ollama
+4B trong `backend/.env`. Tại project **doctis → Settings → Environment Variables**,
+đặt cho **Production**:
+
+| Biến | Giá trị |
+| --- | --- |
+| `AI_PROVIDER` | `gemini` |
+| `GEMINI_MODEL` | `gemini-3.6-flash` |
+| `GEMINI_API_KEY` | Khóa do chủ dự án tự nhập, không gửi vào chat |
+
+Sau khi lưu biến, redeploy project **doctis** để bản chạy nhận cấu hình mới.
+Chỉ thêm khóa ở backend; không dùng tiền tố `REACT_APP_`. Giữ nguyên `MONGO_URI`,
+`JWT_SECRET`, `ALLOWED_ORIGINS` đang hoạt động. Vercel mặc định chọn Gemini khi
+chưa đặt `AI_PROVIDER`; nếu đã có `AI_PROVIDER=ollama`, cần đổi thành `gemini`.
+Không tự fallback về Ollama trên Vercel. Hỏi thuần số đo đã lưu dùng dữ liệu xác
+thực và không cần khóa model; hội thoại cần khóa hợp lệ và hạn mức nhà cung cấp.
+
+Việc chọn cloud đồng nghĩa câu hỏi và phần ngữ cảnh y tế liên quan được gửi đến
+Gemini để suy luận. Backend vẫn chỉ chọn dữ liệu y tế cần thiết, loại tên/email/
+CCCD/địa chỉ/ảnh/liên hệ. Kiểm tra câu trả lời cloud thật sau khi đã cấu hình khóa;
+kiểm thử local trước đó không chứng minh chất lượng hoặc hạn mức Gemini.
 
 GitHub chỉ lưu mã nguồn; không lưu file `.env`, dữ liệu database hay mật khẩu.
 

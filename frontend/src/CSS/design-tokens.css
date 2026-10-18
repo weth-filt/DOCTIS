@@ -1,0 +1,16 @@
+:is(.health-studio-layout,.role-studio,.conversation-workspace) {
+  --care-navy:#102b3a;
+  --care-ink:#183342;
+  --care-teal:#087f8c;
+  --care-aqua:#69d5d0;
+  --care-coral:#d0806b;
+  --care-canvas:#f3f7f9;
+  --care-paper:#fff;
+  --care-line:#dce7e9;
+  --care-muted:#6c818b;
+  --care-radius:16px;
+  --care-shadow:0 8px 28px rgba(16,43,58,.055);
+  --care-fast:180ms;
+  --care-scene:420ms;
+  --care-ease:cubic-bezier(.22,1,.36,1);
+}

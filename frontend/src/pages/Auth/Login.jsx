@@ -12,6 +12,7 @@ import {
 
 import API from "../../services/api";
 import Auth3DVisual from "../../components/Auth3DVisual";
+import { beginPatientWelcome, completePatientWelcome } from "../../components/studio/patientWelcomeSession";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -42,8 +43,6 @@ export default function Login() {
         password,
       });
 
-      console.log("LOGIN RESPONSE =", res.data);
-
       const token = res.data?.token;
       const role = res.data?.role;
 
@@ -54,12 +53,13 @@ export default function Login() {
         return;
       }
 
+      const returnedUser = res.data?.user || {};
       const userData = {
-        id: res.data?.id || res.data?._id || "",
-        _id: res.data?._id || res.data?.id || "",
-        username: res.data?.username || "",
-        fullName: res.data?.fullName || "",
-        email: res.data?.email || emailValue,
+        id: res.data?.id || res.data?._id || returnedUser.id || returnedUser._id || "",
+        _id: res.data?._id || res.data?.id || returnedUser._id || returnedUser.id || "",
+        username: res.data?.username || returnedUser.username || "",
+        fullName: res.data?.fullName || returnedUser.fullName || "",
+        email: res.data?.email || returnedUser.email || emailValue,
         role: role || "user",
         token,
       };
@@ -68,17 +68,17 @@ export default function Login() {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(userData));
 
-      console.log("USER SAVED =", userData);
-
       if (role === "admin") {
+        completePatientWelcome();
         nav("/admin", { replace: true });
       } else if (role === "doctor") {
+        completePatientWelcome();
         nav("/doctor", { replace: true });
       } else {
+        beginPatientWelcome();
         nav("/dashboard", { replace: true });
       }
     } catch (err) {
-      console.error("LOGIN ERROR =", err);
       const errText =
         err.response?.data?.msg ||
         err.response?.data?.message ||
