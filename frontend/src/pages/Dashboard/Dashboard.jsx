@@ -57,8 +57,8 @@ import StudioExperience from "../../components/studio/StudioExperience";
 import HeartScene from "../../components/3d/HeartScene";
 import AppointmentCalendar from "../../components/studio/AppointmentCalendar";
 import CareWeekGallery from "../../components/studio/CareWeekGallery";
-import AISuggestions from "../../components/studio/AISuggestions";
-import AIResponse from "../../components/studio/AIResponse";
+import AIWorkspace from "../../components/studio/AIWorkspace";
+
 import "../../CSS/conversation-studio.css";
 import "../../CSS/dashboard.css";
 import "../../CSS/dashboard-modern.css";
@@ -73,12 +73,6 @@ const EMPTY_FORM = {
   bloodPressure: "",
   heartRate: "",
 };
-
-const createAIWelcomeMessage = () => ({
-  sender: "ai",
-  isGreeting: true,
-  text: "Chào bạn, mình là DOCTIS. Bạn muốn trao đổi về ăn uống, vận động, thuốc hay cách theo dõi chỉ số đã lưu khi sống cùng đái tháo đường type 2? Mình có thể giải thích thông tin sức khỏe và gợi ý câu hỏi cho bác sĩ; không chẩn đoán hoặc thay đổi thuốc.",
-});
 
 const normalizeDateForInput = (value) => {
   if (!value) return "";
@@ -267,10 +261,7 @@ export default function Dashboard() {
   const [appointments, setAppointments] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
 
-  const [messages, setMessages] = useState(() => [createAIWelcomeMessage()]);
-  const [chatInput, setChatInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const aiRequestInFlightRef = useRef(false);
+
 
   const [profile, setProfile] = useState({});
   const [profileLoading, setProfileLoading] = useState(false);
@@ -325,18 +316,12 @@ export default function Dashboard() {
   // Backend Doctor Page có thể cung cấp dữ liệu qua /prescriptions/my.
   const [prescriptions, setPrescriptions] = useState([]);
   const [prescriptionLoading, setPrescriptionLoading] = useState(false);
-  const [prescriptionError, setPrescriptionError] = useState(false);
-
-    const chatBodyRef = useRef(null);
-  const chatStickToBottomRef = useRef(true);
-  const doctorChatEndRef = useRef(null);
+  const [prescriptionError, setPrescriptionError] = useState(false);  const doctorChatEndRef = useRef(null);
   const doctorChatBodyRef = useRef(null);
   const doctorChatStickToBottomRef = useRef(true);
   useConversationMotion(doctorChatBodyRef, selectedDoctor?._id || selectedDoctor?.id, doctorMessages, doctorLoading);
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
-  const doctorViewport = useConversationViewport(doctorChatBodyRef, getId(selectedDoctor), doctorMessages, menu === "doctor-chat", doctorLoading);
-  const aiViewport = useConversationViewport(chatBodyRef, "assistant", messages, menu === "ai", loading);
-  const doctorAttachmentInputRef = useRef(null);
+  const doctorViewport = useConversationViewport(doctorChatBodyRef, getId(selectedDoctor), doctorMessages, menu === "doctor-chat", doctorLoading);  const doctorAttachmentInputRef = useRef(null);
   const fileInputRef = useRef(null);
   const profileRef = useRef({});
   const [savedCareProfile, setSavedCareProfile] = useState(null);
@@ -540,28 +525,6 @@ export default function Dashboard() {
     fetchDoctors,
     fetchPrescriptions,
   ]);
-
-  useEffect(() => {
-    const chatBody = chatBodyRef.current;
-    if (!chatBody) return;
-    if (chatStickToBottomRef.current) {
-      chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: reducedMotion ? "instant" : "smooth" });
-    }
-  }, [messages, loading, reducedMotion]);
-
-  const handleAiChatScroll = (event) => {
-    aiViewport.onScroll(event);
-    const chatBody = event.currentTarget;
-    const distanceFromBottom = chatBody.scrollHeight - chatBody.scrollTop - chatBody.clientHeight;
-    chatStickToBottomRef.current = distanceFromBottom < 96;
-  };
-
-  const handleAiReplyReveal = useCallback(() => {
-    const chatBody = chatBodyRef.current;
-    // Follow only when the reader was already at the newest message. A
-    // presentation reveal must never pull someone away from older history.
-    if (chatBody && chatStickToBottomRef.current) chatBody.scrollTop = chatBody.scrollHeight;
-  }, []);
 
     useEffect(() => {
     if (menu !== "doctor-chat") return;
@@ -1229,91 +1192,6 @@ export default function Dashboard() {
     }
   };
 
-  const startNewAIConversation = () => {
-    if (aiRequestInFlightRef.current) return;
-    setMessages([createAIWelcomeMessage()]);
-  };
-
-  const sendMessage = async () => {
-    const userText = chatInput.trim();
-    if (!userText || aiRequestInFlightRef.current) return;
-    // React state updates may be batched across Enter/click events. Lock the
-    // request immediately so the same question cannot be submitted twice.
-    aiRequestInFlightRef.current = true;
-
-    const userMsg = {
-      sender: "user",
-      text: userText,
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    setChatInput("");
-    setLoading(true);
-
-    try {
-      // Send only turns that existed before this question. The API adds the
-      // current question itself, so including userMsg here would duplicate it.
-      const history = messages
-        .filter((msg) => !msg.isGreeting && !msg.isError && !msg.isFailed && (msg.sender === "user" || msg.sender === "ai"))
-        .slice(-10)
-        .map((msg) => ({
-          role: msg.sender === "user" ? "user" : "assistant",
-          content: msg.text,
-        }));
-
-      // The authenticated backend loads saved medical context. Do not pass
-      // missing values as zero or treat an unsaved health form as a record.
-      const res = await API.post("/ai/analyze", {
-        message: userText,
-        history,
-      }, { timeout: 150000 });
-      const reply = typeof res.data?.reply === "string" ? res.data.reply.trim() : "";
-      if (!reply) {
-        throw new Error("Trợ lý AI chưa trả về nội dung hợp lệ. Vui lòng thử lại.");
-      }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: "ai",
-          text: reply,
-        },
-      ]);
-    } catch (err) {
-      if (process.env.NODE_ENV !== "production") console.error("AI CHAT ERROR =", err);
-
-      const serverMessage = err.response?.data?.msg;
-      const errorText = typeof serverMessage === "string" && serverMessage.trim()
-        ? serverMessage.trim()
-        : err.code === "ECONNABORTED"
-        ? "Trợ lý AI phản hồi quá lâu. Vui lòng thử lại."
-        : err.message === "Trợ lý AI chưa trả về nội dung hợp lệ. Vui lòng thử lại."
-        ? err.message
-        : "Chưa kết nối được trợ lý AI. Vui lòng thử lại sau.";
-      setChatInput((current) => current || userText);
-      setMessages((prev) => [
-        // Keep the question visible, but exclude this failed attempt from the
-        // provider context when the user retries or asks a new question.
-        ...prev.map((msg) => msg === userMsg ? { ...msg, isFailed: true } : msg),
-        {
-          sender: "ai",
-          text: errorText,
-          isError: true,
-        },
-      ]);
-    } finally {
-      aiRequestInFlightRef.current = false;
-      setLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
   const filteredDoctors = useMemo(() => {
     const keyword = doctorSearch.toLowerCase().trim();
 
@@ -1736,7 +1614,7 @@ export default function Dashboard() {
             <div><span className="studio-breadcrumb">DOCTIS <i>/</i> BỆNH NHÂN</span><h1>{pageTitle}</h1><p>{pageDescription}</p></div>
           </div>
           <div className="studio-topbar-actions">
-            {menu !== "dashboard" && <HeartScene compact className="patient-header-heart" bpm={latest?.heartRate} status={risk.label} busy={healthSaving || loading || nutritionLoading} />}
+            {menu !== "dashboard" && <HeartScene compact className="patient-header-heart" bpm={latest?.heartRate} status={risk.label} busy={healthSaving || nutritionLoading} />}
             <StudioControls />
             <span className="studio-today"><FaCalendarCheck />{new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long" })}</span>
             <button type="button" className="studio-notification" onClick={() => setMenu("advices")} aria-label={`Lời khuyên bác sĩ${advices.length ? `, ${advices.length} mục` : ""}`}><FaBell />{advices.length > 0 && <i>{advices.length}</i>}</button>
@@ -2597,77 +2475,7 @@ export default function Dashboard() {
 
         {menu === "analytics" && <HealthAnalytics data={data} loading={healthLoading} error={apiErrors.health} />}
 
-        {menu === "ai" && (
-          <motion.div
-            className="chat-wrapper studio-assistant-workspace"
-            initial={false}
-          >
-            <div className="chat-header">
-              <span className={`assistant-particle-orb ${loading ? "is-thinking" : ""}`} aria-hidden="true"><FaRobot/><i/><i/><i/></span>
-              <div className="chat-assistant-heading">
-                <strong>Trợ lý sức khỏe DOCTIS</strong>
-                <span>Kiến thức và chăm sóc đái tháo đường type 2</span>
-              </div>
-              <div className="chat-assistant-actions">
-                <span className="chat-assistant-status"><i /> Kiến thức type 2</span>
-                <button type="button" className="assistant-new-conversation" onClick={startNewAIConversation} disabled={loading} title="Bắt đầu lại hội thoại AI, giữ nguyên câu hỏi đang nhập">Cuộc trò chuyện mới</button>
-              </div>
-            </div>
-
-            <div className="chat-body" ref={chatBodyRef} onScroll={handleAiChatScroll}>
-              {messages.length === 0 && !loading && <div className="assistant-empty"><CareScene kind="assistant" /></div>}
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={
-                    msg.sender === "user"
-                      ? "chat-message user conversation-message"
-                      : `chat-message ai conversation-message${msg.isError ? " error" : ""}`
-                  }
-                >
-                  {msg.sender === "user" ? msg.text : <AIResponse message={msg} onReveal={handleAiReplyReveal} />}
-                </div>
-              ))}
-
-              {loading && (
-                <div className="chat-message ai thinking" role="status">
-                  <span className="assistant-thinking-ecg" aria-hidden="true"><i/><i/><i/></span> DOCTIS đang phân tích…
-                </div>
-              )}
-
-            </div>
-
-            <ConversationNotice viewport={aiViewport} />
-            <div className="chat-assistant-sources">
-              Tham khảo: {" "}
-              <a href="https://www.niddk.nih.gov/health-information/diabetes/overview/managing-diabetes/" target="_blank" rel="noreferrer">NIDDK</a>
-              {" · "}
-              <a href="https://diabetes.org/living-with-diabetes/hypoglycemia-low-blood-glucose/symptoms-treatment" target="_blank" rel="noreferrer">Hiệp hội Đái tháo đường Hoa Kỳ</a>
-            </div>
-
-            <AISuggestions onChoose={setChatInput} disabled={loading}/>
-
-            <div className="chat-input-box">
-              <input
-                type="text"
-                placeholder="Hỏi về đường huyết, bữa ăn, vận động, thuốc..."
-                maxLength={1200}
-                aria-label="Nhập câu hỏi về đái tháo đường type 2"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-              />
-
-              <button
-                type="button"
-                onClick={sendMessage}
-                disabled={loading || !chatInput.trim()}
-              >
-                {loading ? "Đang gửi..." : "Gửi"}
-              </button>
-            </div>
-          </motion.div>
-        )}
+        <AIWorkspace active={menu === "ai"} />
 
                 {menu === "care-plan" && (
           <motion.div

@@ -6,7 +6,7 @@ const path = require("node:path");
 
 const USER_ID = "6513bfc2fdbda065e5a00001";
 
-function loadController({ chatAI, loadPatientContext = async () => ({ profile: {}, measurements: [] }) }) {
+function loadController({ chatAI, loadPatientContext = async () => ({ profile: {}, measurements: [] }), consumeAIMessage = async () => {} }) {
   const controller = {};
   const source = fs.readFileSync(path.join(__dirname, "../controllers/aiController.js"), "utf8");
   vm.runInNewContext(source, {
@@ -14,6 +14,7 @@ function loadController({ chatAI, loadPatientContext = async () => ({ profile: {
     console: { error() {} },
     require: (moduleName) => {
       if (moduleName === "../services/aiService") return { chatAI };
+      if (moduleName === "../services/aiRateLimit") return { consumeAIMessage };
       if (moduleName === "../services/aiPatientContext") return {
         loadPatientContext,
         isValidPatientId: (value) => typeof value === "string" && /^[a-f\d]{24}$/i.test(value),
@@ -95,4 +96,28 @@ test("non-service exceptions return generic error without exposing details", asy
   assert.equal(res.statusCode, 502);
   assert.equal(res.body.code, "AI_UNAVAILABLE");
   assert.ok(!res.body.msg.includes("Private connection details"));
+});
+
+test("database error codes do not become public AI errors or reveal internal details", async () => {
+  const controller = loadController({ chatAI: async () => { throw Object.assign(new Error("PRIVATE_DATABASE_DETAIL"), { code: 11000 }); } });
+  const res = response();
+  await controller.analyze({ user: { id: USER_ID }, body: { message: "Câu hỏi" } }, res);
+  assert.equal(res.statusCode, 502);
+  assert.equal(res.body.code, "AI_UNAVAILABLE");
+  assert.ok(!JSON.stringify(res.body).includes("PRIVATE_DATABASE_DETAIL"));
+});
+
+test("legacy analyze shares the server-side quota and validates before reserving a slot", async () => {
+  let calls = 0, generations = 0;
+  const controller = loadController({ chatAI: async () => { generations++; return { reply: "Test" }; }, consumeAIMessage: async () => { calls++; throw Object.assign(new Error("Quota reached"), { code: "AI_RATE_LIMITED", status: 429, retryAfterSeconds: 60 }); } });
+  const empty = response();
+  await controller.analyze({ user: { id: USER_ID }, body: { message: "" } }, empty);
+  assert.equal(empty.statusCode, 400);
+  assert.equal(calls, 0);
+  const full = response();
+  await controller.analyze({ user: { id: USER_ID }, body: { message: "Câu hỏi" } }, full);
+  assert.equal(full.statusCode, 429);
+  assert.equal(full.body.retryAfterSeconds, 60);
+  assert.equal(generations, 0);
+  assert.equal(calls, 1);
 });

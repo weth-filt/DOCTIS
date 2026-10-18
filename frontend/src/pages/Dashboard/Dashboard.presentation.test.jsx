@@ -51,6 +51,7 @@ const appointmentDate = new Date(new Date().getFullYear(), new Date().getMonth()
 const READ_FIXTURES = {
   "/care-plans/my": null,
   "/care-plans/current": null,
+  "/ai/conversations": {conversations:[],hasMore:false},
   "/health/history": [{ _id: "test-reading", createdAt: "2026-10-16T08:00:00.000Z", height: 170, weight: 65, bmi: 22.49, glucose: 100, systolic: 120, diastolic: 80, heartRate: 75 }],
   "/health/advices": [],
   "/appointments/patient": [{ _id: "test-appointment", appointmentDate, doctorId: { fullName: "Bác sĩ kiểm thử" }, type: "Tái khám đã lưu", status: "approved", note: "Ghi chú lịch hẹn kiểm thử" }],
@@ -97,7 +98,7 @@ afterAll(() => {
 async function openDashboard() {
   const result = render(<StudioPreferencesProvider><Dashboard /></StudioPreferencesProvider>);
   await screen.findByRole("heading", { name: /Bệnh nhân kiểm thử/ });
-  await waitFor(() => expect(API.get).toHaveBeenCalledTimes(Object.keys(READ_FIXTURES).length));
+  await waitFor(() => expect(API.get).toHaveBeenCalledTimes(Object.keys(READ_FIXTURES).length - 1));
   return result;
 }
 function navigate(label) {
@@ -153,13 +154,14 @@ test("AI suggestion fills and preserves a draft without sending an API request",
   await openDashboard();
   const originalReads = API.get.mock.calls.length;
   navigate("AI phân tích");
-  fireEvent.click(screen.getByRole("button", { name: "Gợi ý bữa tối phù hợp" }));
-  expect(screen.getByRole("textbox", { name: "Nhập câu hỏi về đái tháo đường type 2" }).value).toBe("Gợi ý bữa tối phù hợp");
+  await waitFor(() => expect(API.get).toHaveBeenCalledWith("/ai/conversations"));
+  fireEvent.click(screen.getByRole("button", { name: /Tôi muốn hỏi về bữa ăn và vận động/ }));
+  expect(screen.getByRole("textbox", { name: "Nhập câu hỏi cho DOCTIS" }).value).toBe("Tôi muốn hỏi về bữa ăn và vận động");
   expect(screen.getByText(/Thông tin AI chỉ để tham khảo/)).toBeTruthy();
   navigate("Thông tin sức khỏe");
   navigate("AI phân tích");
-  expect(screen.getByRole("textbox", { name: "Nhập câu hỏi về đái tháo đường type 2" }).value).toBe("Gợi ý bữa tối phù hợp");
-  expect(API.get).toHaveBeenCalledTimes(originalReads);
+  expect(screen.getByRole("textbox", { name: "Nhập câu hỏi cho DOCTIS" }).value).toBe("Tôi muốn hỏi về bữa ăn và vận động");
+  expect(API.get).toHaveBeenCalledTimes(originalReads + 1);
 });
 
 test("profile view and edit modes preserve the same controlled fields and draft", async () => {
