@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 const schema = new mongoose.Schema({
   name: { type: String, required: true, trim: true, maxlength: 200 },
   address: { type: String, required: true, trim: true, maxlength: 500 },
-  wardId: { type: mongoose.Schema.Types.ObjectId, ref: "Ward", required: true },
+  wardId: { type: mongoose.Schema.Types.ObjectId, ref: "Ward", default: null, required: function () { return this.verified; } },
   city: { type: String, enum: ["Đà Nẵng"], default: "Đà Nẵng" },
-  phone: { type: String, required: true, trim: true, maxlength: 100 },
+  phone: { type: String, default: "", required: function () { return this.verified; }, trim: true, maxlength: 100 },
   acceptingPatients: { type: Boolean, default: false },
   sourceUrl: { type: String, required: true, maxlength: 1000 },
   verified: { type: Boolean, default: false },

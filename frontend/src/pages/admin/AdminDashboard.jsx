@@ -206,13 +206,13 @@ export default function AdminDashboard() {
           <div><strong>DOCTIS</strong><span>ADMIN CONTROL</span></div>
         </div>
         <div className="admin-sidebar-label">QUẢN TRỊ HỆ THỐNG</div>
-        <nav className="admin-menu">
+        <nav className="admin-menu" aria-label="Điều hướng quản trị">
           {nav.map(item => (
-            <button key={item.id} type="button" className={`admin-menu-item ${view === item.id ? "is-active" : ""}`} onClick={() => setView(item.id)}>
+            <button key={item.id} type="button" className={`admin-menu-item ${view === item.id ? "is-active" : ""}`} title={item.label} aria-current={view === item.id ? "page" : undefined} onClick={() => setView(item.id)}>
               {view === item.id && <motion.i className="role-nav-light" layoutId="admin-navigation-light" />}
               <span className="admin-menu-icon">{item.icon}</span>
               <span className="admin-menu-copy"><strong>{item.label}</strong><small>{item.hint}</small></span>
-              {item.badge > 0 ? <span className="admin-menu-badge">{item.badge}</span> : <FaChevronRight className="admin-menu-arrow" />}
+              {item.badge > 0 ? <span className="admin-menu-badge" title={`${item.badge} bệnh nhân chưa được phân công`}>{item.badge}</span> : <FaChevronRight className="admin-menu-arrow" aria-hidden="true" />}
             </button>
           ))}
         </nav>
@@ -299,7 +299,7 @@ export default function AdminDashboard() {
               <div className="assignment-toolbar-stats"><div><span>Tổng bệnh nhân</span><strong>{assignPatients.length}</strong></div><div><span>Đã phân công</span><strong className="success">{assignedCount}</strong></div><div><span>Đang chờ</span><strong className="warning">{unassignedCount}</strong></div><div><span>Bác sĩ</span><strong>{assignDoctors.length}</strong></div></div>
               <section className="admin-panel assignment-panel">
                 {assignmentLoading ? <LoadingState text="Đang tải mạng lưới bệnh nhân..." /> : !filteredAssignments.length ? <EmptyState icon={<FaUsers />} title="Không tìm thấy bệnh nhân" text="Hãy thử thay đổi từ khóa tìm kiếm." /> :
-                  <div className="assignment-table-wrap"><table className="admin-table"><thead><tr><th>Bệnh nhân</th><th>Liên hệ</th><th>Bác sĩ hiện tại</th><th>Bệnh viện</th><th>Trạng thái</th><th /></tr></thead><tbody>
+                  <div className="assignment-table-wrap"><table className="admin-table"><thead><tr><th>Bệnh nhân</th><th>Liên hệ</th><th>Bác sĩ hiện tại</th><th>Bệnh viện</th><th>Trạng thái</th><th className="assignment-actions-cell">Thao tác</th></tr></thead><tbody>
                     {filteredAssignments.map(patient => {
                       return <tr key={patient._id}>
                         <td data-label="Bệnh nhân"><button type="button" className="patient-cell" onClick={() => setSelectedPatient(patient)}><span className="patient-avatar">{(displayName(patient)[0] || "P").toUpperCase()}</span><span><strong>{displayName(patient)}</strong><small>@{patient.username || "patient"}</small></span></button></td>
@@ -307,7 +307,7 @@ export default function AdminDashboard() {
                         <td data-label="Bác sĩ hiện tại">{patient.assignedDoctor ? <div className="current-doctor"><span className="doctor-dot"><FaUserMd /></span><span><strong>{displayName(patient.assignedDoctor)}</strong><small>Bác sĩ phụ trách</small></span></div> : <span className="status-pill waiting"><i /> Chưa phân công</span>}</td>
                         <td data-label="Bệnh viện"><span className="muted-cell">{patient.hospital?.name || patient.assignedDoctor?.hospitalId?.name || "Chưa xác định · cần đối chiếu"}</span></td>
                         <td data-label="Trạng thái"><span className={`status-pill ${patient.assignedDoctor ? "assigned" : "waiting"}`}><i />{patient.assignedDoctor ? "Đang quản lý" : "Đang chờ"}</span></td>
-                        <td data-label="Thao tác"><div className="table-actions"><button type="button" className="action-primary" onClick={() => { setFocusIntakeId(entityId(patient.intake)); setView("coordination"); }}>Đi đến tiếp nhận</button>{patient.assignedDoctor && patient.legacyAssignment && <button type="button" className="action-danger" onClick={() => setLegacyEndPatient(patient)}>Kết thúc phân công cũ</button>}</div></td>
+                        <td className="assignment-actions-cell" data-label="Thao tác"><div className="table-actions assignment-actions"><button type="button" className="action-primary" onClick={() => { setFocusIntakeId(entityId(patient.intake)); setView("coordination"); }}>Đi đến tiếp nhận</button>{patient.assignedDoctor && patient.legacyAssignment && <button type="button" className="action-danger" onClick={() => setLegacyEndPatient(patient)}>Kết thúc phân công cũ</button>}</div></td>
                       </tr>;
                     })}
                   </tbody></table></div>}

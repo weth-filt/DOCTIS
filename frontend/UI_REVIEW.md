@@ -1,4 +1,13 @@
-# Sửa kế hoạch chăm sóc và lịch hẹn bác sĩ — 19/10/2026
+# Địa chỉ hồ sơ, danh mục bệnh viện và quản trị — 19/10/2026
+
+- Sửa nút “Kết thúc phân công cũ”: không còn kế thừa chiều rộng 34px của nút icon. Nhóm thao tác và badge số có vị trí riêng, hỗ trợ sidebar thu gọn và điện thoại.
+- Địa chỉ đăng ký (thành phố, phường, số nhà/đường) hiển thị trong Hồ sơ; sửa và lưu địa chỉ tại cùng mục bằng API `/care-team/address`. Giữ draft qua đổi chức năng. Không lặp địa chỉ nhà/editor trong mục Bệnh viện và bác sĩ phụ trách.
+- Điều phối nhóm bệnh viện cùng phường, hiển thị địa chỉ/liên hệ và liên kết xem đường đi. Không tạo khoảng cách hoặc tự khẳng định cơ sở gần nhất. Chặn xác nhận tiếp nhận/phân công khi lựa chọn bệnh viện mới chưa lưu; bác sĩ vẫn phải thuộc bệnh viện đã tiếp nhận.
+- Dataset theo nguồn người dùng gồm 24 bệnh viện và 1 phòng khám: 5 cơ sở đối chiếu đủ thông tin với nguồn chính thức, 20 bản chờ đối chiếu. Danh mục hỗ trợ draft thiếu phường hiện hành/số liên hệ; draft không được bật tiếp nhận. Mọi cơ sở nhập mới mặc định chưa bật tiếp nhận.
+- Build cuối thành công: preview `main.408f261e.js` / `main.2205fb78.css`. Controller/model đã kiểm tra cú pháp, `git diff --check` đạt. Không thêm hoặc chạy test trong đợt này. Công cụ trình duyệt không có phiên kết nối, chưa kiểm tra trực quan bản mới.
+- Kiểm tra chỉ đọc production trước reset: 15 user, 3 doctor, 1 admin. Người dùng đã yêu cầu xóa non-admin cùng dữ liệu liên quan, giữ admin và danh mục. Chưa xóa trong lúc chuẩn bị bản này; cần cấu hình kết nối Atlas qua file maintenance ignored. Công cụ CLI mặc định dry-run, apply yêu cầu fingerprint và transaction.
+
+## Lịch sử sửa kế hoạch chăm sóc và lịch hẹn bác sĩ
 
 - Đổi nội dung hiển thị “đã chốt” thành “đã xác nhận”; kế hoạch nháp là “Đang xem xét”, kế hoạch bệnh nhân đã được xác nhận là “Sẵn sàng thực hiện”. Giữ nguyên các giá trị trạng thái API.
 - Bỏ danh sách duyệt lịch trùng ở Tổng quan. Mục Lịch hẹn quản lý tạo, duyệt, hoàn tất, hủy và nhắc email, có tìm kiếm và lọc trạng thái. Thu gọn card và hàng thông tin bác sĩ; điện thoại giữ nút thao tác tối thiểu 44px.

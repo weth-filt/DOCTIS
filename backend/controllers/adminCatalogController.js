@@ -23,10 +23,14 @@ function createAdminCatalogController({ WardModel = Ward, HospitalModel = Hospit
         const fields = { name, city: CITY, sourceUrl: sourceUrl(input.sourceUrl), active: input.active !== false, verified: input.verified, verifiedAt: input.verified ? now() : null, verifiedBy: input.verified ? req.user.id : null };
         if (kind === "wards") { fields.code = clean(input.code, 40); if (!fields.code) throw problem("WARD_CODE_REQUIRED", "Cần mã phường từ nguồn đã xác minh."); }
         else {
-          fields.address = clean(input.address, 500); fields.phone = clean(input.phone, 100); fields.wardId = requireId(body.wardId === undefined && current ? String(current.wardId) : input.wardId, "Phường của bệnh viện");
-          if (!fields.address || !fields.phone || typeof input.acceptingPatients !== "boolean") throw problem("HOSPITAL_FIELDS_REQUIRED", "Cần địa chỉ, liên hệ và trạng thái tiếp nhận của bệnh viện.");
+          fields.address = clean(input.address, 500); fields.phone = clean(input.phone, 100);
+          const wardId = body.wardId === undefined && current ? current.wardId : input.wardId;
+          fields.wardId = wardId ? requireId(String(wardId), "Phường của bệnh viện") : null;
+          if (!fields.address || typeof input.acceptingPatients !== "boolean") throw problem("HOSPITAL_FIELDS_REQUIRED", "Cần địa chỉ và trạng thái tiếp nhận của bệnh viện.");
+          if (fields.verified && (!fields.phone || !fields.wardId)) throw problem("HOSPITAL_VERIFICATION_INCOMPLETE", "Cần đối chiếu phường hiện tại và số liên hệ trước khi xác minh bệnh viện.");
+          if (input.acceptingPatients && !fields.verified) throw problem("HOSPITAL_NOT_VERIFIED", "Chỉ bật tiếp nhận sau khi thông tin bệnh viện đã được xác minh.");
           fields.acceptingPatients = input.acceptingPatients;
-          if (!await WardModel.findOne({ _id: fields.wardId, active: true, verified: true, city: CITY }).session(session).lean().exec()) throw problem("INVALID_WARD", "Phường bệnh viện phải thuộc danh mục Đà Nẵng đã xác minh.");
+          if (fields.wardId && !await WardModel.findOne({ _id: fields.wardId, active: true, verified: true, city: CITY }).session(session).lean().exec()) throw problem("INVALID_WARD", "Phường bệnh viện phải thuộc danh mục Đà Nẵng đã xác minh.");
           if (current && (!fields.active || !fields.verified) && (await Assignment.exists({ hospitalId: current._id, status: "active" }).session(session) || await Intake.exists({ hospitalId: current._id, status: { $in: ["hospital_selected", "accepted", "assigned"] } }).session(session))) throw problem("HOSPITAL_IN_USE", "Cần chuyển hồ sơ và kết thúc phân công liên quan trước khi ngừng xác minh hoặc ngừng hoạt động bệnh viện.", 409);
         }
         if (create) { const [created] = await Model.create([fields], { session }); return created.toObject(); }

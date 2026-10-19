@@ -1,0 +1,25 @@
+.coord-hospital-preview {
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr);
+  gap:12px;
+  margin:12px 0;
+  padding:14px;
+  border:1px solid var(--care-line);
+  border-radius:12px;
+  background:var(--care-soft);
+  color:var(--care-ink);
+}
+.coord-hospital-preview-icon {
+  display:grid;
+  place-items:center;
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  background:var(--care-accent-soft);
+  color:var(--care-link,var(--care-teal));
+}
+.coord-hospital-preview :is(strong,p,small,a) { display:block; overflow-wrap:anywhere; }
+.coord-hospital-preview p { margin:6px 0; }
+.coord-hospital-preview small { color:var(--care-muted); }
+.coord-hospital-preview a { margin-top:9px; color:var(--care-link,var(--care-teal)); font-size:12px; }
+.coord-hospital-same-ward { display:inline-block; margin-top:8px; padding:4px 8px; border-radius:6px; background:var(--care-accent-soft); color:var(--care-link,var(--care-teal)); font-size:11px; }

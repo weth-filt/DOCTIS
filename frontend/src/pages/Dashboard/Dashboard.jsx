@@ -67,6 +67,10 @@ import "../../CSS/dashboard-modern.css";
 import "../../CSS/health-clarity.css";
 import "../../CSS/health-studio.css";
 import "../../CSS/patient-redesign.css";
+import "../../CSS/profile-address.css";
+
+const SERVICE_CITY = "Đà Nẵng";
+const profileAddress = value => ({ address: value?.address || "", wardId: String(getId(value?.wardId) || ""), ward: typeof value?.ward === "string" ? value.ward : value?.ward?.name || "", city: value?.city || value?.province || "" });
 
 const EMPTY_FORM = {
   height: "",
@@ -271,6 +275,18 @@ export default function Dashboard() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaveFeedback, setProfileSaveFeedback] = useState(null);
+  const [addressDraft, setAddressDraft] = useState({ address: "", wardId: "" });
+  const [savedAddress, setSavedAddress] = useState(null);
+  const [addressWards, setAddressWards] = useState([]);
+  const [addressWardsLoading, setAddressWardsLoading] = useState(false);
+  const [addressWardsError, setAddressWardsError] = useState("");
+  const [addressSaving, setAddressSaving] = useState(false);
+  const [addressFeedback, setAddressFeedback] = useState(null);
+  const [addressFocusRequest, setAddressFocusRequest] = useState(0);
+  const addressDirty = useRef(false);
+  const addressWriteLock = useRef(false);
+  const addressCatalogLoaded = useRef(false);
+  const addressCatalogVersion = useRef(0);
   const [healthSaving, setHealthSaving] = useState(false);
   const [healthSaveFeedback, setHealthSaveFeedback] = useState(null);
 
@@ -388,6 +404,9 @@ export default function Dashboard() {
       const res = await API.get("/profile");
       const profileData = res.data?.profile || res.data || {};
       setSavedCareProfile(profileData);
+      const location = profileAddress(profileData);
+      setSavedAddress(location);
+      if (!addressDirty.current) setAddressDraft({ address: location.address, wardId: location.wardId });
 
       setProfile((prev) => ({
         ...prev,
@@ -418,9 +437,11 @@ export default function Dashboard() {
         dateOfBirth: normalizeDateForInput(profileData.dateOfBirth),
         gender: profileData.gender ?? "",
         address: profileData.address ?? "",
-        province: profileData.province ?? profileData.city ?? "",
+        province: profileData.province || profileData.city || "",
         district: profileData.district ?? "",
         ward: profileData.ward ?? "",
+        wardId: profileData.wardId ?? null,
+        city: profileData.city || profileData.province || "",
         bloodType: profileData.bloodType ?? "",
         allergies: profileData.allergies ?? "",
         medicalHistory: profileData.medicalHistory ?? "",
@@ -444,6 +465,33 @@ export default function Dashboard() {
       setProfileLoading(false);
     }
   }, []);
+
+  const loadAddressWards = useCallback(async signal => {
+    const version = ++addressCatalogVersion.current;
+    setAddressWardsLoading(true); setAddressWardsError("");
+    try {
+      const response = await API.get("/public/wards", { signal });
+      if (signal?.aborted || version !== addressCatalogVersion.current) return;
+      setAddressWards(Array.isArray(response.data?.wards) ? response.data.wards : []);
+      addressCatalogLoaded.current = true;
+    } catch (failure) {
+      if (!signal?.aborted && version === addressCatalogVersion.current) setAddressWardsError("Chưa tải được danh mục phường. Thông tin bạn đã nhập vẫn được giữ lại.");
+    } finally { if (!signal?.aborted && version === addressCatalogVersion.current) setAddressWardsLoading(false); }
+  }, []);
+  useEffect(() => {
+    if (menu !== "profile" || addressCatalogLoaded.current) return undefined;
+    const controller = new AbortController(); loadAddressWards(controller.signal);
+    return () => controller.abort();
+  }, [menu, loadAddressWards]);
+  useEffect(() => {
+    if (menu !== "profile" || !addressFocusRequest) return undefined;
+    const frame = requestAnimationFrame(() => {
+      document.getElementById(profileSectionId("Thông tin địa chỉ"))?.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" });
+      document.getElementById("patient-service-address")?.focus({ preventScroll: true });
+      setAddressFocusRequest(0);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [menu, addressFocusRequest, reducedMotion]);
 
     const fetchPrescriptions = useCallback(async () => {
     setPrescriptionLoading(true);
@@ -695,6 +743,50 @@ export default function Dashboard() {
     setProfileSaveFeedback(null);
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
+
+  const changeServiceAddress = event => {
+    if (addressWriteLock.current || profileSaving) return;
+    const { name, value } = event.target;
+    addressDirty.current = true;
+    setAddressFeedback(null);
+    setAddressDraft(previous => ({ ...previous, [name]: value }));
+  };
+  const saveServiceAddress = async event => {
+    event.preventDefault();
+    if (addressWriteLock.current || profileSaving || profileLoading) return;
+    const address = addressDraft.address.trim();
+    if (address.length < 3 || address.length > 500 || !addressWards.some(ward => String(getId(ward)) === addressDraft.wardId)) {
+      setAddressFeedback({ type: "error", text: "Vui lòng nhập địa chỉ chi tiết từ 3 đến 500 ký tự và chọn phường trong danh mục phục vụ." }); return;
+    }
+    addressWriteLock.current = true; setAddressSaving(true); setAddressFeedback(null);
+    try {
+      const response = await API.patch("/care-team/address", { address, wardId: addressDraft.wardId, city: SERVICE_CITY });
+      const location = profileAddress(response.data?.address);
+      if (!location.address || !location.wardId || location.city !== SERVICE_CITY) throw new Error("ADDRESS_RESPONSE_INCOMPLETE");
+      const savedFields = { address: location.address, wardId: location.wardId, ward: location.ward, city: location.city, province: location.city };
+      addressDirty.current = false;
+      setSavedAddress(location);
+      setAddressDraft({ address: location.address, wardId: location.wardId });
+      setProfile(previous => ({ ...previous, ...savedFields }));
+      setSavedCareProfile(previous => ({ ...previous, ...savedFields }));
+      const storedUser = { ...safeUserFromStorage(), ...savedFields };
+      try { localStorage.setItem("user", JSON.stringify(storedUser)); } catch { /* The API response remains authoritative if browser storage is full. */ }
+      setUser(previous => ({ ...previous, ...savedFields }));
+      setCareTeamRefresh(previous => previous + 1);
+      setAddressFeedback({ type: "success", text: response.data?.msg || "Đã lưu địa chỉ. Admin sẽ đối chiếu thông tin để hỗ trợ điều phối." });
+    } catch (failure) {
+      setAddressFeedback({ type: "error", text: failure.response?.data?.msg || "Chưa xác nhận được việc lưu địa chỉ. Thông tin bạn nhập vẫn được giữ lại để thử lại." });
+    } finally { addressWriteLock.current = false; setAddressSaving(false); }
+  };
+  const discardServiceAddressChanges = () => {
+    if (addressWriteLock.current) return;
+    addressDirty.current = false;
+    setAddressDraft({ address: savedAddress?.address || "", wardId: savedAddress?.wardId || "" });
+    setAddressFeedback(null);
+  };
+  const addressHasChanges = addressDraft.address.trim() !== (savedAddress?.address || "").trim() || addressDraft.wardId !== (savedAddress?.wardId || "");
+  const addressNeedsSave = addressHasChanges || Boolean(savedAddress && savedAddress.city !== SERVICE_CITY);
+  const addressWardInCatalog = addressWards.some(ward => String(getId(ward)) === addressDraft.wardId);
 
   const updateHealthField = (field, value) => {
     setHealthSaveFeedback(null);
@@ -967,7 +1059,7 @@ export default function Dashboard() {
   };
 
   const saveProfile = async () => {
-    if (profileSaving) return;
+    if (profileSaving || addressWriteLock.current) return;
 
        const required = [
       ["fullName", "Vui lòng nhập họ và tên."],
@@ -1657,7 +1749,7 @@ export default function Dashboard() {
                     Thông tin cá nhân và thông tin cần thiết cho quá trình
                     khám bệnh.
                   </p>
-                  <div className="profile-mode-switch" role="group" aria-label="Chế độ hồ sơ"><button type="button" aria-pressed={profileReadOnly} disabled={profileSaving} onClick={() => setProfileReadOnly(true)}>Xem hồ sơ</button><button type="button" aria-pressed={!profileReadOnly} disabled={profileSaving} onClick={() => setProfileReadOnly(false)}>Chỉnh sửa</button></div>
+                  <div className="profile-mode-switch" role="group" aria-label="Chế độ hồ sơ"><button type="button" aria-pressed={profileReadOnly} disabled={profileSaving || addressSaving} onClick={() => setProfileReadOnly(true)}>Xem hồ sơ</button><button type="button" aria-pressed={!profileReadOnly} disabled={profileSaving || addressSaving} onClick={() => setProfileReadOnly(false)}>Chỉnh sửa</button></div>
                 </div>
                 <div className="profile-masthead-seal" aria-hidden="true"><FaAddressBook /><span>Thông tin<br/>chăm sóc của bạn</span></div>
               </div>
@@ -1797,10 +1889,22 @@ export default function Dashboard() {
               </ProfileSection>
 
               <ProfileSection title="Thông tin địa chỉ" icon={<FaMapMarkerAlt />}>
-                <ProfileField full label="Địa chỉ chi tiết"><input value={profile.address || "Chưa bổ sung"} readOnly /></ProfileField>
-                <ProfileField label="Thành phố"><input value={profile.province || "Chưa xác minh"} readOnly /></ProfileField>
-                <ProfileField label="Phường"><input value={profile.ward || "Chưa bổ sung"} readOnly /></ProfileField>
-                <div className="profile-field full-width"><p>Cập nhật địa chỉ và phường trong danh mục phục vụ tại mục bệnh viện.</p><button type="button" className="coord-secondary" onClick={() => setMenu("care-team")}>Cập nhật địa chỉ phục vụ</button></div>
+                <form className="profile-address-form" noValidate onSubmit={saveServiceAddress} aria-label="Thông tin địa chỉ phục vụ" aria-busy={addressSaving}>
+                  <p className="profile-address-intro">Địa chỉ đã đăng ký được hiển thị tại đây. Bạn có thể chỉnh sửa và lưu riêng địa chỉ để admin tiếp tục hỗ trợ điều phối.</p>
+                  <ProfileField label="Thành phố"><input value={SERVICE_CITY} readOnly aria-describedby="patient-service-city-note" /></ProfileField>
+                  <ProfileField label="Phường *"><select name="wardId" value={addressDraft.wardId} onChange={changeServiceAddress} disabled={addressSaving || profileSaving || profileLoading || addressWardsLoading || !addressWards.length} aria-describedby="patient-service-ward-note">
+                    <option value="">{addressWardsLoading ? "Đang tải danh mục phường…" : "Chọn phường"}</option>
+                    {addressDraft.wardId && !addressWardInCatalog && <option value={addressDraft.wardId} disabled>{savedAddress?.ward || profile.ward || "Phường đã lưu"}{!addressWardsLoading && addressCatalogLoaded.current ? " · cần chọn lại" : ""}</option>}
+                    {addressWards.map(ward => <option key={getId(ward)} value={getId(ward)}>{ward.name}</option>)}
+                  </select></ProfileField>
+                  <ProfileField full label="Địa chỉ chi tiết *"><input id="patient-service-address" name="address" value={addressDraft.address} onChange={changeServiceAddress} maxLength={500} disabled={addressSaving || profileSaving || profileLoading} placeholder="Số nhà, tên đường, tổ hoặc khu dân cư" autoComplete="street-address" /></ProfileField>
+                  <p id="patient-service-city-note" className="profile-address-hint">Phạm vi phục vụ hiện tại là thành phố Đà Nẵng. Thành phố được giữ cố định như khi đăng ký.</p>
+                  <p id="patient-service-ward-note" className="profile-address-hint">{!addressWardsLoading && addressCatalogLoaded.current && !addressWardInCatalog ? savedAddress?.ward && !addressDraft.wardId ? `Phường đã khai báo: ${savedAddress.ward}. Vui lòng chọn phường trong danh mục đã được xác minh.` : "Vui lòng chọn phường trong danh mục đã được xác minh." : "Danh mục phường dùng chung với trang đăng ký."}</p>
+                  {addressWardsError && <p className="profile-address-feedback is-error" role="alert">{addressWardsError}</p>}
+                  {!addressWardsLoading && addressCatalogLoaded.current && !addressWards.length && <p className="profile-address-feedback is-warning">Danh mục phường chưa được cấu hình. Vui lòng liên hệ admin để bổ sung; không cần đăng ký lại tài khoản.</p>}
+                  {addressFeedback && <p className={`profile-address-feedback is-${addressFeedback.type}`} role={addressFeedback.type === "error" ? "alert" : "status"}>{addressFeedback.text}</p>}
+                  <div className="profile-address-actions"><button type="submit" className="profile-address-save" disabled={addressSaving || profileSaving || profileLoading || addressWardsLoading || !!addressWardsError || !addressWards.length || !addressNeedsSave}>{addressSaving ? <span className="button-spinner" aria-hidden="true" /> : <FaSave aria-hidden="true" />}{addressSaving ? "Đang lưu địa chỉ…" : "Lưu địa chỉ"}</button>{addressHasChanges && <button type="button" className="profile-address-discard" onClick={discardServiceAddressChanges} disabled={addressSaving || profileSaving}>Bỏ thay đổi địa chỉ</button>}{!addressWardsLoading && (addressWardsError || !addressWards.length) && <button type="button" className="profile-address-discard" onClick={() => loadAddressWards()} disabled={addressSaving}>Tải lại danh mục phường</button>}</div>
+                </form>
               </ProfileSection>
 
                             <ProfileSection
@@ -1986,7 +2090,7 @@ export default function Dashboard() {
                   type="button"
                   className="profile-save-btn"
                   onClick={saveProfile}
-                  disabled={profileSaving || profileLoading}
+                  disabled={profileSaving || profileLoading || addressSaving}
                 >
                   {profileSaving ? <span className="button-spinner" aria-hidden="true" /> : <FaSave />}
                   {profileSaving ? "Đang lưu..." : "Lưu hồ sơ bệnh nhân"}
@@ -2632,7 +2736,7 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        <CareTeamPanel active={menu === "care-team"} refreshKey={careTeamRefresh} onUpdated={value => { const location = value.address || {}; setProfile(old => ({ ...old, address: location.address || old.address, ward: location.ward?.name || location.wardName || (typeof location.ward === "string" ? location.ward : old.ward), province: location.city || old.province })); }} />
+        <CareTeamPanel active={menu === "care-team"} refreshKey={careTeamRefresh} onEditAddress={() => { setProfileReadOnly(false); setAddressFocusRequest(value => value + 1); setMenu("profile"); }} />
 
         {menu === "appointments" && <AppointmentCalendar focusAppointmentId={focusAppointmentId} onCancelled={updated => { setAppointments(old => old.map(item => getId(item) === getId(updated) ? { ...item, ...updated, doctorId: typeof updated.doctorId === "object" ? updated.doctorId : item.doctorId, patientId: typeof updated.patientId === "object" ? updated.patientId : item.patientId } : item)); fetchAppointments(); }} appointments={appointments} formatDate={formatDate} formatTime={formatTime} statusLabel={appointmentStatusLabel} />}
 

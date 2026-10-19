@@ -1,0 +1,14 @@
+.studio-profile-page .profile-address-form { grid-column:1 / -1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 20px;min-width:0;margin:0; }
+.studio-profile-page .profile-address-form > :is(.profile-address-intro,.profile-address-hint,.profile-address-feedback,.profile-address-actions) { grid-column:1 / -1;min-width:0; }
+.studio-profile-page .profile-address-intro { margin:0 0 3px;color:var(--care-muted,#66817a);font-size:12px;line-height:1.8; }
+.studio-profile-page .profile-address-hint { margin:0;color:var(--care-muted,#66817a);font-size:11px;line-height:1.7; }
+.studio-profile-page .profile-address-feedback { margin:0;padding:11px 13px;border:1px solid var(--care-line,#d8e6e2);border-radius:11px;background:var(--care-soft,#edf5f2);color:var(--care-ink,#173d3c);font-size:12px;line-height:1.75;overflow-wrap:anywhere; }
+.studio-profile-page .profile-address-feedback.is-error { color:var(--care-danger,#b94459); }.studio-profile-page .profile-address-feedback.is-success { color:var(--care-link,#087d7f); }.studio-profile-page .profile-address-feedback.is-warning { color:var(--care-warning,#94601b); }
+.studio-profile-page .profile-address-actions { display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding-top:3px; }
+.studio-profile-page .profile-address-actions button { display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:39px;padding:10px 13px;border:1px solid var(--care-line,#d8e6e2);border-radius:10px;font:inherit;font-size:12px;font-weight:600;line-height:1.5;cursor:pointer;transition:transform .16s ease,background-color .16s ease; }
+.studio-profile-page .profile-address-actions .profile-address-save { border-color:var(--care-button,#087d7f);background:var(--care-button,#087d7f);color:var(--care-on-primary,#fff); }
+.studio-profile-page .profile-address-actions .profile-address-discard { background:var(--care-soft,#edf5f2);color:var(--care-ink,#173d3c); }
+.studio-profile-page .profile-address-actions button:disabled { opacity:.55;cursor:default; }.studio-profile-page .profile-address-actions button:not(:disabled):active { transform:scale(.98); }
+.patient-care-team .care-team-profile-link { display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px; }.patient-care-team .care-team-profile-link p { margin:0;flex:1 1 260px; }.patient-care-team .care-team-profile-link button { flex:0 0 auto; }
+@media(max-width:700px) { .studio-profile-page .profile-address-form { grid-template-columns:minmax(0,1fr);gap:14px; }.studio-profile-page .profile-address-actions button { min-height:44px; }.studio-profile-page .profile-address-form :is(input,select) { font-size:16px; } }
+@media(prefers-reduced-motion:reduce) { .studio-profile-page .profile-address-actions button { transition:none;transform:none; } }
