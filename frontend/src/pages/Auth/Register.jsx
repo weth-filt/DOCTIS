@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -10,10 +10,14 @@ import {
   FaUserPlus,
   FaExclamationCircle,
   FaCheckCircle,
+  FaCity,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
 
 import API from "../../services/api";
 import Auth3DVisual from "../../components/Auth3DVisual";
+import { createRequestKey, entityId } from "../../components/coordination/coordinationUtils";
+import "../../CSS/register.css";
 
 export default function Register() {
   const nav = useNavigate();
@@ -24,11 +28,25 @@ export default function Register() {
     email: "",
     password: "",
     confirmPassword: "",
+    address: "",
+    wardId: "",
   });
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [wards, setWards] = useState([]);
+  const [wardsLoading, setWardsLoading] = useState(true);
+  const [wardsError, setWardsError] = useState("");
+  const submitLock = useRef(false);
+  const registrationAttempt = useRef(null);
+  const loadWards = useCallback(async signal => {
+    setWardsLoading(true); setWardsError("");
+    try { const response = await API.get("/public/wards", { signal }); if (!signal?.aborted) setWards(response.data?.wards || []); }
+    catch { if (!signal?.aborted) setWardsError("Chưa tải được danh mục phường. Bạn hãy thử lại."); }
+    finally { if (!signal?.aborted) setWardsLoading(false); }
+  }, []);
+  useEffect(() => { const controller = new AbortController(); loadWards(controller.signal); return () => controller.abort(); }, [loadWards]);
 
   const change = (e) => {
     setForm({
@@ -39,31 +57,35 @@ export default function Register() {
 
   const register = async (e) => {
     if (e) e.preventDefault();
-    if (loading) return;
+    if (submitLock.current || loading) return;
 
     setErrorMessage("");
     setSuccessMessage("");
 
-    if (!form.cccd || !form.username || !form.email || !form.password) {
+    if (!form.cccd.trim() || !form.username.trim() || !form.email.trim() || !form.password || !form.address.trim() || !wards.some(ward => entityId(ward) === form.wardId)) {
       const msg = "Vui lòng điền đầy đủ các thông tin bắt buộc.";
       setErrorMessage(msg);
-      alert(msg);
       return;
     }
 
     if (form.password !== form.confirmPassword) {
       const msg = "Mật khẩu xác nhận không khớp.";
       setErrorMessage(msg);
-      alert(msg);
       return;
     }
+    if (!/^\d{12}$/.test(form.cccd.trim())) { setErrorMessage("Số CCCD / định danh cần đủ 12 chữ số."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setErrorMessage("Vui lòng nhập email hợp lệ."); return; }
+    if (form.password.length < 6) { setErrorMessage("Mật khẩu cần ít nhất 6 ký tự."); return; }
 
+    submitLock.current = true;
     try {
       setLoading(true);
-      const res = await API.post("/auth/register", form);
+      const payload = { ...form, cccd: form.cccd.trim(), username: form.username.trim(), email: form.email.trim(), address: form.address.trim(), city: "Đà Nẵng" };
+      const signature = JSON.stringify(payload);
+      if (registrationAttempt.current?.signature !== signature) registrationAttempt.current = { signature, requestId: createRequestKey() };
+      const res = await API.post("/auth/register", { ...payload, requestId: registrationAttempt.current.requestId });
       const okMsg = res.data?.msg || "Đăng ký tài khoản thành công!";
       setSuccessMessage(okMsg);
-      alert(okMsg);
       nav("/");
     } catch (err) {
       const errText =
@@ -71,8 +93,8 @@ export default function Register() {
         err.response?.data?.message ||
         "Đăng ký thất bại. Vui lòng thử lại.";
       setErrorMessage(errText);
-      alert(errText);
     } finally {
+      submitLock.current = false;
       setLoading(false);
     }
   };
@@ -129,8 +151,8 @@ export default function Register() {
             </div>
           )}
 
-          <form onSubmit={register} noValidate>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <form className="auth-register-form" onSubmit={register} noValidate>
+            <div className="register-field-row">
               <div className="doc-field">
                 <label className="doc-label" htmlFor="reg-cccd">
                   Số CCCD / Định danh
@@ -188,7 +210,7 @@ export default function Register() {
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div className="register-field-row">
               <div className="doc-field">
                 <label className="doc-label" htmlFor="reg-password">
                   Mật khẩu
@@ -230,10 +252,45 @@ export default function Register() {
               </div>
             </div>
 
+            <div className="register-field-row">
+              <div className="doc-field">
+                <label className="doc-label" htmlFor="reg-city">Thành phố</label>
+                <div className="doc-input-wrapper">
+                  <FaCity className="doc-input-icon" aria-hidden="true" />
+                  <input id="reg-city" className="doc-input doc-input-with-icon" value="Đà Nẵng" readOnly />
+                </div>
+              </div>
+              <div className="doc-field">
+                <label className="doc-label" htmlFor="reg-ward">Phường *</label>
+                <div className="doc-input-wrapper">
+                  <FaMapMarkerAlt className="doc-input-icon" aria-hidden="true" />
+                  <select id="reg-ward" className="doc-input doc-input-with-icon" name="wardId" value={form.wardId} onChange={change} disabled={loading || wardsLoading || !wards.length} aria-describedby="reg-ward-feedback">
+                    <option value="">{wardsLoading ? "Đang tải phường…" : "Chọn phường"}</option>
+                    {wards.map(ward => <option key={entityId(ward)} value={entityId(ward)}>{ward.name}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="doc-field">
+              <label className="doc-label" htmlFor="reg-address">Địa chỉ chi tiết *</label>
+              <div className="doc-input-wrapper">
+                <FaMapMarkerAlt className="doc-input-icon" aria-hidden="true" />
+                <input id="reg-address" className="doc-input doc-input-with-icon" name="address" value={form.address} onChange={change} maxLength={500} autoComplete="street-address" placeholder="Số nhà, tên đường, tổ hoặc khu dân cư" disabled={loading} />
+              </div>
+            </div>
+
+            <div id="reg-ward-feedback" className="register-catalog-feedback" aria-live="polite">
+              {wardsError && <p className="register-catalog-error" role="alert">{wardsError}</p>}
+              {!wardsLoading && !wards.length && <p>Danh mục phường chưa được cấu hình. Admin cần bổ sung dữ liệu đã xác minh trước khi tiếp nhận đăng ký mới.</p>}
+              {(wardsError || !wards.length) && !wardsLoading && <button className="auth-link" type="button" onClick={() => loadWards()}>Tải lại danh mục phường</button>}
+            </div>
+            <p className="register-service-note">Admin sẽ đối chiếu địa chỉ và cập nhật bệnh viện hỗ trợ sau khi bạn đăng ký. Bác sĩ được ghi nhận sau bước bệnh viện tiếp nhận.</p>
+
             <button
               type="submit"
               className="doc-btn doc-btn-primary auth-submit-btn"
-              disabled={loading}
+              disabled={loading || wardsLoading || !wards.length}
             >
               {loading ? (
                 "Đang đăng ký..."

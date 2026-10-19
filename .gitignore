@@ -17,3 +17,5 @@ AI/health_model.pkl
 # Local review captures may contain patient information.
 /frontend/ui-review/
 /.deploy-tmp/
+/.local-public-check/
+**/__pycache__/

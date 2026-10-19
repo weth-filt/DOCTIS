@@ -1,5 +1,27 @@
 # Đưa DOCTIS lên Vercel
 
+## Phát hành luồng public ngày 19/10/2026
+
+Chủ dự án đã duyệt form đăng ký đồng nhất và yêu cầu phát hành toàn bộ thay đổi.
+Web/API/mobile tiếp tục dùng ba project riêng bên dưới. Những dòng “chưa deploy”
+trong tài liệu review local mô tả giai đoạn trước khi duyệt phát hành này.
+
+- Đăng ký mới cần Ward active/verified trong database production. JSON trong repo
+  không tự nạp database. Chỉ thêm danh mục phường còn thiếu từ nguồn đã đối chiếu;
+  không tự điền bệnh viện hoặc bác sĩ. Chủ dự án nhập dữ liệu bệnh viện đã xác minh
+  tại Admin → Danh mục phục vụ, sau đó gắn bệnh viện cho bác sĩ.
+- Tài khoản cũ vẫn đăng nhập được; bổ sung địa chỉ tại mục Bệnh viện và bác sĩ phụ
+  trách. Không chạy script promoteLocalPreviewAdmin trên production.
+- Giữ cấu hình Gemini cloud hiện có. Python model là dịch vụ riêng, cần
+  AI_SERVICE_URL truy cập được nếu muốn nhãn dự đoán ML online. Khi không có,
+  số đo và cảnh báo quy tắc vẫn được lưu, prediction báo unavailable.
+- OTP/email cần SMTP thật. Nhắc theo giờ cần scheduler ngoài gọi POST
+  /api/internal/scheduler/reminders với Bearer CRON_SECRET riêng ≥32 ký tự;
+  mã serverless không tự chạy node-cron. Chưa cấu hình trigger thì không công bố
+  rằng email nhắc đã tự chạy trên Vercel.
+
+Chi tiết API, dữ liệu cũ, nguồn danh mục và kiểm thử local: [PUBLIC_WORKFLOW.md](docs/PUBLIC_WORKFLOW.md).
+
 Vercel sẽ cấp URL dạng `https://ten-du-an.vercel.app`. Vì API cần Express và dữ liệu cần MongoDB, triển khai thành hai Vercel project từ cùng một GitHub repository riêng tư:
 
 - `doctis` (`doctis.vercel.app`): Root Directory `backend`, API Express.

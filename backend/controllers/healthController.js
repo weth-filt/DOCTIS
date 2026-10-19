@@ -163,59 +163,24 @@ exports.addHealth = async (req, res) => {
       "Dữ liệu đã được lưu. " +
       "Hiện chưa thể phân tích bằng AI.";
 
-    // =================================================
-    // GỌI AI PYTHON
-    // =================================================
-    //
-    // QUAN TRỌNG:
-    // Nếu Python AI không chạy port 8000,
-    // KHÔNG làm API /health/add bị lỗi.
-    //
-    try {
-      console.log(
-        "Đang gọi AI:",
-        `${AI_SERVICE_URL}/predict`
-      );
-
-      const ai = await axios.post(
-        `${AI_SERVICE_URL}/predict`,
-        {
-          glucose:
-            glucoseNumber ?? 0,
-
-          bmi:
-            roundedBMI
-        },
-        {
-          timeout: 5000
+    // Missing glucose is not zero: the ML model requires both real features.
+    let predictionStatus = glucoseNumber === null ? "insufficient_data" : "unavailable";
+    if (glucoseNumber !== null && glucoseNumber > 0) {
+      try {
+        const ai = await axios.post(
+          `${AI_SERVICE_URL}/predict`,
+          { glucose: glucoseNumber, bmi: roundedBMI },
+          { timeout: 5000 }
+        );
+        if (ai.data?.prediction !== undefined && !ai.data?.error) {
+          aiPrediction = String(ai.data.prediction);
+          aiRecommendation = ai.data.recommendation || "Không có khuyến nghị";
+          predictionStatus = "available";
         }
-      );
-
-      console.log(
-        "AI RESPONSE =",
-        ai.data
-      );
-
-      if (ai.data) {
-        aiPrediction =
-          ai.data.prediction ??
-          "Không xác định";
-
-        aiRecommendation =
-          ai.data.recommendation ??
-          "Không có khuyến nghị";
+      } catch (error) {
+        // Do not log medical payloads, service URLs or connection strings.
+        console.warn("Prediction service unavailable; health record will retain its monitoring alert.");
       }
-    }
-
-    catch (aiErr) {
-      console.error(
-        "⚠️ AI SERVICE KHÔNG KẾT NỐI:",
-        aiErr.code || aiErr.message
-      );
-
-      console.log(
-        "Health vẫn sẽ được lưu vào MongoDB."
-      );
     }
 
     // =================================================
@@ -239,6 +204,10 @@ exports.addHealth = async (req, res) => {
       heartRate: heartRateNumber,
 
       prediction: aiPrediction,
+      predictionStatus,
+      predictionSource: predictionStatus === "available" ? "python-model" : null,
+      riskSource: "monitoring-rule",
+      monitoringRuleVersion: getRisk.ruleVersion,
 
       risk: aiRisk,
 
@@ -252,10 +221,7 @@ exports.addHealth = async (req, res) => {
   }
 
   catch (err) {
-    console.error(
-      "❌ ADD HEALTH ERROR =",
-      err
-    );
+    console.error("Health operation failed.");
 
     return res.status(500).json({
       msg:
@@ -290,10 +256,7 @@ exports.getHistory = async (
   }
 
   catch (err) {
-    console.error(
-      "❌ GET HISTORY ERROR =",
-      err
-    );
+    console.error("Health operation failed.");
 
     return res.status(500).json({
       msg: err.message
@@ -328,10 +291,7 @@ exports.getLatest = async (
   }
 
   catch (err) {
-    console.error(
-      "❌ GET LATEST ERROR =",
-      err
-    );
+    console.error("Health operation failed.");
 
     return res.status(500).json({
       msg: err.message
@@ -353,10 +313,6 @@ exports.getAdvices = async (
       });
     }
 
-    console.log(
-      "USER =",
-      req.user
-    );
 
     const advices =
       await Advice.find({
@@ -370,19 +326,12 @@ exports.getAdvices = async (
           createdAt: -1
         });
 
-    console.log(
-      "ADVICES =",
-      advices
-    );
 
     return res.json(advices);
   }
 
   catch (err) {
-    console.error(
-      "❌ GET ADVICES ERROR =",
-      err
-    );
+    console.error("Health operation failed.");
 
     return res.status(500).json({
       message:

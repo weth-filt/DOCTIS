@@ -1,0 +1,17 @@
+{
+  "version": "doctis-monitoring-legacy-1",
+  "purpose": "Monitoring alerts preserved from the existing application; not a diagnosis or a model prediction.",
+  "missingLabel": "Chưa có dữ liệu",
+  "stableLabel": "Ổn định",
+  "levels": [
+    { "label": "Nguy hiểm", "conditions": [
+      ["glucose", ">", 180], ["glucose", "<", 70], ["bmi", ">=", 30],
+      ["heartRate", ">", 120], ["heartRate", "<", 50],
+      ["systolic", ">", 160], ["diastolic", ">", 100]
+    ] },
+    { "label": "Cao", "conditions": [
+      ["glucose", ">", 126], ["bmi", ">=", 25], ["heartRate", ">", 100],
+      ["systolic", ">", 140], ["diastolic", ">", 90]
+    ] }
+  ]
+}

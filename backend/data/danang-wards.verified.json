@@ -1,0 +1,20 @@
+{
+  "city": "Đà Nẵng",
+  "checkedAt": "2026-10-19",
+  "sourceUrl": "https://xaydungchinhsach.chinhphu.vn/toan-van-nghi-quyet-so-1659-nq-ubtvqh15-sap-xep-cac-dvhc-cap-xa-cua-thanh-pho-da-nang-nam-2025-119250616202714604.htm",
+  "scope": "23 phường; chưa bao gồm xã và đặc khu. code là mã nội bộ DOCTIS, không phải mã hành chính quốc gia.",
+  "wards": [
+    {"code":"DN-HAI-CHAU","name":"Hải Châu"}, {"code":"DN-HOA-CUONG","name":"Hòa Cường"},
+    {"code":"DN-THANH-KHE","name":"Thanh Khê"}, {"code":"DN-AN-KHE","name":"An Khê"},
+    {"code":"DN-AN-HAI","name":"An Hải"}, {"code":"DN-SON-TRA","name":"Sơn Trà"},
+    {"code":"DN-NGU-HANH-SON","name":"Ngũ Hành Sơn"}, {"code":"DN-HOA-KHANH","name":"Hòa Khánh"},
+    {"code":"DN-HAI-VAN","name":"Hải Vân"}, {"code":"DN-LIEN-CHIEU","name":"Liên Chiểu"},
+    {"code":"DN-CAM-LE","name":"Cẩm Lệ"}, {"code":"DN-HOA-XUAN","name":"Hòa Xuân"},
+    {"code":"DN-TAM-KY","name":"Tam Kỳ"}, {"code":"DN-QUANG-PHU","name":"Quảng Phú"},
+    {"code":"DN-HUONG-TRA","name":"Hương Trà"}, {"code":"DN-BAN-THACH","name":"Bàn Thạch"},
+    {"code":"DN-DIEN-BAN","name":"Điện Bàn"}, {"code":"DN-DIEN-BAN-DONG","name":"Điện Bàn Đông"},
+    {"code":"DN-AN-THANG","name":"An Thắng"}, {"code":"DN-DIEN-BAN-BAC","name":"Điện Bàn Bắc"},
+    {"code":"DN-HOI-AN","name":"Hội An"}, {"code":"DN-HOI-AN-DONG","name":"Hội An Đông"},
+    {"code":"DN-HOI-AN-TAY","name":"Hội An Tây"}
+  ]
+}

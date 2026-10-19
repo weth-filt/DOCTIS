@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FaArrowLeft, FaArrowRight, FaCalendarAlt, FaClock, FaUserMd } from "react-icons/fa";
 import useLiveReducedMotion from "../useLiveReducedMotion";
+import CancelAppointmentDialog from "../CancelAppointmentDialog";
 import "../../CSS/patient-functions.css";
 
 const dayKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -20,13 +21,23 @@ export function AppointmentCountdown({ date }) {
   return <span className="appointment-countdown"><FaClock aria-hidden="true" />{days ? `Còn ${days} ngày ${hours} giờ` : hours ? `Còn ${hours} giờ ${minutes % 60} phút` : `Còn ${minutes} phút`}</span>;
 }
 
-export default function AppointmentCalendar({ appointments = [], formatDate, formatTime, statusLabel }) {
+export default function AppointmentCalendar({ appointments = [], formatDate, formatTime, statusLabel, onCancelled, focusAppointmentId }) {
   const reduced = useLiveReducedMotion();
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState(null);
   const [allDates, setAllDates] = useState(false);
   const records = useMemo(() => appointments.map((item) => ({ ...item, date: new Date(item.appointmentDate) })).filter((item) => Number.isFinite(item.date.getTime())).sort((a, b) => a.date - b.date), [appointments]);
   const [expanded, setExpanded] = useState(null);
+  const [cancelling, setCancelling] = useState(null);
+  useEffect(() => {
+    if (!focusAppointmentId) return;
+    const target = appointments.find(item => String(item._id || item.id) === String(focusAppointmentId));
+    if (!target) return;
+    const date = new Date(target.appointmentDate);
+    if (!Number.isFinite(date.getTime())) return;
+    setMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+    setSelectedDay(dayKey(date)); setAllDates(false); setExpanded(target._id || target.id);
+  }, [focusAppointmentId, appointments]);
   const monthKey = `${month.getFullYear()}-${month.getMonth()}`;
   const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const offset = (month.getDay() + 6) % 7;
@@ -40,6 +51,7 @@ export default function AppointmentCalendar({ appointments = [], formatDate, for
   };
 
   return <div className="appointment-studio">
+    {cancelling && <CancelAppointmentDialog appointment={cancelling} onClose={() => setCancelling(null)} onCancelled={(updated, response) => { onCancelled?.(updated, response); setCancelling(null); }} />}
     <section className="patient-function-intro appointment-intro"><span className="function-kicker">Kết nối chăm sóc</span><h2>Lịch hẹn của bạn</h2><p>Thời gian gặp bác sĩ, ghi chú và những cuộc hẹn đã được lưu.</p><span className="function-intro-count"><FaCalendarAlt /> {records.length} cuộc hẹn</span></section>
     <div className="appointment-workspace">
       <section className="appointment-month" aria-label="Lịch tháng">
@@ -63,8 +75,10 @@ export default function AppointmentCalendar({ appointments = [], formatDate, for
           const opened = expanded === id;
           return <motion.article key={id} layout className="appointment-detail-card" initial={{ opacity: reduced ? 1 : 0, y: reduced ? 0 : 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: reduced ? 0 : .22 }}>
             <div className="appointment-date-block"><strong>{item.date.getDate()}</strong><span>{item.date.toLocaleDateString("vi-VN", { month: "short" })}</span></div>
-            <div className="appointment-card-copy"><span className="appointment-status">{statusLabel?.(item.status) || item.status || "Chưa cập nhật"}</span><h4><FaUserMd /> {item.doctorId?.fullName || item.doctorId?.username || "Chưa cập nhật bác sĩ"}</h4><p><FaClock /> {formatTime ? formatTime(item.appointmentDate) : item.date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} · {item.type || "Lịch khám"}</p>{item.date.getTime() >= Date.now() && <AppointmentCountdown date={item.appointmentDate} />}
+            <div className="appointment-card-copy"><span className="appointment-status">{statusLabel?.(item.status) || item.status || "Chưa cập nhật"}</span><h4><FaUserMd /> {item.doctorId?.fullName || item.doctorId?.username || "Chưa cập nhật bác sĩ"}</h4><p><FaClock /> {formatTime ? formatTime(item.appointmentDate) : item.date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} · {item.type || "Lịch khám"}</p>{["pending", "approved"].includes(item.status) && item.date.getTime() >= Date.now() && <AppointmentCountdown date={item.appointmentDate} />}
               <button type="button" className="appointment-details-trigger" aria-expanded={opened} onClick={() => setExpanded(opened ? null : id)}>{opened ? "Thu gọn chi tiết" : "Xem chi tiết"}<FaArrowRight /></button>
+              {["pending", "approved"].includes(item.status) && <button type="button" className="appointment-details-trigger" onClick={() => setCancelling(item)}>Hủy lịch hẹn</button>}
+              {item.status === "cancelled" && item.cancelReason && <p>Lý do hủy: {item.cancelReason}</p>}
               <AnimatePresence initial={false}>{opened && <motion.div className="appointment-more" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: reduced ? 0 : .22 }}><dl><div><dt>Ngày khám</dt><dd>{formatDate ? formatDate(item.appointmentDate) : item.date.toLocaleDateString("vi-VN")}</dd></div><div><dt>Ghi chú bác sĩ</dt><dd>{item.note || "Chưa có ghi chú."}</dd></div></dl></motion.div>}</AnimatePresence>
             </div>
           </motion.article>;

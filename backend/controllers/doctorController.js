@@ -148,14 +148,10 @@ exports.getPatients = async (req, res) => {
 
     return res.json(result);
   } catch (err) {
-    console.error(
-      "GET DOCTOR PATIENTS ERROR =",
-      err
-    );
+    console.error("GET DOCTOR PATIENTS ERROR =");
 
     return res.status(500).json({
       msg:
-        err.message ||
         "Không thể tải bệnh nhân được phân công.",
     });
   }
@@ -182,13 +178,6 @@ exports.getPatientHealth = async (req, res) => {
       return;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | QUAN TRỌNG:
-    | Health dùng userId
-    |--------------------------------------------------------------------------
-    */
-
     const history = await Health.find({
       userId: req.params.id,
     })
@@ -197,37 +186,20 @@ exports.getPatientHealth = async (req, res) => {
       })
       .lean();
 
-    /*
-    | Bổ sung risk nếu record cũ chưa có
-    */
-
     history.forEach((item) => {
       item.risk = getRisk(item);
     });
 
     return res.json(history);
   } catch (err) {
-    console.error(
-      "GET PATIENT HEALTH ERROR =",
-      err
-    );
+    console.error("GET PATIENT HEALTH ERROR =");
 
     return res.status(500).json({
       msg:
-        err.message ||
         "Không thể lấy lịch sử sức khỏe.",
     });
   }
 };
-
-/*
-|--------------------------------------------------------------------------
-| AI RISK
-|--------------------------------------------------------------------------
-|
-| GET /api/doctor/ai-risk/:id
-|
-*/
 
 exports.getAIRisk = async (req, res) => {
   try {
@@ -240,13 +212,6 @@ exports.getAIRisk = async (req, res) => {
     if (!allowed) {
       return;
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | QUAN TRỌNG:
-    | Health dùng userId
-    |--------------------------------------------------------------------------
-    */
 
     const latest = await Health.findOne({
       userId: req.params.id,
@@ -276,14 +241,10 @@ exports.getAIRisk = async (req, res) => {
       health: latest,
     });
   } catch (err) {
-    console.error(
-      "GET AI RISK ERROR =",
-      err
-    );
+    console.error("GET AI RISK ERROR =");
 
     return res.status(500).json({
       msg:
-        err.message ||
         "Không thể phân tích nguy cơ.",
     });
   }
@@ -328,38 +289,19 @@ exports.getDoctors = async (req, res) => {
       }))
     );
   } catch (err) {
-    console.error(
-      "GET DOCTORS ERROR =",
-      err
-    );
+    console.error("GET DOCTORS ERROR =");
 
     return res.status(500).json({
       msg:
-        err.message ||
         "Không thể tải danh sách bác sĩ.",
     });
   }
 };
 
-/*
-|--------------------------------------------------------------------------
-| SEND ADVICE
-|--------------------------------------------------------------------------
-|
-| POST /api/doctor/send-advice
-|
-*/
-
 exports.sendAdvice = async (req, res) => {
   try {
     const patientId =
       req.body?.patientId;
-
-    /*
-    |--------------------------------------------------------------------------
-    | CHỈ ĐƯỢC GỬI CHO BỆNH NHÂN ĐANG ĐƯỢC PHÂN CÔNG
-    |--------------------------------------------------------------------------
-    */
 
     const allowed =
       await requireAssignedDoctor(
@@ -413,14 +355,10 @@ exports.sendAdvice = async (req, res) => {
       advice,
     });
   } catch (err) {
-    console.error(
-      "SEND ADVICE ERROR =",
-      err
-    );
+    console.error("SEND ADVICE ERROR =");
 
     return res.status(500).json({
       msg:
-        err.message ||
         "Không thể gửi lời khuyên.",
     });
   }

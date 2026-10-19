@@ -1,3 +1,21 @@
+# Review local — luồng public Đà Nẵng, 19/10/2026
+
+**Đợt hiện tại chưa push/deploy và không thay đổi production.** Phần phát hành bên dưới là lịch sử của bản trước.
+
+- Đã bổ sung đăng ký theo danh mục phường; admin tiếp nhận/điều phối/danh mục; bệnh viện–bác sĩ; thông báo polling lưu server; bệnh nhân xem/cập nhật địa chỉ; hủy lịch có xác nhận. Giữ thiết kế và đăng nhập cũ.
+- Phân công tách ba bước, unique/CAS/transaction; thu quyền doctor áp dụng ngay với JWT cũ. Không có bệnh viện giả, tọa độ giả hoặc xếp hạng “gần nhất”.
+- Sửa OTP/reset đầy đủ hợp đồng, lỗi gửi mail, lịch nhắc một ngày/múi giờ; cảnh báo cùng nguồn JSON, giữ nguyên ngưỡng; thiếu glucose không gửi 0 sang mô hình. Kế hoạch bác sĩ/gợi ý bệnh nhân vẫn tách biệt.
+- **177/177 test backend đạt**, không skip trong lượt bật đầy đủ, gồm 10 test tích hợp Mongo/HTTP local (8 coordination, 1 auth/cancel, 1 health/profile/scheduler) và kiểm Python rule không load model. **182/182 test frontend đạt, 37 suites**. API trong React DOM tests là mock kiểm soát, không phải browser thật.
+- Build preview mới thành công: main.22c81b78.js / main.6beec3dc.css. URL riêng http://127.0.0.1:5001, build ignored; API/DB riêng, SMTP và scheduler tắt. Tài khoản Atlas không có sẵn trong DB review.
+- HTTP kiểm tra ngoài sandbox: /register, /dashboard, /admin, /api/health trả 200; /api/public/wards có 23 phường. Người dùng đã xác nhận mở được link trong Chrome sau khi kiểm lại cổng Windows. Chưa nhận ảnh mới; không coi việc mở được link là xác minh bố cục/chuyển động trực quan.
+- Import phường local chạy lại: lần đầu insert23; lần sau insert0/preserve23. Chưa nạp Atlas. Bệnh viện để trống để chủ dự án nhập nguồn đã xác minh.
+- Mobile đăng ký đã đồng bộ ward/address/requestId và hồ sơ không gửi location qua API cũ; Expo export web và 6 kiểm tra logic đạt. Chưa chạy native iOS/Android. Điều phối mới hiện ở web.
+- Chưa xác minh hình ảnh desktop/điện thoại, email SMTP thật hoặc chất lượng ML/AI cloud. Công cụ không có browser kết nối. Cấu hình scheduler Vercel chưa được bật.
+
+Chi tiết chức năng, API, scripts, nguồn danh mục và cách mở admin review: [PUBLIC_WORKFLOW.md](../docs/PUBLIC_WORKFLOW.md).
+
+---
+
 # Bản UI local — cập nhật 18/10/2026
 
 ## Phát hành lên Vercel — yêu cầu mới đã được chấp thuận

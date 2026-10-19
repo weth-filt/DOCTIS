@@ -1,0 +1,42 @@
+/* Registration uses the same field system for account and service address. */
+.auth-register-form .register-field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 12px;
+}
+
+.auth-register-form .doc-field,
+.auth-register-form .doc-input-wrapper {
+  min-width: 0;
+}
+
+.auth-register-form .register-catalog-feedback:empty {
+  display: none;
+}
+
+.auth-register-form .register-service-note,
+.auth-register-form .register-catalog-feedback {
+  margin: 0 0 14px;
+  color: var(--doc-subtext);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.auth-register-form .register-catalog-feedback p + p,
+.auth-register-form .register-catalog-feedback button {
+  margin-top: 6px;
+}
+
+.auth-register-form .register-catalog-error {
+  color: var(--doc-danger, #b94459);
+}
+
+@media (max-width: 480px) {
+  .auth-register-form .register-field-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .auth-register-form .doc-input {
+    font-size: 16px;
+  }
+}

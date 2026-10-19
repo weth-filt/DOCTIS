@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -20,6 +20,7 @@ export default function Forgot() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const busy = useRef(false);
 
   const [form, setForm] = useState({
     email: "",
@@ -29,16 +30,16 @@ export default function Forgot() {
   });
 
   const change = (e) => {
-    setForm({
-      ...form,
+    setForm(previous => ({
+      ...previous,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
 
   // BƯỚC 1: GỬI OTP
   const sendOTP = async (e) => {
     if (e) e.preventDefault();
-    if (loading) return;
+    if (busy.current) return;
 
     setErrorMessage("");
     setSuccessMessage("");
@@ -46,64 +47,59 @@ export default function Forgot() {
     if (!form.email.trim()) {
       const msg = "Vui lòng nhập địa chỉ email đã đăng ký.";
       setErrorMessage(msg);
-      alert(msg);
       return;
     }
 
     try {
-      setLoading(true);
+      busy.current = true; setLoading(true);
       const res = await API.post("/auth/forgot", { email: form.email.trim() });
       const okMsg = res.data?.msg || "Mã xác thực OTP đã được gửi đến email của bạn.";
       setSuccessMessage(okMsg);
-      alert(okMsg);
+      setForm(previous => ({ ...previous, otp: "", password: "", confirmPassword: "" }));
       setStep(2);
     } catch (err) {
       const errText = err.response?.data?.msg || "Lỗi gửi mã OTP. Vui lòng kiểm tra lại email.";
       setErrorMessage(errText);
-      alert(errText);
     } finally {
-      setLoading(false);
+      busy.current = false; setLoading(false);
     }
   };
 
   // BƯỚC 2: XÁC THỰC OTP
   const verifyOTP = async (e) => {
     if (e) e.preventDefault();
-    if (loading) return;
+    if (busy.current) return;
 
     setErrorMessage("");
     setSuccessMessage("");
 
-    if (!form.otp.trim()) {
+    if (!/^\d{6}$/.test(form.otp.trim())) {
       const msg = "Vui lòng nhập mã OTP nhận được trong email.";
       setErrorMessage(msg);
-      alert(msg);
       return;
     }
 
     try {
-      setLoading(true);
+      busy.current = true; setLoading(true);
       const res = await API.post("/auth/verify", {
         email: form.email.trim(),
         otp: form.otp.trim(),
       });
       const okMsg = res.data?.msg || "Mã OTP hợp lệ! Vui lòng đặt mật khẩu mới.";
       setSuccessMessage(okMsg);
-      alert(okMsg);
       setStep(3);
     } catch (err) {
       const errText = err.response?.data?.msg || "Mã OTP không chính xác hoặc đã hết hạn.";
       setErrorMessage(errText);
-      alert(errText);
     } finally {
-      setLoading(false);
+      busy.current = false; setLoading(false);
     }
   };
 
   // BƯỚC 3: ĐỔI MẬT KHẨU
   const resetPassword = async (e) => {
     if (e) e.preventDefault();
-    if (loading) return;
+    if (busy.current) return;
 
     setErrorMessage("");
     setSuccessMessage("");
@@ -111,19 +107,21 @@ export default function Forgot() {
     if (!form.password || !form.confirmPassword) {
       const msg = "Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu.";
       setErrorMessage(msg);
-      alert(msg);
       return;
     }
 
     if (form.password !== form.confirmPassword) {
       const msg = "Mật khẩu xác nhận không khớp.";
       setErrorMessage(msg);
-      alert(msg);
       return;
     }
 
+    if (form.password.length < 6 || form.password.length > 128) {
+      setErrorMessage("Mật khẩu mới cần từ 6 đến 128 ký tự."); return;
+    }
+
     try {
-      setLoading(true);
+      busy.current = true; setLoading(true);
       const res = await API.post("/auth/reset", {
         email: form.email.trim(),
         otp: form.otp.trim(),
@@ -132,14 +130,13 @@ export default function Forgot() {
       });
       const okMsg = res.data?.msg || "Đặt lại mật khẩu thành công!";
       setSuccessMessage(okMsg);
-      alert(okMsg);
-      window.location.href = "/";
+      setForm({ email: "", otp: "", password: "", confirmPassword: "" });
+      setStep(4);
     } catch (err) {
       const errText = err.response?.data?.msg || "Đổi mật khẩu thất bại. Vui lòng thử lại.";
       setErrorMessage(errText);
-      alert(errText);
     } finally {
-      setLoading(false);
+      busy.current = false; setLoading(false);
     }
   };
 
@@ -182,6 +179,7 @@ export default function Forgot() {
               {step === 1 && "Nhập email của bạn để nhận mã xác thực một lần (OTP)"}
               {step === 2 && "Nhập mã OTP gồm 6 chữ số đã gửi tới hòm thư của bạn"}
               {step === 3 && "Thiết lập mật khẩu bảo mật mới cho tài khoản DOCTIS"}
+              {step === 4 && "Mật khẩu đã được cập nhật. Bạn có thể quay lại đăng nhập."}
             </p>
 
             {/* Step Progress Pills */}
@@ -278,6 +276,8 @@ export default function Forgot() {
                     onChange={change}
                     disabled={loading}
                     autoComplete="one-time-code"
+                    inputMode="numeric"
+                    maxLength={6}
                   />
                 </div>
                 <small style={{ color: "var(--doc-subtext)", fontSize: "12px", marginTop: "4px" }}>
@@ -298,6 +298,7 @@ export default function Forgot() {
                 className="doc-btn doc-btn-ghost"
                 style={{ width: "100%", marginTop: "10px" }}
                 onClick={() => setStep(1)}
+                disabled={loading}
               >
                 Gửi lại mã OTP
               </button>

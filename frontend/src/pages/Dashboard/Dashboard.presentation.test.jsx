@@ -52,6 +52,7 @@ const READ_FIXTURES = {
   "/care-plans/my": null,
   "/care-plans/current": null,
   "/ai/conversations": {conversations:[],hasMore:false},
+  "/notifications": {notifications:[],unreadCount:0,nextCursor:null},
   "/health/history": [{ _id: "test-reading", createdAt: "2026-10-16T08:00:00.000Z", height: 170, weight: 65, bmi: 22.49, glucose: 100, systolic: 120, diastolic: 80, heartRate: 75 }],
   "/health/advices": [],
   "/appointments/patient": [{ _id: "test-appointment", appointmentDate, doctorId: { fullName: "Bác sĩ kiểm thử" }, type: "Tái khám đã lưu", status: "approved", note: "Ghi chú lịch hẹn kiểm thử" }],
@@ -98,7 +99,9 @@ afterAll(() => {
 async function openDashboard() {
   const result = render(<StudioPreferencesProvider><Dashboard /></StudioPreferencesProvider>);
   await screen.findByRole("heading", { name: /Bệnh nhân kiểm thử/ });
-  await waitFor(() => expect(API.get).toHaveBeenCalledTimes(Object.keys(READ_FIXTURES).length - 1));
+  const initialReads = Object.keys(READ_FIXTURES).filter(path => path !== "/ai/conversations");
+  await waitFor(() => expect(API.get).toHaveBeenCalledTimes(initialReads.length));
+  initialReads.forEach(path => expect(API.get.mock.calls.filter(([requested]) => requested === path)).toHaveLength(1));
   return result;
 }
 function navigate(label) {

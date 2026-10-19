@@ -56,6 +56,8 @@ import StudioControls from "../../components/studio/StudioControls";
 import StudioExperience from "../../components/studio/StudioExperience";
 import HeartScene from "../../components/3d/HeartScene";
 import AppointmentCalendar from "../../components/studio/AppointmentCalendar";
+import CareTeamPanel from "../../components/coordination/CareTeamPanel";
+import NotificationInbox from "../../components/coordination/NotificationInbox";
 import CareWeekGallery from "../../components/studio/CareWeekGallery";
 import AIWorkspace from "../../components/studio/AIWorkspace";
 
@@ -259,6 +261,8 @@ export default function Dashboard() {
   const [latest, setLatest] = useState({});
   const [advices, setAdvices] = useState([]);
   const [appointments, setAppointments] = useState([]);
+  const [careTeamRefresh, setCareTeamRefresh] = useState(0);
+  const [focusAppointmentId, setFocusAppointmentId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
 
 
@@ -414,7 +418,7 @@ export default function Dashboard() {
         dateOfBirth: normalizeDateForInput(profileData.dateOfBirth),
         gender: profileData.gender ?? "",
         address: profileData.address ?? "",
-        province: profileData.province ?? "",
+        province: profileData.province ?? profileData.city ?? "",
         district: profileData.district ?? "",
         ward: profileData.ward ?? "",
         bloodType: profileData.bloodType ?? "",
@@ -972,10 +976,6 @@ export default function Dashboard() {
       ["cccd", "Vui lòng nhập số CCCD."],
       ["email", "Vui lòng nhập email."],
       ["phone", "Vui lòng nhập số điện thoại."],
-      ["address", "Vui lòng nhập địa chỉ nhà."],
-      ["province", "Vui lòng nhập tỉnh/thành phố."],
-      ["district", "Vui lòng nhập quận/huyện."],
-      ["ward", "Vui lòng nhập phường/xã."],
       ["bloodType", "Vui lòng chọn nhóm máu."],
     ];
 
@@ -1021,10 +1021,6 @@ export default function Dashboard() {
         dateOfBirth: profile.dateOfBirth || "",
         gender: profile.gender || "",
         cccd: String(profile.cccd || "").trim(),
-        address: String(profile.address || "").trim(),
-        province: String(profile.province || "").trim(),
-        district: String(profile.district || "").trim(),
-        ward: String(profile.ward || "").trim(),
         bloodType: profile.bloodType || "",
         allergies: String(profile.allergies || "").trim(),
         medicalHistory: String(profile.medicalHistory || "").trim(),
@@ -1533,13 +1529,16 @@ export default function Dashboard() {
     },
   ];
 
+  menus.push({ key: "care-team", icon: <FaUserMd />, label: "Bệnh viện và bác sĩ phụ trách" });
+
   const navGroups = [
     { label: "CÁ NHÂN", items: ["dashboard", "profile"] },
     { label: "THEO DÕI SỨC KHỎE", items: ["health", "analytics", "ai"] },
-    { label: "ĐIỀU TRỊ & KẾT NỐI", items: ["care-plan", "appointments", "doctor-chat", "advices"] },
+    { label: "ĐIỀU TRỊ & KẾT NỐI", items: ["care-team", "care-plan", "appointments", "doctor-chat", "advices"] },
   ];
   const pageMeta = {
     dashboard: ["Tổng quan sức khỏe", "Các chỉ số và hoạt động chăm sóc gần nhất của bạn."],
+    "care-team": ["Bệnh viện và bác sĩ phụ trách", "Thông tin điều phối, tiếp nhận và bác sĩ đang theo dõi bạn."],
     profile: ["Hồ sơ bệnh nhân", "Thông tin cá nhân, liên hệ và tiền sử y tế."],
     health: ["Nhập dữ liệu sức khỏe", "Ghi lại chỉ số đo để cập nhật lịch sử theo dõi."],
     analytics: ["Biểu đồ & lịch sử", "Theo dõi các lần ghi nhận sức khỏe của bạn."],
@@ -1552,7 +1551,7 @@ export default function Dashboard() {
   const [pageTitle, pageDescription] = pageMeta[menu] || pageMeta.dashboard;
   const displayName = profile.fullName || user?.fullName || user?.username || "Tài khoản";
   const nextAppointment = useMemo(() => appointments
-    .filter((item) => item?.appointmentDate && new Date(item.appointmentDate).getTime() >= Date.now())
+    .filter((item) => ["pending", "approved"].includes(item.status) && item?.appointmentDate && new Date(item.appointmentDate).getTime() >= Date.now())
     .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))[0] || null,
   [appointments]);
 
@@ -1617,7 +1616,7 @@ export default function Dashboard() {
             {menu !== "dashboard" && <HeartScene compact className="patient-header-heart" bpm={latest?.heartRate} status={risk.label} busy={healthSaving || nutritionLoading} />}
             <StudioControls />
             <span className="studio-today"><FaCalendarCheck />{new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long" })}</span>
-            <button type="button" className="studio-notification" onClick={() => setMenu("advices")} aria-label={`Lời khuyên bác sĩ${advices.length ? `, ${advices.length} mục` : ""}`}><FaBell />{advices.length > 0 && <i>{advices.length}</i>}</button>
+            <NotificationInbox onOpen={notification => { if (notification.entityType === "appointment") { setFocusAppointmentId(notification.entityId); setMenu("appointments"); fetchAppointments(); } else { setCareTeamRefresh(value => value + 1); setMenu("care-team"); } }} />
             <button type="button" className="studio-topbar-user" onClick={() => setMenu("profile")} aria-label={`Mở hồ sơ: ${displayName}`}><span className="studio-user-avatar">{displayName.slice(0, 1).toUpperCase()}</span><FaChevronDown /></button>
           </div>
         </header>
@@ -1797,53 +1796,11 @@ export default function Dashboard() {
                 </ProfileField>
               </ProfileSection>
 
-              <ProfileSection
-                title="Thông tin địa chỉ"
-                icon={<FaMapMarkerAlt />}
-              >
-                <ProfileField
-                  full
-                  label="Địa chỉ nhà *"
-                  icon={<FaMapMarkerAlt />}
-                >
-                  <input
-                    type="text"
-                    name="address"
-                    value={profile.address || ""}
-                    onChange={handleProfileChange}
-                    placeholder="Số nhà, tên đường..."
-                  />
-                </ProfileField>
-
-                <ProfileField label="Tỉnh / Thành phố *">
-                  <input
-                    type="text"
-                    name="province"
-                    value={profile.province || ""}
-                    onChange={handleProfileChange}
-                    placeholder="Ví dụ: Đà Nẵng"
-                  />
-                </ProfileField>
-
-                <ProfileField label="Quận / Huyện *">
-                  <input
-                    type="text"
-                    name="district"
-                    value={profile.district || ""}
-                    onChange={handleProfileChange}
-                    placeholder="Ví dụ: Hải Châu"
-                  />
-                </ProfileField>
-
-                <ProfileField label="Phường / Xã *">
-                  <input
-                    type="text"
-                    name="ward"
-                    value={profile.ward || ""}
-                    onChange={handleProfileChange}
-                    placeholder="Nhập phường / xã"
-                  />
-                </ProfileField>
+              <ProfileSection title="Thông tin địa chỉ" icon={<FaMapMarkerAlt />}>
+                <ProfileField full label="Địa chỉ chi tiết"><input value={profile.address || "Chưa bổ sung"} readOnly /></ProfileField>
+                <ProfileField label="Thành phố"><input value={profile.province || "Chưa xác minh"} readOnly /></ProfileField>
+                <ProfileField label="Phường"><input value={profile.ward || "Chưa bổ sung"} readOnly /></ProfileField>
+                <div className="profile-field full-width"><p>Cập nhật địa chỉ và phường trong danh mục phục vụ tại mục bệnh viện.</p><button type="button" className="coord-secondary" onClick={() => setMenu("care-team")}>Cập nhật địa chỉ phục vụ</button></div>
               </ProfileSection>
 
                             <ProfileSection
@@ -2675,7 +2632,9 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {menu === "appointments" && <AppointmentCalendar appointments={appointments} formatDate={formatDate} formatTime={formatTime} statusLabel={appointmentStatusLabel} />}
+        <CareTeamPanel active={menu === "care-team"} refreshKey={careTeamRefresh} onUpdated={value => { const location = value.address || {}; setProfile(old => ({ ...old, address: location.address || old.address, ward: location.ward?.name || location.wardName || (typeof location.ward === "string" ? location.ward : old.ward), province: location.city || old.province })); }} />
+
+        {menu === "appointments" && <AppointmentCalendar focusAppointmentId={focusAppointmentId} onCancelled={updated => { setAppointments(old => old.map(item => getId(item) === getId(updated) ? { ...item, ...updated, doctorId: typeof updated.doctorId === "object" ? updated.doctorId : item.doctorId, patientId: typeof updated.patientId === "object" ? updated.patientId : item.patientId } : item)); fetchAppointments(); }} appointments={appointments} formatDate={formatDate} formatTime={formatTime} statusLabel={appointmentStatusLabel} />}
 
       </main>
       </div>

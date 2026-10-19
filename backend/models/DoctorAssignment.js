@@ -29,6 +29,8 @@ const doctorAssignmentSchema =
         ref: "User",
         default: null,
       },
+      hospitalId: { type: mongoose.Schema.Types.ObjectId, ref: "Hospital", default: null },
+      supportRequestId: { type: mongoose.Schema.Types.ObjectId, ref: "SupportRequest", default: null },
 
       assignedAt: {
         type: Date,
@@ -51,6 +53,7 @@ const doctorAssignmentSchema =
         default: "",
         trim: true,
       },
+      endReason: { type: String, default: "", trim: true },
     },
     {
       timestamps: true,

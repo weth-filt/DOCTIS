@@ -1,6 +1,10 @@
 import { WorkspaceIntro, WorkspaceNotice, WorkspaceTabs } from "../../components/WorkspacePrimitives";
 import { useWorkspaceMotion } from "../../components/WorkspaceMotion";
-import CareScene from "../../components/CareScene";
+import AdminCoordination from "../../components/coordination/AdminCoordination";
+import AdminCatalogManager from "../../components/coordination/AdminCatalogManager";
+import NotificationInbox from "../../components/coordination/NotificationInbox";
+import LegacyUnassignDialog from "../../components/coordination/LegacyUnassignDialog";
+import { entityId, verifiedActive } from "../../components/coordination/coordinationUtils";
 import HeartScene from "../../components/3d/HeartScene";
 import { useStudioPreferences } from "../../components/studio/StudioPreferences";
 import StudioControls from "../../components/studio/StudioControls";
@@ -8,17 +12,17 @@ import StudioExperience from "../../components/studio/StudioExperience";
 import useLiveReducedMotion from "../../components/useLiveReducedMotion";
 import useWorkspaceDialog from "../../components/useWorkspaceDialog";
 import "../../CSS/role-studio.css";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MotionConfig, motion, AnimatePresence } from "framer-motion";
 import API from "../../services/api";
 import {
-  FaBell, FaChartLine, FaChevronRight, FaCrown, FaExchangeAlt,
+  FaChartLine, FaChevronRight, FaCrown, FaExchangeAlt, FaHospital,
   FaHeartbeat, FaSearch, FaSignOutAlt, FaShieldAlt,
   FaTimes, FaUserCog, FaUserMd, FaUserPlus, FaUsers, FaUserShield,
   FaUserTimes, FaEdit, FaSave, FaPhone, FaEnvelope,
 } from "react-icons/fa";
 
-const ROLE_PAGE_ORDER = ["dashboard", "assignment", "users"];
+const ROLE_PAGE_ORDER = ["dashboard", "coordination", "catalog", "assignment", "users"];
 const getStoredUser = () => {
   try { return JSON.parse(localStorage.getItem("user") || "null"); }
   catch { return null; }
@@ -47,8 +51,14 @@ export default function AdminDashboard() {
   const [assignDoctors, setAssignDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [assignmentLoading, setAssignmentLoading] = useState(false);
-  const [savingPatientId, setSavingPatientId] = useState("");
-  const [pendingChoice, setPendingChoice] = useState({});
+  const [focusIntakeId, setFocusIntakeId] = useState("");
+  const [focusRequestKey, setFocusRequestKey] = useState(0);
+  const [catalogVersion, setCatalogVersion] = useState(0);
+  const [hospitals, setHospitals] = useState([]);
+  const [hospitalError, setHospitalError] = useState("");
+  const [roleSavingId, setRoleSavingId] = useState("");
+  const roleLock = useRef(false);
+  const doctorLock = useRef(false);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [assignmentFilter, setAssignmentFilter] = useState("all");
@@ -56,20 +66,16 @@ export default function AdminDashboard() {
   const showFeedback = (text, type = "error") => setFeedback({ text, type });
   const [assignmentSearch, setAssignmentSearch] = useState("");
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [legacyEndPatient, setLegacyEndPatient] = useState(null);
   const [error, setError] = useState("");
   const [editingDoctor, setEditingDoctor] = useState(null);
   const [doctorForm, setDoctorForm] = useState({
     fullName: "",
     username: "",
     email: "",
-    phone: ""
+    phone: "", hospitalId: ""
   });
   const [savingDoctor, setSavingDoctor] = useState(false);
-  const [reasonRequest, setReasonRequest] = useState(null);
-  const [reasonText, setReasonText] = useState("");
-  const finishReason = value => { reasonRequest?.resolve(value); setReasonRequest(null); };
-  const reasonDialogRef = useWorkspaceDialog(Boolean(reasonRequest), () => finishReason(null));
-  const requestReason = title => new Promise(resolve => { setReasonText(""); setReasonRequest({title, resolve}); });
   const patientDialogRef = useWorkspaceDialog(Boolean(selectedPatient), () => setSelectedPatient(null));
   const doctorDialogRef = useWorkspaceDialog(Boolean(editingDoctor), () => { if (!savingDoctor) setEditingDoctor(null); });
 
@@ -122,23 +128,27 @@ export default function AdminDashboard() {
     return visible.filter(p => [p.fullName,p.username,p.email,displayName(p.assignedDoctor)].filter(Boolean).some(v => String(v).toLowerCase().includes(q)));
   }, [assignPatients, assignmentSearch, assignmentFilter]);
 
-  const chosenDoctor = patient => pendingChoice[patient._id] ?? patient.assignedDoctorId ?? patient.assignedDoctor?._id ?? "";
-
   const changeRole = async (id, role) => {
+    if (roleLock.current) return;
+    roleLock.current = true; setRoleSavingId(id);
     try {
       await API.put(`/admin/change-role/${id}`, { role }, authConfig());
       await Promise.all([loadUsers(), loadAssignmentData()]);
     } catch (err) { showFeedback(err.response?.data?.msg || "Không thể đổi quyền."); }
+    finally { roleLock.current = false; setRoleSavingId(""); }
   };
 
-  const openDoctorEditor = (doctor) => {
+  const openDoctorEditor = async (doctor) => {
     setEditingDoctor(doctor);
     setDoctorForm({
       fullName: doctor?.fullName || doctor?.username || "",
       username: doctor?.username || "",
       email: doctor?.email || "",
-      phone: doctor?.phone || ""
+      phone: doctor?.phone || "", hospitalId: entityId(doctor?.hospitalId)
     });
+    setHospitalError("");
+    try { const response = await API.get("/admin/catalog/hospitals"); setHospitals(response.data?.hospitals || []); }
+    catch (failure) { setHospitalError(failure.response?.data?.msg || "Chưa tải được danh mục bệnh viện đã xác minh."); }
   };
 
   const closeDoctorEditor = () => {
@@ -147,7 +157,7 @@ export default function AdminDashboard() {
   };
 
   const saveDoctorProfile = async () => {
-    if (!editingDoctor?._id) return;
+    if (!editingDoctor?._id || doctorLock.current) return;
     const fullName = doctorForm.fullName.trim();
     const username = doctorForm.username.trim();
     const email = doctorForm.email.trim();
@@ -155,11 +165,13 @@ export default function AdminDashboard() {
 
     if (!fullName) return showFeedback("Vui lòng nhập tên hiển thị cho bác sĩ.");
     if (!username) return showFeedback("Vui lòng nhập username.");
+    if (doctorForm.hospitalId && !hospitals.some(hospital => entityId(hospital) === doctorForm.hospitalId && verifiedActive(hospital))) return showFeedback("Chọn bệnh viện đã xác minh và đang hoạt động.");
 
+    doctorLock.current = true;
     setSavingDoctor(true);
     try {
       await API.put(`/admin/doctors/${editingDoctor._id}`, {
-        fullName, username, email, phone
+        fullName, username, email, phone, hospitalId: doctorForm.hospitalId || null
       }, authConfig());
 
       await Promise.all([loadUsers(), loadAssignmentData()]);
@@ -168,35 +180,9 @@ export default function AdminDashboard() {
     } catch (err) {
       showFeedback(err.response?.data?.msg || "Không thể cập nhật hồ sơ bác sĩ.");
     } finally {
+      doctorLock.current = false;
       setSavingDoctor(false);
     }
-  };
-
-  const saveAssignment = async patient => {
-    const doctorId = chosenDoctor(patient);
-    if (!doctorId) return showFeedback("Vui lòng chọn bác sĩ.");
-    if (patient.assignedDoctor && String(patient.assignedDoctor._id) === String(doctorId)) return showFeedback("Bệnh nhân đã thuộc bác sĩ này.");
-    const reason = await requestReason("Phân công / đổi bác sĩ");
-    if (reason === null) return;
-    setSavingPatientId(patient._id);
-    try {
-      await API.post("/admin/assignments/assign", { patientId: patient._id, doctorId, reason }, authConfig());
-      setPendingChoice(prev => { const n = { ...prev }; delete n[patient._id]; return n; });
-      await loadAssignmentData();
-    } catch (err) { showFeedback(err.response?.data?.msg || "Không thể phân công bác sĩ."); }
-    finally { setSavingPatientId(""); }
-  };
-
-  const removeAssignment = async patient => {
-    if (!patient.assignedDoctor) return;
-    const reason = await requestReason("Gỡ bác sĩ phụ trách");
-    if (reason === null) return;
-    setSavingPatientId(patient._id);
-    try {
-      await API.post("/admin/assignments/unassign", { patientId: patient._id, reason }, authConfig());
-      await loadAssignmentData();
-    } catch (err) { showFeedback(err.response?.data?.msg || "Không thể gỡ phân công."); }
-    finally { setSavingPatientId(""); }
   };
 
   const logout = () => {
@@ -205,7 +191,9 @@ export default function AdminDashboard() {
 
   const nav = [
     { id: "dashboard", label: "Tổng quan", hint: "Hệ thống", icon: <FaChartLine /> },
-    { id: "assignment", label: "Phân công bệnh nhân", hint: `${unassignedCount} chưa giao`, icon: <FaUserCog />, badge: unassignedCount },
+    { id: "coordination", label: "Tiếp nhận và điều phối", hint: "Bệnh viện · tiếp nhận · bác sĩ", icon: <FaHospital /> },
+    { id: "catalog", label: "Danh mục phục vụ", hint: "Phường và bệnh viện", icon: <FaHospital /> },
+    { id: "assignment", label: "Phân công bệnh nhân", hint: "Đối chiếu dữ liệu hiện có", icon: <FaUserCog />, badge: unassignedCount },
     { id: "users", label: "Người dùng & quyền", hint: `${users.length} tài khoản`, icon: <FaUsers /> },
   ];
 
@@ -241,13 +229,12 @@ export default function AdminDashboard() {
           <button className="role-menu-toggle" type="button" onClick={() => setRoleNavOpen(v => !v)} aria-label="Menu" aria-expanded={roleNavOpen}>☰</button>
           <div>
             <span className="admin-eyebrow"><i /> SMART HEALTH PLATFORM</span>
-            <h1>{view === "dashboard" ? "Trung tâm quản trị" : view === "assignment" ? "Phân công bệnh nhân" : "Người dùng & phân quyền"}</h1>
+            <h1>{view === "dashboard" ? "Trung tâm quản trị" : view === "assignment" ? "Phân công bệnh nhân" : view === "coordination" ? "Tiếp nhận và điều phối" : view === "catalog" ? "Danh mục phục vụ Đà Nẵng" : "Người dùng & phân quyền"}</h1>
             <p>Quản lý người dùng, bác sĩ và mối quan hệ chăm sóc trong DOCTIS.</p>
           </div>
-          <div className="role-header-tools">{view !== "dashboard" && <div className="role-heart-slot"><HeartScene compact status="neutral" /></div>}<StudioControls /><div className="admin-topbar-user">
+          <div className="role-header-tools">{view !== "dashboard" && <div className="role-heart-slot"><HeartScene compact status="neutral" /></div>}<StudioControls /><NotificationInbox onOpen={notification => { if (notification.entityType === "intake") { setFocusIntakeId(notification.entityId); setFocusRequestKey(value => value + 1); setView("coordination"); } else setView("coordination"); }} /><div className="admin-topbar-user">
             <div className="admin-avatar"><FaCrown /></div>
             <div><strong>{displayName(getStoredUser())}</strong><span>System Administrator</span></div>
-            <FaBell className="admin-bell" />
           </div>
           </div>
         </header>
@@ -255,6 +242,8 @@ export default function AdminDashboard() {
         {error && <motion.div className="admin-error" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}}><FaTimes /><span>{error}</span><button type="button" onClick={() => setError("")}>Đóng</button></motion.div>}
 
         <div ref={screenRef} className="role-workspace-content">
+          {view === "coordination" && <AdminCoordination key={catalogVersion} focusIntakeId={focusIntakeId} focusRequestKey={focusRequestKey} onChanged={() => loadAssignmentData()} />}
+          {view === "catalog" && <AdminCatalogManager onChanged={() => setCatalogVersion(value => value + 1)} />}
           {view === "dashboard" && (
             <section key="dashboard" className="admin-view">
               <section className="role-overview-stage admin-overview-stage">
@@ -300,26 +289,25 @@ export default function AdminDashboard() {
 
           {view === "assignment" && (
             <section key="assignment" className="admin-view">
-              <WorkspaceIntro title="Kết nối mạng lưới chăm sóc" description="Xem bác sĩ phụ trách của từng bệnh nhân và cập nhật phân công ngay trong danh sách." kind="chat">
+              <WorkspaceIntro title="Đối chiếu mạng lưới chăm sóc" description="Danh sách hiện có được giữ để đối chiếu. Ghi nhận phân công mới tại Tiếp nhận và điều phối, sau bước bệnh viện tiếp nhận." kind="chat">
                 <WorkspaceTabs label="Lọc tình trạng phân công" value={assignmentFilter} onChange={setAssignmentFilter} options={[{value:"all",label:"Tất cả",count:assignPatients.length},{value:"assigned",label:"Đã phân công",count:assignedCount},{value:"waiting",label:"Đang chờ",count:unassignedCount}]} />
               </WorkspaceIntro>
               <div className="section-toolbar">
-                <div><span className="admin-eyebrow small"><i /> CARE MANAGEMENT</span><h2>Phân công bệnh nhân cho bác sĩ</h2><p>Mỗi bệnh nhân chỉ có một bác sĩ phụ trách tại một thời điểm. Khi đổi bác sĩ, bản ghi cũ được giữ lại.</p></div>
+                <div><span className="admin-eyebrow small"><i /> CARE MANAGEMENT</span><h2>Phân công đang được ghi nhận</h2><p>Quan hệ cũ chưa xác định bệnh viện cần được admin xử lý trong quy trình tiếp nhận.</p><button type="button" className="coord-primary" onClick={() => setView("coordination")}>Mở Tiếp nhận và điều phối</button></div>
                 <div className="toolbar-search"><FaSearch /><input value={assignmentSearch} onChange={e => setAssignmentSearch(e.target.value)} placeholder="Tìm bệnh nhân..." /></div>
               </div>
               <div className="assignment-toolbar-stats"><div><span>Tổng bệnh nhân</span><strong>{assignPatients.length}</strong></div><div><span>Đã phân công</span><strong className="success">{assignedCount}</strong></div><div><span>Đang chờ</span><strong className="warning">{unassignedCount}</strong></div><div><span>Bác sĩ</span><strong>{assignDoctors.length}</strong></div></div>
               <section className="admin-panel assignment-panel">
                 {assignmentLoading ? <LoadingState text="Đang tải mạng lưới bệnh nhân..." /> : !filteredAssignments.length ? <EmptyState icon={<FaUsers />} title="Không tìm thấy bệnh nhân" text="Hãy thử thay đổi từ khóa tìm kiếm." /> :
-                  <div className="assignment-table-wrap"><table className="admin-table"><thead><tr><th>Bệnh nhân</th><th>Liên hệ</th><th>Bác sĩ hiện tại</th><th>Phân công mới</th><th>Trạng thái</th><th /></tr></thead><tbody>
+                  <div className="assignment-table-wrap"><table className="admin-table"><thead><tr><th>Bệnh nhân</th><th>Liên hệ</th><th>Bác sĩ hiện tại</th><th>Bệnh viện</th><th>Trạng thái</th><th /></tr></thead><tbody>
                     {filteredAssignments.map(patient => {
-                      const chosen = chosenDoctor(patient); const saving = savingPatientId === patient._id;
                       return <tr key={patient._id}>
                         <td data-label="Bệnh nhân"><button type="button" className="patient-cell" onClick={() => setSelectedPatient(patient)}><span className="patient-avatar">{(displayName(patient)[0] || "P").toUpperCase()}</span><span><strong>{displayName(patient)}</strong><small>@{patient.username || "patient"}</small></span></button></td>
                         <td data-label="Liên hệ"><span className="muted-cell">{patient.email || "—"}</span><small className="table-sub">{patient.phone || "Chưa có SĐT"}</small></td>
                         <td data-label="Bác sĩ hiện tại">{patient.assignedDoctor ? <div className="current-doctor"><span className="doctor-dot"><FaUserMd /></span><span><strong>{displayName(patient.assignedDoctor)}</strong><small>Bác sĩ phụ trách</small></span></div> : <span className="status-pill waiting"><i /> Chưa phân công</span>}</td>
-                        <td data-label="Phân công"><select className="doctor-select" value={chosen} onChange={e => setPendingChoice(prev => ({...prev,[patient._id]:e.target.value}))} disabled={saving}><option value="">-- Chọn bác sĩ --</option>{assignDoctors.map(d => <option key={d._id} value={d._id}>{displayName(d)} — {d.patientCount || 0} BN</option>)}</select></td>
+                        <td data-label="Bệnh viện"><span className="muted-cell">{patient.hospital?.name || patient.assignedDoctor?.hospitalId?.name || "Chưa xác định · cần đối chiếu"}</span></td>
                         <td data-label="Trạng thái"><span className={`status-pill ${patient.assignedDoctor ? "assigned" : "waiting"}`}><i />{patient.assignedDoctor ? "Đang quản lý" : "Đang chờ"}</span></td>
-                        <td data-label="Thao tác"><div className="table-actions"><button type="button" className="action-primary" disabled={saving || !chosen} onClick={() => saveAssignment(patient)}>{saving ? "..." : patient.assignedDoctor ? "Đổi BS" : "Giao BS"}</button>{patient.assignedDoctor && <button type="button" className="action-danger" disabled={saving} onClick={() => removeAssignment(patient)} title="Gỡ bác sĩ"><FaUserTimes /></button>}</div></td>
+                        <td data-label="Thao tác"><div className="table-actions"><button type="button" className="action-primary" onClick={() => { setFocusIntakeId(entityId(patient.intake)); setView("coordination"); }}>Đi đến tiếp nhận</button>{patient.assignedDoctor && patient.legacyAssignment && <button type="button" className="action-danger" onClick={() => setLegacyEndPatient(patient)}>Kết thúc phân công cũ</button>}</div></td>
                       </tr>;
                     })}
                   </tbody></table></div>}
@@ -328,7 +316,8 @@ export default function AdminDashboard() {
           )}
 
           {view === "users" && (
-            <section key="users" className="admin-view">
+            <section key="users" className="admin-view" aria-busy={Boolean(roleSavingId)}>
+              <fieldset disabled={Boolean(roleSavingId)} style={{ display: "contents", border: 0, padding: 0, margin: 0 }}>
               <WorkspaceIntro title="Danh bạ DOCTIS" description="Tìm tài khoản, xem vai trò và cập nhật thông tin bác sĩ trong cùng một không gian." kind="profile">
                 <WorkspaceTabs label="Lọc vai trò tài khoản" value={roleFilter} onChange={setRoleFilter} options={[{value:"all",label:"Tất cả",count:users.length},{value:"user",label:"Bệnh nhân",count:patients.length},{value:"doctor",label:"Bác sĩ",count:doctors.length},{value:"admin",label:"Admin",count:admins.length}]} />
               </WorkspaceIntro>
@@ -339,23 +328,11 @@ export default function AdminDashboard() {
                     {filteredUsers.map(item => <tr key={item._id}><td data-label="Tài khoản"><div className="patient-cell"><span className={`patient-avatar role-${item.role}`}>{item.role === "doctor" ? <FaUserMd /> : <FaUsers />}</span><span><strong>{displayName(item)}</strong><small>@{item.username || "account"}</small></span></div></td><td data-label="Liên hệ"><span className="muted-cell">{item.email || "—"}</span><small className="table-sub">{item.phone || "Chưa có SĐT"}</small></td><td data-label="Vai trò"><RoleBadge role={item.role} /></td><td data-label="Thao tác">{item.role === "admin" ? <span className="protected-label"><FaShieldAlt /> Tài khoản bảo vệ</span> : item.role === "doctor" ? <div className="doctor-user-actions"><button type="button" className="role-action edit" onClick={() => openDoctorEditor(item)}><FaEdit /> Chỉnh sửa</button><button type="button" className="role-action danger" onClick={() => changeRole(item._id,"user")}><FaUserTimes /> Thu quyền Doctor</button></div> : <button type="button" className="role-action primary" onClick={() => changeRole(item._id,"doctor")}><FaUserMd /> Cấp quyền Doctor</button>}</td></tr>)}
                   </tbody></table></div>}
               </section>
+              </fieldset>
             </section>
           )}
         </div>
       </main>
-
-      <AnimatePresence>
-        {reasonRequest && <motion.div className="admin-modal-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:.18}} onMouseDown={e => { if(e.target === e.currentTarget) finishReason(null); }}>
-          <motion.section ref={reasonDialogRef} className="admin-reason-dialog" role="dialog" aria-modal="true" aria-labelledby="assignment-reason-title" tabIndex={-1} initial={{opacity:0,y:18,scale:.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:12}} transition={{duration:.22}}>
-            <CareScene kind="chat" className="compact" />
-            <h2 id="assignment-reason-title">{reasonRequest.title}</h2>
-            <p>Ghi lại lý do để theo dõi việc chăm sóc. Bạn có thể để trống.</p>
-            <label htmlFor="assignment-reason">Lý do</label>
-            <textarea id="assignment-reason" rows={3} value={reasonText} onChange={e => setReasonText(e.target.value)} placeholder="Nhập lý do (không bắt buộc)" />
-            <div className="doctor-editor-actions"><button type="button" className="editor-cancel" onClick={() => finishReason(null)}>Hủy</button><button type="button" className="editor-save" onClick={() => finishReason(reasonText)}>Tiếp tục</button></div>
-          </motion.section>
-        </motion.div>}
-      </AnimatePresence>
 
       <AnimatePresence>
         {selectedPatient && <motion.div className="admin-modal-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:.2}} onMouseDown={e => { if (e.target === e.currentTarget) setSelectedPatient(null); }}>
@@ -411,7 +388,10 @@ export default function AdminDashboard() {
                 <label><span>Username *</span><div className="editor-input"><FaUserCog /><input value={doctorForm.username} onChange={e => setDoctorForm(p => ({ ...p, username: e.target.value }))} placeholder="doctor01" /></div></label>
                 <label><span>Email</span><div className="editor-input"><FaEnvelope /><input type="email" value={doctorForm.email} onChange={e => setDoctorForm(p => ({ ...p, email: e.target.value }))} placeholder="doctor@doctis.vn" /></div></label>
                 <label><span>Số điện thoại</span><div className="editor-input"><FaPhone /><input value={doctorForm.phone} onChange={e => setDoctorForm(p => ({ ...p, phone: e.target.value }))} placeholder="09xxxxxxxx" /></div></label>
+                <label><span>Bệnh viện của bác sĩ</span><select value={doctorForm.hospitalId} onChange={event => setDoctorForm(old => ({ ...old, hospitalId: event.target.value }))} disabled={savingDoctor}><option value="">Chưa xác định bệnh viện</option>{hospitals.filter(verifiedActive).map(hospital => <option key={entityId(hospital)} value={entityId(hospital)}>{hospital.name}</option>)}</select></label>
               </div>
+              {hospitalError && <p className="coord-error" role="alert">{hospitalError}</p>}
+              {!hospitals.filter(verifiedActive).length && <p className="coord-warning">Chưa có bệnh viện đã xác minh. Bổ sung danh mục trước khi gắn bác sĩ; không tự suy ra bệnh viện cho tài khoản cũ.</p>}
 
               <div className="doctor-editor-note"><FaShieldAlt /><span>Thay đổi tên ở đây sẽ đồng bộ với danh sách bác sĩ và tên bác sĩ phụ trách của bệnh nhân.</span></div>
 
@@ -423,6 +403,7 @@ export default function AdminDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+      {legacyEndPatient && <LegacyUnassignDialog patient={legacyEndPatient} onClose={() => setLegacyEndPatient(null)} onSaved={response => { showFeedback(response.msg || "Đã kết thúc phân công cũ.", "success"); loadAssignmentData(); }} />}
     </div></MotionConfig>
   );
 }

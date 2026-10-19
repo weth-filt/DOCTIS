@@ -56,7 +56,7 @@ const NAV_ITEMS = [
   { id: 'profile', label: 'Hồ sơ', icon: '○' },
 ];
 
-async function api(path, { token, method = 'GET', body } = {}) {
+async function api(path, { token, method = 'GET', body, signal } = {}) {
   let response;
   try {
     response = await fetch(`${API_BASE}${path}`, {
@@ -67,6 +67,7 @@ async function api(path, { token, method = 'GET', body } = {}) {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
+      ...(signal ? { signal } : {}),
     });
   } catch {
     throw new Error('Không kết nối được máy chủ. Hãy kiểm tra mạng rồi thử lại.');
@@ -82,6 +83,15 @@ async function api(path, { token, method = 'GET', body } = {}) {
 }
 
 const asArray = (value) => Array.isArray(value) ? value : [];
+const registrationFields = () => ({ cccd: '', username: '', email: '', password: '', confirmPassword: '', address: '', wardId: '' });
+const wardIdentity = (ward) => String(ward?.id || ward?._id || '');
+const createRegistrationKey = () => {
+  if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+    const random = Math.floor(Math.random() * 16);
+    return (character === 'x' ? random : (random & 3) | 8).toString(16);
+  });
+};
 const mergeMessages = (previous, incoming) => {
   const oldById = new Map(previous.map((message) => [String(message?._id || ''), message]));
   const serverIds = new Set(incoming.map((message) => String(message?._id || '')));
@@ -102,13 +112,15 @@ const displayDate = (value) => {
 };
 const prettyStatus = (value) => ({ pending: 'Đang chờ', approved: 'Đã xác nhận', completed: 'Đã khám', cancelled: 'Đã hủy', confirmed: 'Đã chốt', draft: 'Bản nháp' }[value] || value || '—');
 
-function Field({ label, value, onChangeText, placeholder, secureTextEntry, keyboardType, multiline, onFocus, autoCapitalize = 'sentences', autoCorrect = false }) {
+function Field({ label, value, onChangeText, placeholder, secureTextEntry, keyboardType, multiline, onFocus, autoCapitalize = 'sentences', autoCorrect = false, editable = true }) {
   return (
     <View style={styles.fieldWrap}>
       {!!label && <Text style={styles.fieldLabel}>{label}</Text>}
       <TextInput
         style={[styles.input, multiline && styles.multilineInput]}
         value={value}
+        accessibilityLabel={label}
+        editable={editable}
         onChangeText={onChangeText}
         placeholder={placeholder || label}
         placeholderTextColor="#94a8af"
@@ -123,10 +135,10 @@ function Field({ label, value, onChangeText, placeholder, secureTextEntry, keybo
   );
 }
 
-function ActionButton({ title, onPress, secondary, disabled, style }) {
+function ActionButton({ title, onPress, secondary, disabled, loading = disabled, style }) {
   return (
     <Pressable onPress={onPress} disabled={disabled} style={({ pressed }) => [styles.button, secondary && styles.buttonSecondary, disabled && styles.buttonDisabled, pressed && !disabled && styles.buttonPressed, style]}>
-      {disabled ? <ActivityIndicator color={secondary ? '#087d83' : '#fff'} /> : <Text style={[styles.buttonText, secondary && styles.buttonSecondaryText]}>{title}</Text>}
+      {loading ? <ActivityIndicator color={secondary ? '#087d83' : '#fff'} /> : <Text style={[styles.buttonText, secondary && styles.buttonSecondaryText]}>{title}</Text>}
     </Pressable>
   );
 }
@@ -135,10 +147,46 @@ function Card({ children, style }) {
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
+function RegistrationWardField({ wards, value, onChange, loading, error, onRetry, disabled }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const selected = wards.find((ward) => wardIdentity(ward) === value);
+  const matches = wards.filter((ward) => String(ward.name || '').toLocaleLowerCase('vi').includes(search.trim().toLocaleLowerCase('vi')));
+  return <View style={styles.fieldWrap}>
+    <Text style={styles.fieldLabel}>Phường tại Đà Nẵng *</Text>
+    {loading ? <View style={styles.wardStatus}><ActivityIndicator color="#087d83" /><Text style={styles.bodyMuted}>Đang tải danh mục phường…</Text></View> : error ? <>
+      <Text style={styles.wardError}>{error}</Text>
+      <ActionButton title="Tải lại danh mục phường" secondary onPress={onRetry} disabled={disabled} loading={false} />
+    </> : !wards.length ? <>
+      <Text style={styles.wardError}>Danh mục phường chưa được quản trị viên công bố. Vui lòng quay lại sau hoặc liên hệ DOCTIS để được hỗ trợ đăng ký.</Text>
+      <ActionButton title="Kiểm tra lại danh mục" secondary onPress={onRetry} disabled={disabled} loading={false} />
+    </> : <>
+      <Pressable accessibilityRole="button" accessibilityLabel="Chọn phường" accessibilityState={{ expanded: open, disabled }} disabled={disabled} style={[styles.input, styles.wardTrigger]} onPress={() => setOpen((previous) => !previous)}>
+        <Text style={styles.wardName}>{selected?.name || 'Chọn phường của bạn'}</Text><Text style={styles.wardChevron}>{open ? '⌃' : '⌄'}</Text>
+      </Pressable>
+      {open && <View style={styles.wardOptions}>
+        <Field label="Tìm phường" value={search} onChangeText={setSearch} editable={!disabled} placeholder="Nhập tên phường" />
+        <ScrollView style={styles.wardList} nestedScrollEnabled keyboardShouldPersistTaps="handled">
+          {matches.map((ward) => <Pressable key={wardIdentity(ward)} accessibilityRole="radio" accessibilityState={{ checked: wardIdentity(ward) === value, disabled }} disabled={disabled} style={[styles.wardOption, wardIdentity(ward) === value && styles.wardOptionSelected]} onPress={() => { onChange(wardIdentity(ward)); setOpen(false); setSearch(''); }}>
+            <Text style={styles.wardName}>{ward.name}</Text>{wardIdentity(ward) === value && <Text style={styles.wardChevron}>✓</Text>}
+          </Pressable>)}
+          {!matches.length && <Text style={styles.bodyMuted}>Không tìm thấy phường phù hợp.</Text>}
+        </ScrollView>
+      </View>}
+    </>}
+  </View>;
+}
+
 export default function App() {
   const [authMode, setAuthMode] = useState('login');
-  const [authForm, setAuthForm] = useState({ cccd: '', username: '', email: '', password: '', confirmPassword: '' });
+  const [authForm, setAuthForm] = useState(registrationFields);
   const [authBusy, setAuthBusy] = useState(false);
+  const authSubmitLock = useRef(false);
+  const registrationAttempt = useRef(null);
+  const [registrationWards, setRegistrationWards] = useState([]);
+  const [wardsLoading, setWardsLoading] = useState(false);
+  const [wardsError, setWardsError] = useState('');
+  const [wardsReload, setWardsReload] = useState(0);
   const [booting, setBooting] = useState(true);
   const [token, setToken] = useState('');
   const [user, setUser] = useState(null);
@@ -177,6 +225,23 @@ export default function App() {
 
   const setAuthValue = (key, value) => setAuthForm((previous) => ({ ...previous, [key]: value }));
   const patientMode = user?.role === 'user';
+
+  useEffect(() => {
+    if (authMode !== 'register' || token) return undefined;
+    const controller = new AbortController();
+    let active = true;
+    setWardsLoading(true);
+    setWardsError('');
+    setRegistrationWards([]);
+    api('/public/wards', { signal: controller.signal }).then((result) => {
+      if (active) setRegistrationWards(asArray(result?.wards).filter((ward) => wardIdentity(ward) && ward.name));
+    }).catch((err) => {
+      if (active) setWardsError(err.message || 'Không tải được danh mục phường.');
+    }).finally(() => {
+      if (active) setWardsLoading(false);
+    });
+    return () => { active = false; controller.abort(); };
+  }, [authMode, token, wardsReload]);
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -352,22 +417,30 @@ export default function App() {
   }, [token, doctor?._id, tab]);
 
   const submitAuth = async () => {
+    if (authSubmitLock.current) return;
     const email = authForm.email.trim().toLowerCase();
     if (!email || !authForm.password) return setError('Nhập email và mật khẩu để tiếp tục.');
     if (authMode === 'register') {
       if (!authForm.cccd.trim() || !authForm.username.trim()) return setError('Nhập đầy đủ CCCD và tên tài khoản.');
       if (authForm.password.length < 8) return setError('Mật khẩu nên có ít nhất 8 ký tự.');
       if (authForm.password !== authForm.confirmPassword) return setError('Mật khẩu xác nhận chưa khớp.');
+      if (!authForm.address.trim()) return setError('Nhập số nhà, tên đường và địa chỉ chi tiết của bạn.');
+      if (wardsLoading || wardsError || !registrationWards.some((ward) => wardIdentity(ward) === authForm.wardId)) return setError('Vui lòng chọn một phường trong danh mục đã tải trước khi đăng ký.');
     }
+    authSubmitLock.current = true;
     setAuthBusy(true);
     setError('');
     setNotice('');
     try {
       if (authMode === 'register') {
-        await api('/auth/register', { method: 'POST', body: { cccd: authForm.cccd.trim(), username: authForm.username.trim(), email, password: authForm.password, confirmPassword: authForm.confirmPassword } });
-        setAuthForm({ cccd: '', username: '', email, password: '', confirmPassword: '' });
+        const payload = { cccd: authForm.cccd.trim(), username: authForm.username.trim(), email, password: authForm.password, confirmPassword: authForm.confirmPassword, address: authForm.address.trim(), wardId: authForm.wardId, city: 'Đà Nẵng' };
+        const signature = JSON.stringify(payload);
+        if (registrationAttempt.current?.signature !== signature) registrationAttempt.current = { signature, requestId: createRegistrationKey() };
+        await api('/auth/register', { method: 'POST', body: { ...payload, requestId: registrationAttempt.current.requestId } });
+        registrationAttempt.current = null;
+        setAuthForm({ ...registrationFields(), email });
         setAuthMode('login');
-        setNotice('Tạo tài khoản thành công. Đăng nhập để bắt đầu sử dụng DOCTIS.');
+        setNotice('Tạo tài khoản thành công. Hồ sơ đang chờ cập nhật bệnh viện hỗ trợ. Bạn có thể đăng nhập để sử dụng DOCTIS.');
       } else {
         const result = await api('/auth/login', { method: 'POST', body: { email, password: authForm.password } });
         await sessionStore.setItemAsync(TOKEN_KEY, result.token);
@@ -375,7 +448,8 @@ export default function App() {
         setToken(result.token);
         setUser(result.user);
         setProfile(result.user);
-        setAuthForm({ cccd: '', username: '', email: '', password: '', confirmPassword: '' });
+        registrationAttempt.current = null;
+        setAuthForm(registrationFields());
         setTab('home');
         if (result.user?.role !== 'user') setNotice('Phiên bản mobile hiện dành cho tài khoản bệnh nhân. Bác sĩ và quản trị viên vui lòng dùng website DOCTIS.');
         else await loadData(result.token, true);
@@ -383,6 +457,7 @@ export default function App() {
     } catch (err) {
       setError(err.message);
     } finally {
+      authSubmitLock.current = false;
       setAuthBusy(false);
     }
   };
@@ -410,7 +485,10 @@ export default function App() {
     setProfileBusy(true);
     setError('');
     try {
-      const result = await api('/profile', { token, method: 'PUT', body: profile });
+      // Service location belongs to /care-team/address so intake and user stay in sync.
+      const locationKeys = ['address', 'addressDetail', 'province', 'district', 'ward', 'wardId', 'city'];
+      const profileWithoutLocation = Object.fromEntries(Object.entries(profile || {}).filter(([key]) => !locationKeys.includes(key)));
+      const result = await api('/profile', { token, method: 'PUT', body: profileWithoutLocation });
       const saved = result.profile || profile;
       setProfile(saved);
       setUser((previous) => ({ ...previous, ...saved }));
@@ -575,14 +653,23 @@ export default function App() {
             {!!notice && <Notice text={notice} />}
             <Card style={styles.authCard}>
               {authMode === 'register' && <>
-                <Field label="Số CCCD" value={authForm.cccd} onChangeText={(value) => setAuthValue('cccd', value)} keyboardType="number-pad" />
-                <Field label="Tên tài khoản" value={authForm.username} onChangeText={(value) => setAuthValue('username', value)} autoCapitalize="none" />
+                <Field label="Số CCCD" value={authForm.cccd} onChangeText={(value) => setAuthValue('cccd', value)} keyboardType="number-pad" editable={!authBusy} />
+                <Field label="Tên tài khoản" value={authForm.username} onChangeText={(value) => setAuthValue('username', value)} autoCapitalize="none" editable={!authBusy} />
               </>}
-              <Field label="Email" value={authForm.email} onChangeText={(value) => setAuthValue('email', value)} keyboardType="email-address" autoCapitalize="none" />
-              <Field label="Mật khẩu" value={authForm.password} onChangeText={(value) => setAuthValue('password', value)} secureTextEntry />
-              {authMode === 'register' && <Field label="Nhập lại mật khẩu" value={authForm.confirmPassword} onChangeText={(value) => setAuthValue('confirmPassword', value)} secureTextEntry />}
-              <ActionButton title={authMode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'} onPress={submitAuth} disabled={authBusy} style={styles.authSubmit} />
-              <Pressable style={styles.switchAuth} onPress={() => { setError(''); setNotice(''); setAuthMode(authMode === 'login' ? 'register' : 'login'); }}>
+              <Field label="Email" value={authForm.email} onChangeText={(value) => setAuthValue('email', value)} keyboardType="email-address" autoCapitalize="none" editable={!authBusy} />
+              <Field label="Mật khẩu" value={authForm.password} onChangeText={(value) => setAuthValue('password', value)} secureTextEntry editable={!authBusy} />
+              {authMode === 'register' && <>
+                <Field label="Nhập lại mật khẩu" value={authForm.confirmPassword} onChangeText={(value) => setAuthValue('confirmPassword', value)} secureTextEntry editable={!authBusy} />
+                <View style={styles.registrationAddress}>
+                  <Text style={styles.cardTitle}>Địa chỉ phục vụ</Text>
+                  <Text style={styles.cardSub}>DOCTIS hiện tiếp nhận đăng ký tại Đà Nẵng. Bệnh viện và bác sĩ sẽ được phân công sau khi hồ sơ được tiếp nhận.</Text>
+                  <Field label="Thành phố" value="Đà Nẵng" editable={false} />
+                  <RegistrationWardField wards={registrationWards} value={authForm.wardId} onChange={(value) => setAuthValue('wardId', value)} loading={wardsLoading} error={wardsError} onRetry={() => setWardsReload((previous) => previous + 1)} disabled={authBusy} />
+                  <Field label="Địa chỉ chi tiết *" value={authForm.address} onChangeText={(value) => setAuthValue('address', value)} placeholder="Số nhà, tên đường, thôn/tổ dân phố" multiline editable={!authBusy} />
+                </View>
+              </>}
+              <ActionButton title={authMode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'} onPress={submitAuth} disabled={authBusy || (authMode === 'register' && (wardsLoading || !!wardsError || !registrationWards.length))} loading={authBusy} style={styles.authSubmit} />
+              <Pressable style={styles.switchAuth} disabled={authBusy} onPress={() => { setError(''); setNotice(''); setAuthMode(authMode === 'login' ? 'register' : 'login'); }}>
                 <Text style={styles.switchText}>{authMode === 'login' ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}<Text style={styles.switchStrong}>{authMode === 'login' ? 'Đăng ký' : 'Đăng nhập'}</Text></Text>
               </Pressable>
             </Card>
@@ -887,7 +974,17 @@ function ProfileScreen({ profile, editing, setEditing, setProfile, onSave, busy,
   ];
   return <>
     <ScreenTitle eyebrow="THÔNG TIN CÁ NHÂN" title="Hồ sơ sức khỏe" subtitle="Thông tin này giúp đội ngũ chăm sóc hiểu hồ sơ của bạn." />
-    <Card><View style={styles.profileIdentity}><View style={styles.profileAvatar}><Text style={styles.profileAvatarText}>{fullName(profile).slice(0, 1).toUpperCase()}</Text></View><View style={styles.profileIdentityText}><Text style={styles.profileName}>{fullName(profile)}</Text><Text style={styles.bodyMuted}>{profile?.email}</Text></View></View><View style={styles.profileFields}>{fields.map(([key, label]) => <View key={key} style={styles.profileField}>{editing ? <Field label={label} value={profile?.[key] || ''} onChangeText={(value) => setProfile((previous) => ({ ...previous, [key]: value }))} /> : <><Text style={styles.profileLabel}>{label}</Text><Text style={styles.profileValue}>{profile?.[key] || 'Chưa cập nhật'}</Text></>}</View>)}</View>{editing ? <View style={styles.actionRow}><ActionButton title="Lưu thay đổi" onPress={onSave} disabled={busy} style={styles.flexButton} /><ActionButton title="Hủy" secondary onPress={() => setEditing(false)} style={styles.flexButton} /></View> : <ActionButton title="Chỉnh sửa hồ sơ" secondary onPress={() => setEditing(true)} style={styles.fullButton} />}</Card>
+    <Card>
+      <View style={styles.profileIdentity}><View style={styles.profileAvatar}><Text style={styles.profileAvatarText}>{fullName(profile).slice(0, 1).toUpperCase()}</Text></View><View style={styles.profileIdentityText}><Text style={styles.profileName}>{fullName(profile)}</Text><Text style={styles.bodyMuted}>{profile?.email}</Text></View></View>
+      <View style={styles.profileFields}>{fields.map(([key, label]) => <View key={key} style={styles.profileField}>
+        {editing && key !== 'address' ? <Field label={label} value={profile?.[key] || ''} onChangeText={(value) => setProfile((previous) => ({ ...previous, [key]: value }))} /> : <>
+          <Text style={styles.profileLabel}>{label}</Text>
+          <Text style={styles.profileValue}>{key === 'address' ? [profile?.address, profile?.ward, profile?.city || profile?.province].filter(Boolean).join(', ') || 'Chưa cập nhật' : profile?.[key] || 'Chưa cập nhật'}</Text>
+          {key === 'address' && editing && <Text style={styles.bodyMuted}>Để cập nhật địa chỉ và phường, mở DOCTIS trên web → Bệnh viện và bác sĩ phụ trách. Thay đổi địa chỉ cần được đồng bộ với hồ sơ tiếp nhận.</Text>}
+        </>}
+      </View>)}</View>
+      {editing ? <View style={styles.actionRow}><ActionButton title="Lưu thay đổi" onPress={onSave} disabled={busy} style={styles.flexButton} /><ActionButton title="Hủy" secondary onPress={() => setEditing(false)} style={styles.flexButton} /></View> : <ActionButton title="Chỉnh sửa hồ sơ" secondary onPress={() => setEditing(true)} style={styles.fullButton} />}
+    </Card>
     <ActionButton title="Đăng xuất" secondary onPress={onSignOut} style={styles.fullButton} />
   </>;
 }
@@ -991,6 +1088,16 @@ const styles = StyleSheet.create({
   authTitle: { color: '#18394c', fontSize: 27, lineHeight: 33, fontWeight: '900', letterSpacing: -0.5 },
   authSubtitle: { color: '#728991', fontSize: 13, lineHeight: 20, marginTop: 8 },
   authCard: { padding: 18, marginTop: 10 },
+  registrationAddress: { borderTopWidth: 1, borderTopColor: '#e2ebed', marginTop: 2, paddingTop: 16, marginBottom: 8 },
+  wardStatus: { flexDirection: 'row', alignItems: 'center', gap: 9, paddingVertical: 12 },
+  wardTrigger: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  wardName: { color: '#234254', fontSize: 13, flexShrink: 1 },
+  wardChevron: { color: '#087d83', fontSize: 18, fontWeight: '800' },
+  wardOptions: { borderWidth: 1, borderColor: '#dce7e9', borderRadius: 12, padding: 10, marginTop: 6, backgroundColor: '#fbfdfd' },
+  wardList: { maxHeight: 220 },
+  wardOption: { minHeight: 44, paddingHorizontal: 10, paddingVertical: 10, borderRadius: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  wardOptionSelected: { backgroundColor: '#e2f1f0' },
+  wardError: { color: '#ad4051', fontSize: 11, lineHeight: 17, marginBottom: 10 },
   authSubmit: { marginTop: 4 },
   switchAuth: { alignItems: 'center', paddingTop: 18, paddingBottom: 3 },
   switchText: { color: '#748a91', fontSize: 12 },

@@ -391,6 +391,7 @@ exports.getMyConfirmedPrescriptions = async (
   res
 ) => {
   try {
+    if (req.user?.role !== "user") return res.status(403).json({ msg: "Chỉ bệnh nhân xem đơn thuốc cá nhân." });
     const list = await Prescription.find({
       patientId: req.user.id,
       status: "confirmed",

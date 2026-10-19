@@ -1,11 +1,14 @@
 from flask import Flask, request, jsonify
 import joblib
+import math
+from pathlib import Path
+from monitoring_rules import assess, RULES
 
 app = Flask(__name__)
 
 # LOAD MODEL
 
-model = joblib.load("health_model.pkl")
+model = joblib.load(Path(__file__).with_name("health_model.pkl"))
 
 # ================= PREDICT =================
 
@@ -18,6 +21,8 @@ def predict():
 
         glucose = float(data["glucose"])
         bmi = float(data["bmi"])
+        if not math.isfinite(glucose) or not math.isfinite(bmi) or glucose <= 0 or bmi <= 0:
+            return jsonify({"error": "Glucose và BMI phải là số dương hợp lệ."}), 400
 
         # MODEL INPUT
 
@@ -76,21 +81,29 @@ def predict():
 - Tập thể dục đều đặn
 """
 
+        # Shared monitoring rules are independent of the trained model's label.
+        risk = assess(data)
         return jsonify({
 
             "prediction": str(prediction),
 
             "riskLevel": risk,
+            "riskSource": "monitoring-rule",
+            "monitoringRuleVersion": RULES["version"],
+            "predictionSource": "gaussian-naive-bayes",
 
             "recommendation": recommendation
 
         })
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError):
+        return jsonify({"error": "Cần glucose và BMI hợp lệ để dự đoán."}), 400
+
+    except Exception:
 
         return jsonify({
-            "error": str(e)
-        })
+            "error": "Không thể chạy mô hình dự đoán."
+        }), 503
 
 # ================= RUN =================
 
@@ -98,5 +111,5 @@ if __name__ == "__main__":
 
     app.run(
         port=8000,
-        debug=True
+        debug=False
     )

@@ -41,10 +41,7 @@ mongoose
         "✅ Cron service started"
       );
     } catch (cronError) {
-      console.error(
-        "⚠️ Cron service error =",
-        cronError
-      );
+      console.error("⚠️ Cron service error =");
     }
 
     app.listen(
@@ -58,10 +55,7 @@ mongoose
     );
   })
   .catch((err) => {
-    console.error(
-      "❌ MongoDB connection error =",
-      err
-    );
+    console.error("❌ MongoDB connection error =");
 
     process.exit(1);
   });

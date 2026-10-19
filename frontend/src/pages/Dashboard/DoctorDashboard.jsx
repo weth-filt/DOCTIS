@@ -7,6 +7,9 @@ import { STUDIO_PREFERENCES_KEY, useStudioPreferences } from "../../components/s
 import StudioControls from "../../components/studio/StudioControls";
 import StudioExperience from "../../components/studio/StudioExperience";
 import useLiveReducedMotion from "../../components/useLiveReducedMotion";
+import CancelAppointmentDialog from "../../components/CancelAppointmentDialog";
+import NotificationInbox from "../../components/coordination/NotificationInbox";
+import { entityId } from "../../components/coordination/coordinationUtils";
 import "../../CSS/role-studio.css";
 import "../../CSS/doctor.css";
 
@@ -50,6 +53,7 @@ import "../../CSS/conversation-studio.css";
 import getRiskAssessment from "../../utils/riskAssessment";
 
 const ROLE_PAGE_ORDER = ["overview", "patients", "messages", "appointment", "alerts"];
+const appointmentStatusLabel = status => ({ pending: "Chờ duyệt", approved: "Đã duyệt", completed: "Đã hoàn thành", cancelled: "Đã hủy" })[status] || "Chưa xác định";
 const authConfig = () => {
   const user = JSON.parse(localStorage.getItem("user") || "null");
   return {
@@ -141,6 +145,8 @@ export default function DoctorDashboard() {
     type: "Tái khám"
   });
   const [appointmentActionId, setAppointmentActionId] = useState("");
+  const [cancelAppointment, setCancelAppointment] = useState(null);
+  const [notificationAppointmentId, setNotificationAppointmentId] = useState("");
   const [reminderSendingId, setReminderSendingId] = useState("");
 
   // Messaging
@@ -191,12 +197,18 @@ export default function DoctorDashboard() {
       if (process.env.NODE_ENV !== "production") console.error("GET DOCTOR APPOINTMENTS ERROR =", err);
     }
   }, []);
+  useEffect(() => {
+    if (activeMenu !== "appointment" || !notificationAppointmentId) return;
+    const node = document.getElementById(`doctor-appointment-${notificationAppointmentId}`);
+    node?.focus(); node?.scrollIntoView?.({ block: "center", behavior: "auto" });
+  }, [activeMenu, appointments, notificationAppointmentId]);
 
   const fetchPatients = useCallback(async () => {
     try {
       setLoading(true);
       const res = await API.get("/doctor/patients", authConfig());
       setPatients(res.data || []);
+      return safeArray(res.data);
     } catch (err) {
       if (process.env.NODE_ENV !== "production") console.error("GET PATIENTS ERROR =", err);
     } finally {
@@ -1113,7 +1125,10 @@ export default function DoctorDashboard() {
             </p>
           </div>
 
-          <div className="role-header-tools">{activeMenu !== "overview" && <div className="role-heart-slot"><HeartScene compact status="neutral" /></div>}<StudioControls /><div className={activeMenu === "messages" ? "conversation-account" : "doctor-profile"}>
+          <div className="role-header-tools">{activeMenu !== "overview" && <div className="role-heart-slot"><HeartScene compact status="neutral" /></div>}<StudioControls /><NotificationInbox onOpen={async notification => {
+            if (notification.entityType === "appointment") { setNotificationAppointmentId(notification.entityId); setActiveMenu("appointment"); fetchAppointments(); }
+            else { setActiveMenu("patients"); const latest = await fetchPatients(); const patient = (latest || patients).find(item => entityId(item) === notification.entityId); if (patient) openPatient(patient); }
+          }} /><div className={activeMenu === "messages" ? "conversation-account" : "doctor-profile"}>
             <div className={activeMenu === "messages" ? "conversation-avatar" : "doctor-avatar"}>
               {String(currentUser?.fullName || currentUser?.username || "D")
                 .charAt(0)
@@ -1175,11 +1190,12 @@ export default function DoctorDashboard() {
                   <div className="mini-patient-info">
                     <strong>{appointment.patientId?.fullName || appointment.patientId?.username || "Bệnh nhân"}</strong>
                     <span>{formatDate(appointment.appointmentDate)} · {formatTime(appointment.appointmentDate)} · {appointment.type || "Tái khám"}</span>
-                    <span>Trạng thái: {appointment.status}</span>
+                    <span>Trạng thái: {appointmentStatusLabel(appointment.status)}</span>
                   </div>
                   <div className="mini-actions">
                     {appointment.status === "pending" && <button className="view-btn" disabled={appointmentActionId === appointment._id} onClick={() => updateAppointmentStatus(appointment, "approved")}>Duyệt</button>}
                     {appointment.status === "approved" && <button className="view-btn" disabled={appointmentActionId === appointment._id} onClick={() => updateAppointmentStatus(appointment, "completed")}>Hoàn tất</button>}
+                    {["pending", "approved"].includes(appointment.status) && <button type="button" className="close-btn" onClick={() => setCancelAppointment(appointment)}>Hủy lịch</button>}
                   </div>
                 </article>
               )) : <div className="empty-state">Chưa có lịch hẹn.</div>}
@@ -1653,7 +1669,7 @@ export default function DoctorDashboard() {
 
               <div className="appointment-list">
                 {appointments.map((a) => (
-                  <div className="appointment-row" key={a._id}>
+                  <div className="appointment-row" id={`doctor-appointment-${a._id}`} tabIndex={-1} key={a._id}>
                     <div className="appointment-date-icon"><FaCalendarAlt /></div>
                     <div className="appointment-main">
                       <strong>{a.patientId?.fullName || a.patientId?.username || "Bệnh nhân"}</strong>
@@ -1661,10 +1677,10 @@ export default function DoctorDashboard() {
                       {a.note && <p>{a.note}</p>}
                     </div>
                     <span className={`appointment-status ${a.status}`}>
-                      {a.status || "pending"}
+                      {appointmentStatusLabel(a.status)}
                     </span>
                     <div className="appointment-actions">
-                      {a.status !== "cancelled" && (
+                      {["pending", "approved"].includes(a.status) && (
                         <>
                           <button
                             className="reminder-btn"
@@ -1676,20 +1692,8 @@ export default function DoctorDashboard() {
                           </button>
                           <button
                             className="close-btn"
-                            onClick={async () => {
-                              const reason = window.prompt("Lý do hủy lịch?");
-                              if (!reason) return;
-                              try {
-                                await API.put(
-                                  `/appointments/cancel/${a._id}`,
-                                  { reason },
-                                  authConfig()
-                                );
-                                await fetchAppointments();
-                              } catch (err) {
-                                alert(err.response?.data?.msg || "Không thể hủy lịch.");
-                              }
-                            }}
+                            type="button"
+                            onClick={() => setCancelAppointment(a)}
                           >
                             Hủy
                           </button>
@@ -1901,7 +1905,8 @@ export default function DoctorDashboard() {
                       <span className="section-kicker">05 · CARE PLAN</span>
                       <h3>Kế hoạch chăm sóc & ăn uống</h3>
                       <p className="care-plan-caption">Lịch trình đã lưu của bệnh nhân theo ngày và từng hoạt động.</p>
-                      {carePlan?.source === "AI" && <p className="care-plan-review-note">Bệnh nhân đã tạo kế hoạch này. Hãy rà soát và điều chỉnh trước khi chốt.</p>}
+                      {carePlan?.source === "AI" && <p className="care-plan-review-note">Đây là kế hoạch gợi ý tự tạo, chưa phải kế hoạch bác sĩ chốt. Rà soát trước khi lưu vào kế hoạch điều trị.</p>}
+                      {carePlan?.source === "DOCTOR" && <p className="care-plan-review-note">Kế hoạch do bác sĩ lưu{carePlan.status === "confirmed" ? " và chốt cho bệnh nhân" : " ở trạng thái nháp"}. Kế hoạch gợi ý không tự ghi đè nội dung này.</p>}
                     </div>
                     <div className="care-plan-heading-actions">
                       {carePlan?.status && (
@@ -2251,6 +2256,7 @@ export default function DoctorDashboard() {
           </aside>
         </div>
       )}
+      <CancelAppointmentDialog appointment={cancelAppointment} onClose={() => setCancelAppointment(null)} onCancelled={() => fetchAppointments()} />
     </div></MotionConfig>
   );
 }

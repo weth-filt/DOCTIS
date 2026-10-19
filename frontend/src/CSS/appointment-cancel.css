@@ -1,0 +1,21 @@
+.appointment-cancel-shade { position:fixed;z-index:3200;inset:0;display:grid;place-items:center;padding:18px;background:#061e2b80;backdrop-filter:blur(4px); }
+.appointment-cancel-dialog { width:min(510px,100%);max-height:calc(100dvh - 36px);overflow:auto;padding:25px;border:1px solid #d7e5e8;border-radius:20px;background:#fff;color:#163342;box-shadow:0 24px 80px #061e2b33;font-family:inherit;animation:appointment-cancel-enter .2s ease-out; }
+.appointment-cancel-dialog header { display:flex;align-items:center;justify-content:space-between;gap:12px; }
+.appointment-cancel-kicker { font-size:10px;letter-spacing:.15em;font-weight:700;color:#087f8c; }
+.appointment-cancel-dialog h2 { margin:6px 0 0;font-size:20px;line-height:1.4; }
+.appointment-cancel-dialog header button { background:#f0f6f7;border:0;border-radius:10px;padding:5px 12px;font-size:25px;color:inherit;cursor:pointer; }
+.appointment-cancel-dialog dl { display:grid;gap:12px;margin:22px 0;padding:16px;background:#f4f8f9;border-radius:12px; }
+.appointment-cancel-dialog dl div { display:flex;justify-content:space-between;gap:16px;font-size:13px; }
+.appointment-cancel-dialog dt { color:#617c89; }.appointment-cancel-dialog dd { margin:0;text-align:right;font-weight:600; }
+.appointment-cancel-dialog p { font-size:13px;line-height:1.7;color:#617c89; }
+.appointment-cancel-dialog label { display:block;margin:18px 0 8px;font-size:13px;font-weight:600; }
+.appointment-cancel-dialog textarea { box-sizing:border-box;display:block;width:100%;min-height:95px;border:1px solid #cbdde2;border-radius:11px;padding:12px;font:inherit;font-size:14px;color:#163342;background:#fff;resize:vertical; }
+.appointment-cancel-dialog textarea:focus { outline:2px solid #79cbd0;outline-offset:2px; }
+.appointment-cancel-dialog .appointment-cancel-error { color:#b83c50; }
+.appointment-cancel-dialog footer { display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:22px; }
+.appointment-cancel-dialog footer button { border:1px solid #cbdde2;border-radius:10px;padding:11px 15px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:transform .16s ease,opacity .16s ease; }
+.appointment-cancel-keep { background:#fff;color:#163342; }.appointment-cancel-dialog .appointment-cancel-confirm { border-color:#b83c50;background:#b83c50;color:#fff; }
+.appointment-cancel-dialog button:disabled { opacity:.55;cursor:wait; }.appointment-cancel-dialog button:not(:disabled):active { transform:scale(.97); }
+@keyframes appointment-cancel-enter { from { opacity:0;transform:translateY(10px) scale(.985); } to { opacity:1;transform:none; } }
+@media(max-width:520px) { .appointment-cancel-dialog { padding:20px; }.appointment-cancel-dialog h2 { font-size:18px; }.appointment-cancel-dialog textarea { font-size:16px; } }
+@media(prefers-reduced-motion:reduce) { .appointment-cancel-dialog { animation:none; }.appointment-cancel-dialog button { transition:none; } }

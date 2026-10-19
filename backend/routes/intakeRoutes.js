@@ -1,0 +1,10 @@
+const router = require("express").Router();
+const controller = require("../controllers/intakeController");
+router.use(require("../middlewares/auth"), require("../middlewares/role")("admin"));
+router.get("/", controller.list);
+router.get("/:id", controller.get);
+router.post("/:id/hospital", controller.selectHospital);
+router.post("/:id/accept", controller.accept);
+router.post("/:id/assign", controller.assign);
+router.post("/:id/unassign", controller.unassign);
+module.exports = router;

@@ -52,6 +52,13 @@ new mongoose.Schema({
     default:""
   },
 
+  cancelledBy:{type:mongoose.Schema.Types.ObjectId,ref:"User",default:null},
+  cancelledByRole:{type:String,enum:["user","doctor",""],default:""},
+  cancelledAt:{type:Date,default:null},
+  operationLock:{type:String,default:null},
+  operationLockAt:{type:Date,default:null},
+  lastReminderAt:{type:Date,default:null},
+
   createdAt:{
     type:Date,
     default:Date.now

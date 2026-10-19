@@ -72,6 +72,10 @@ const userSchema = new mongoose.Schema(
       default: ""
     },
 
+    wardId: { type: mongoose.Schema.Types.ObjectId, ref: "Ward", default: null },
+    city: { type: String, default: "" },
+    hospitalId: { type: mongoose.Schema.Types.ObjectId, ref: "Hospital", default: null, index: true },
+
     province: {
       type: String,
       default: ""

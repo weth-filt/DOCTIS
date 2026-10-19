@@ -148,7 +148,7 @@ const connectMongoForVercel = async (req, res, next) => {
     return next();
   } catch (error) {
     mongoConnectionPromise = undefined;
-    console.error("MongoDB connection failed:", error.message);
+    console.error("MongoDB connection failed.");
     return res.status(503).json({
       success: false,
       msg: "Không thể kết nối cơ sở dữ liệu. Vui lòng thử lại sau.",
@@ -157,6 +157,12 @@ const connectMongoForVercel = async (req, res, next) => {
 };
 
 app.use(connectMongoForVercel);
+app.use("/api/public", require("./routes/publicCatalogRoutes"));
+app.use("/api/admin/catalog", require("./routes/adminCatalogRoutes"));
+app.use("/api/admin/intakes", require("./routes/intakeRoutes"));
+app.use("/api/care-team", require("./routes/careTeamRoutes"));
+app.use("/api/notifications", require("./routes/notificationRoutes"));
+app.use("/api/internal/scheduler", require("./routes/schedulerRoutes"));
 
 /*
 |--------------------------------------------------------------------------
@@ -365,7 +371,7 @@ app.use((req, res) => {
 */
 
 app.use((err, req, res, next) => {
-  console.error("GLOBAL ERROR =", err);
+  console.error("Request failed.");
 
   /*
   | File / JSON quá lớn

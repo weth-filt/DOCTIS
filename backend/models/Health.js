@@ -44,6 +44,11 @@ const healthSchema = new mongoose.Schema(
       type: String
     },
 
+    predictionStatus: { type: String, enum: ["available", "unavailable", "insufficient_data"] },
+    predictionSource: { type: String },
+    riskSource: { type: String },
+    monitoringRuleVersion: { type: String },
+
     risk: {
       type: String
     },

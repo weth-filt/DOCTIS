@@ -14,10 +14,6 @@ const PROFILE_FIELDS = [
   "dateOfBirth",
   "gender",
   "cccd",
-  "address",
-  "province",
-  "district",
-  "ward",
   "bloodType",
   "allergies",
   "medicalHistory",
@@ -93,6 +89,8 @@ exports.getProfile = async (req, res) => {
       province: user.province || "",
       district: user.district || "",
       ward: user.ward || "",
+      wardId: user.wardId || null,
+      city: user.city || "",
 
       bloodType: user.bloodType || "",
       allergies: user.allergies || "",
@@ -117,10 +115,10 @@ exports.getProfile = async (req, res) => {
       updatedAt: user.updatedAt
     });
   } catch (err) {
-    console.error("GET PROFILE ERROR =", err);
+    console.error("GET PROFILE ERROR =");
 
     return res.status(500).json({
-      msg: err.message || "Không thể lấy hồ sơ"
+      msg: "Không thể lấy hồ sơ"
     });
   }
 };
@@ -159,6 +157,13 @@ exports.updateProfile = async (req, res) => {
     // ===================================================
 
     const data = {};
+
+    // Service location updates must also update the intake snapshot atomically.
+    // Old clients may send unchanged legacy strings; preserve that compatibility.
+    const locationKeys = ["address", "province", "district", "ward", "wardId", "city"];
+    if (locationKeys.some(key => Object.prototype.hasOwnProperty.call(req.body, key) && String(req.body[key] ?? "").trim() !== String(user[key] ?? "").trim())) {
+      return res.status(409).json({ code: "USE_SERVICE_ADDRESS", msg: "Vui lòng cập nhật địa chỉ và phường tại mục Bệnh viện và bác sĩ phụ trách." });
+    }
 
     PROFILE_FIELDS.forEach((field) => {
       if (Object.prototype.hasOwnProperty.call(req.body, field)) {
@@ -369,7 +374,7 @@ exports.updateProfile = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error("UPDATE PROFILE ERROR =", err);
+    console.error("UPDATE PROFILE ERROR =");
 
     // Duplicate key
     if (err.code === 11000) {
@@ -398,7 +403,6 @@ exports.updateProfile = async (req, res) => {
 
     return res.status(500).json({
       msg:
-        err.message ||
         "Cập nhật hồ sơ thất bại"
     });
   }

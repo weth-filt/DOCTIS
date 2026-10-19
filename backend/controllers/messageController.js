@@ -158,6 +158,7 @@ const validateAttachment = (
 exports.getDoctorsForPatient =
   async (req, res) => {
     try {
+      if (req.user?.role !== "user") return res.status(403).json({ msg: "Chỉ bệnh nhân xem bác sĩ phụ trách." });
       const patientId =
         req.user.id;
 
@@ -229,14 +230,10 @@ exports.getDoctorsForPatient =
         },
       ]);
     } catch (err) {
-      console.error(
-        "GET DOCTORS FOR PATIENT ERROR =",
-        err
-      );
+      console.error("GET DOCTORS FOR PATIENT ERROR =");
 
       return res.status(500).json({
         msg:
-          err.message ||
           "Không thể lấy bác sĩ phụ trách.",
       });
     }
@@ -344,14 +341,10 @@ exports.getPatientsForDoctor =
 
       return res.json(result);
     } catch (err) {
-      console.error(
-        "GET PATIENTS FOR DOCTOR ERROR =",
-        err
-      );
+      console.error("GET PATIENTS FOR DOCTOR ERROR =");
 
       return res.status(500).json({
         msg:
-          err.message ||
           "Không thể lấy bệnh nhân được phân công.",
       });
     }
@@ -366,6 +359,7 @@ exports.getPatientsForDoctor =
 exports.getMessagesWithDoctor =
   async (req, res) => {
     try {
+      if (req.user?.role !== "user") return res.status(403).json({ msg: "Chỉ bệnh nhân xem cuộc trò chuyện với bác sĩ." });
       const patientId =
         req.user.id;
 
@@ -466,14 +460,10 @@ exports.getMessagesWithDoctor =
 
       return res.json(messages);
     } catch (err) {
-      console.error(
-        "GET MESSAGES WITH DOCTOR ERROR =",
-        err
-      );
+      console.error("GET MESSAGES WITH DOCTOR ERROR =");
 
       return res.status(500).json({
         msg:
-          err.message ||
           "Không thể lấy tin nhắn.",
       });
     }
@@ -589,14 +579,10 @@ exports.getMessagesWithPatient =
 
       return res.json(messages);
     } catch (err) {
-      console.error(
-        "GET MESSAGES WITH PATIENT ERROR =",
-        err
-      );
+      console.error("GET MESSAGES WITH PATIENT ERROR =");
 
       return res.status(500).json({
         msg:
-          err.message ||
           "Không thể lấy tin nhắn.",
       });
     }
@@ -622,6 +608,7 @@ exports.getMessagesWithPatient =
 exports.sendMessage =
   async (req, res) => {
     try {
+      if (!["user", "doctor"].includes(req.user?.role)) return res.status(403).json({ msg: "Chỉ bác sĩ và bệnh nhân được trao đổi tin nhắn." });
       const senderId =
         req.user.id;
 
@@ -825,14 +812,10 @@ exports.sendMessage =
         message
       );
     } catch (err) {
-      console.error(
-        "SEND MESSAGE ERROR =",
-        err
-      );
+      console.error("SEND MESSAGE ERROR =");
 
       return res.status(500).json({
         msg:
-          err.message ||
           "Không thể gửi tin nhắn.",
       });
     }
