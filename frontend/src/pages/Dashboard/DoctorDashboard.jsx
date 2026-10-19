@@ -7,11 +7,14 @@ import { STUDIO_PREFERENCES_KEY, useStudioPreferences } from "../../components/s
 import StudioControls from "../../components/studio/StudioControls";
 import StudioExperience from "../../components/studio/StudioExperience";
 import useLiveReducedMotion from "../../components/useLiveReducedMotion";
+import DoctorAppointmentList from "../../components/DoctorAppointmentList";
+import { appointmentDateTimeInput, appointmentInputToISO } from "../../utils/appointmentDateTime";
 import CancelAppointmentDialog from "../../components/CancelAppointmentDialog";
 import NotificationInbox from "../../components/coordination/NotificationInbox";
 import { entityId } from "../../components/coordination/coordinationUtils";
 import "../../CSS/role-studio.css";
 import "../../CSS/doctor.css";
+import "../../CSS/doctor-appointments.css";
 
 import {
   FaUserInjured,
@@ -53,7 +56,6 @@ import "../../CSS/conversation-studio.css";
 import getRiskAssessment from "../../utils/riskAssessment";
 
 const ROLE_PAGE_ORDER = ["overview", "patients", "messages", "appointment", "alerts"];
-const appointmentStatusLabel = status => ({ pending: "Chờ duyệt", approved: "Đã duyệt", completed: "Đã hoàn thành", cancelled: "Đã hủy" })[status] || "Chưa xác định";
 const authConfig = () => {
   const user = JSON.parse(localStorage.getItem("user") || "null");
   return {
@@ -103,14 +105,6 @@ const formatDate = (value) => {
     : date.toLocaleString("vi-VN");
 };
 
-const formatTime = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? ""
-    : date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-};
-
 const getPatientName = (patient) =>
   patient?.fullName || patient?.username || patient?.name || "Bệnh nhân";
 
@@ -144,7 +138,21 @@ export default function DoctorDashboard() {
     note: "",
     type: "Tái khám"
   });
+  const [appointmentPatient, setAppointmentPatient] = useState(null);
   const [appointmentActionId, setAppointmentActionId] = useState("");
+  const [appointmentsLoading, setAppointmentsLoading] = useState(false);
+  const [appointmentError, setAppointmentError] = useState("");
+  const [appointmentFeedback, setAppointmentFeedback] = useState(null);
+  const [appointmentCreating, setAppointmentCreating] = useState(false);
+  const [appointmentNow, setAppointmentNow] = useState(Date.now);
+  const appointmentWriteLock = useRef(false);
+  const appointmentReadVersion = useRef(0);
+  useEffect(() => {
+    if (activeMenu !== "appointment") return undefined;
+    setAppointmentNow(Date.now());
+    const timer = window.setInterval(() => setAppointmentNow(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, [activeMenu]);
   const [cancelAppointment, setCancelAppointment] = useState(null);
   const [notificationAppointmentId, setNotificationAppointmentId] = useState("");
   const [reminderSendingId, setReminderSendingId] = useState("");
@@ -190,18 +198,29 @@ export default function DoctorDashboard() {
   };
 
   const fetchAppointments = useCallback(async () => {
+    const version = ++appointmentReadVersion.current;
+    setAppointmentsLoading(true); setAppointmentError("");
     try {
       const res = await API.get("/appointments/doctor", authConfig());
-      setAppointments(res.data || []);
-    } catch (err) {
-      if (process.env.NODE_ENV !== "production") console.error("GET DOCTOR APPOINTMENTS ERROR =", err);
+      if (version === appointmentReadVersion.current) setAppointments(safeArray(res.data));
+    } catch {
+      if (version === appointmentReadVersion.current) setAppointmentError("Chưa tải được lịch hẹn. Vui lòng thử tải lại.");
+    } finally {
+      if (version === appointmentReadVersion.current) setAppointmentsLoading(false);
     }
   }, []);
-  useEffect(() => {
-    if (activeMenu !== "appointment" || !notificationAppointmentId) return;
-    const node = document.getElementById(`doctor-appointment-${notificationAppointmentId}`);
-    node?.focus(); node?.scrollIntoView?.({ block: "center", behavior: "auto" });
-  }, [activeMenu, appointments, notificationAppointmentId]);
+
+  const acceptAppointment = useCallback((value, patient) => {
+    if (!value?._id) return;
+    setAppointments(previous => {
+      const existing = previous.find(item => String(item._id) === String(value._id));
+      const patientInfo = typeof value.patientId === "object" && value.patientId
+        ? value.patientId
+        : typeof existing?.patientId === "object" && existing.patientId ? existing.patientId : patient || value.patientId;
+      const updated = { ...existing, ...value, patientId: patientInfo };
+      return existing ? previous.map(item => String(item._id) === String(value._id) ? updated : item) : [updated, ...previous];
+    });
+  }, []);
 
   const fetchPatients = useCallback(async () => {
     try {
@@ -369,7 +388,7 @@ export default function DoctorDashboard() {
       setCarePlan(res.data);
       setCarePlanDays(emptyCarePlanDays(res.data?.days));
       setCarePlanEditorOpen(false);
-      alert(status === "confirmed" ? "Đã chốt kế hoạch cho bệnh nhân." : "Đã lưu bản nháp kế hoạch.");
+      alert(status === "confirmed" ? "Đã xác nhận kế hoạch chăm sóc cho bệnh nhân." : "Đã lưu bản nháp kế hoạch.");
     } catch (err) {
       alert(err.response?.data?.msg || "Không thể lưu kế hoạch chăm sóc.");
     } finally {
@@ -424,68 +443,51 @@ export default function DoctorDashboard() {
   };
 
   const sendEmailReminder = async (appointmentId) => {
-    if (!appointmentId) return;
-    setReminderSendingId(appointmentId);
-
+    if (!appointmentId || appointmentWriteLock.current) return;
+    appointmentWriteLock.current = true; setReminderSendingId(appointmentId); setAppointmentFeedback(null);
     try {
-      await API.post(
-        `/appointments/remind/${appointmentId}`,
-        {},
-        authConfig()
-      );
-      alert("Đã gửi email nhắc lịch cho bệnh nhân.");
-    } catch (err) {
-      alert(
-        err.response?.data?.msg ||
-        "Không thể gửi email nhắc lịch."
-      );
-    } finally {
-      setReminderSendingId("");
-    }
+      const response = await API.post(`/appointments/remind/${appointmentId}`, {}, authConfig());
+      setAppointmentFeedback({ type: "success", message: response.data?.msg || "Dịch vụ email đã tiếp nhận nhắc lịch." });
+    } catch (error) {
+      setAppointmentFeedback({ type: "error", message: error.response?.data?.msg || "Chưa gửi được email nhắc lịch. Vui lòng thử lại." });
+      if (error.response?.status === 409) await fetchAppointments();
+    } finally { appointmentWriteLock.current = false; setReminderSendingId(""); }
   };
 
   const createAppointment = async () => {
-    if (!selectedPatient) return alert("Vui lòng chọn bệnh nhân.");
-    if (!appointmentData.appointmentDate) {
-      return alert("Vui lòng chọn ngày hẹn.");
-    }
-
+    if (appointmentWriteLock.current) return;
+    if (!appointmentPatient) { setAppointmentFeedback({ type: "error", message: "Vui lòng chọn bệnh nhân để tạo lịch." }); return; }
+    const instant = appointmentInputToISO(appointmentData.appointmentDate);
+    if (!instant || new Date(instant).getTime() <= Date.now()) { setAppointmentFeedback({ type: "error", message: "Vui lòng chọn ngày và giờ hẹn hợp lệ trong tương lai (giờ Việt Nam)." }); return; }
+    appointmentWriteLock.current = true; setAppointmentCreating(true); setAppointmentFeedback(null);
     try {
-      await API.post(
-        "/appointments/create",
-        {
-          patientId: selectedPatient._id,
-          appointmentDate: appointmentData.appointmentDate,
-          note: appointmentData.note,
-          type: appointmentData.type
-        },
-        authConfig()
-      );
-
+      const response = await API.post("/appointments/create", { patientId: appointmentPatient._id, appointmentDate: instant, note: appointmentData.note, type: appointmentData.type }, authConfig());
+      acceptAppointment(response.data?.appointment, appointmentPatient);
       await fetchAppointments();
-      alert("Đã tạo lịch hẹn.");
-      setAppointmentData({
-        appointmentDate: "",
-        note: "",
-        type: "Tái khám"
-      });
-      setSelectedPatient(null);
-    } catch (err) {
-      alert(err.response?.data?.msg || "Tạo lịch hẹn thất bại.");
-    }
+      setAppointmentFeedback({ type: "success", message: response.data?.msg || "Đã tạo lịch hẹn." });
+      setAppointmentData({ appointmentDate: "", note: "", type: "Tái khám" });
+      setAppointmentPatient(null);
+    } catch (error) {
+      setAppointmentFeedback({ type: "error", message: error.response?.data?.msg || "Chưa tạo được lịch hẹn. Nội dung bạn nhập được giữ lại." });
+    } finally { appointmentWriteLock.current = false; setAppointmentCreating(false); }
   };
 
   const updateAppointmentStatus = async (appointment, status) => {
-    setAppointmentActionId(appointment._id);
+    if (appointmentWriteLock.current) return;
+    if (status === "completed" && (!appointment.appointmentDate || !Number.isFinite(new Date(appointment.appointmentDate).getTime()) || new Date(appointment.appointmentDate).getTime() > Date.now())) {
+      setAppointmentFeedback({ type: "error", message: "Chưa đến giờ hẹn. Chỉ hoàn tất sau khi buổi khám đến thời gian đã đặt." }); return;
+    }
+    appointmentWriteLock.current = true; setAppointmentActionId(appointment._id); setAppointmentFeedback(null);
     try {
       const action = status === "approved" ? "approve" : "complete";
-      await API.put(`/appointments/${action}/${appointment._id}`, {}, authConfig());
+      const response = await API.put(`/appointments/${action}/${appointment._id}`, {}, authConfig());
+      acceptAppointment(response.data?.appointment);
       await fetchAppointments();
-    } catch (err) {
-      alert(err.response?.data?.msg || "Không thể cập nhật lịch hẹn.");
-    } finally {
-      setAppointmentActionId("");
-    }
+      setAppointmentFeedback({ type: "success", message: response.data?.msg || (status === "approved" ? "Đã duyệt lịch hẹn." : "Đã cập nhật buổi khám hoàn thành.") });
+    } catch (error) {
+      setAppointmentFeedback({ type: "error", message: error.response?.data?.msg || "Chưa cập nhật được lịch hẹn. Vui lòng thử lại." });
+      if (error.response?.status === 409) await fetchAppointments();
+    } finally { appointmentWriteLock.current = false; setAppointmentActionId(""); }
   };
 
   // ================= MESSAGING =================
@@ -935,7 +937,7 @@ export default function DoctorDashboard() {
         medicines: [initialMedicine()]
       });
 
-      alert("Đã chốt đơn thuốc cho bệnh nhân.");
+      alert("Đã xác nhận đơn thuốc cho bệnh nhân.");
     } catch (err) {
       alert(err.response?.data?.msg || "Không thể tạo đơn thuốc.");
     } finally {
@@ -974,7 +976,7 @@ export default function DoctorDashboard() {
 
   const todayAppointments = appointments.filter((a) => {
     if (!a.appointmentDate) return false;
-    return new Date(a.appointmentDate).toDateString() === new Date().toDateString();
+    return appointmentDateTimeInput(a.appointmentDate).slice(0, 10) === appointmentDateTimeInput().slice(0, 10);
   });
 
   const highRisk = patients.filter(
@@ -1179,26 +1181,6 @@ export default function DoctorDashboard() {
                 <p>Có dữ liệu sức khỏe</p>
                 <span className="card-caption">Theo dõi liên tục</span>
               </div>
-            </section>
-
-            <section className="patient-table doctor-appointment-list">
-              <div className="table-top">
-                <div><h2>Lịch hẹn</h2><p>Duyệt lịch đang chờ và cập nhật lịch đã khám.</p></div>
-              </div>
-              {appointments.length ? appointments.map((appointment) => (
-                <article className="mini-patient" key={appointment._id}>
-                  <div className="mini-patient-info">
-                    <strong>{appointment.patientId?.fullName || appointment.patientId?.username || "Bệnh nhân"}</strong>
-                    <span>{formatDate(appointment.appointmentDate)} · {formatTime(appointment.appointmentDate)} · {appointment.type || "Tái khám"}</span>
-                    <span>Trạng thái: {appointmentStatusLabel(appointment.status)}</span>
-                  </div>
-                  <div className="mini-actions">
-                    {appointment.status === "pending" && <button className="view-btn" disabled={appointmentActionId === appointment._id} onClick={() => updateAppointmentStatus(appointment, "approved")}>Duyệt</button>}
-                    {appointment.status === "approved" && <button className="view-btn" disabled={appointmentActionId === appointment._id} onClick={() => updateAppointmentStatus(appointment, "completed")}>Hoàn tất</button>}
-                    {["pending", "approved"].includes(appointment.status) && <button type="button" className="close-btn" onClick={() => setCancelAppointment(appointment)}>Hủy lịch</button>}
-                  </div>
-                </article>
-              )) : <div className="empty-state">Chưa có lịch hẹn.</div>}
             </section>
 
             <section className="dashboard-split">
@@ -1561,6 +1543,7 @@ export default function DoctorDashboard() {
         {/* ================= APPOINTMENTS ================= */}
         {activeMenu === "appointment" && (
           <div className="appointment-page">
+            <DoctorAppointmentList appointments={appointments} loading={appointmentsLoading} error={appointmentError} feedback={appointmentFeedback} actionId={appointmentActionId} reminderId={reminderSendingId} creating={appointmentCreating} now={appointmentNow} focusId={notificationAppointmentId} onReload={fetchAppointments} onUpdateStatus={updateAppointmentStatus} onCancel={setCancelAppointment} onRemind={sendEmailReminder} />
             <section className="patient-table">
               <div className="table-top">
                 <div>
@@ -1574,10 +1557,11 @@ export default function DoctorDashboard() {
                 {patients.map((p) => (
                   <button
                     className={`appointment-patient ${
-                      selectedPatient?._id === p._id ? "selected" : ""
+                      appointmentPatient?._id === p._id ? "selected" : ""
                     }`}
                     key={p._id}
-                    onClick={() => setSelectedPatient(p)}
+                    disabled={appointmentCreating}
+                    onClick={() => setAppointmentPatient(p)}
                   >
                     <div className="mini-avatar">
                       {getPatientName(p).charAt(0).toUpperCase()}
@@ -1592,24 +1576,28 @@ export default function DoctorDashboard() {
               </div>
             </section>
 
-            {selectedPatient && (
-              <section className="appointment-box">
+            {appointmentPatient && (
+              <form className="appointment-box" noValidate onSubmit={event => { event.preventDefault(); createAppointment(); }}>
                 <div className="appointment-header">
                   <div>
-                    <span className="section-kicker">NEW APPOINTMENT</span>
-                    <h2>Tạo lịch hẹn cho {getPatientName(selectedPatient)}</h2>
+                    <span className="section-kicker">LỊCH HẸN MỚI</span>
+                    <h2>Tạo lịch hẹn cho {getPatientName(appointmentPatient)}</h2>
                     <p>Chọn thời gian và nội dung cần trao đổi.</p>
                   </div>
-                  <button className="close-btn" onClick={() => setSelectedPatient(null)}>
+                  <button type="button" className="close-btn" disabled={appointmentCreating} onClick={() => setAppointmentPatient(null)}>
                     <FaTimes /> Đóng
                   </button>
                 </div>
 
                 <div className="appointment-grid">
                   <div className="appointment-input">
-                    <label>Ngày & giờ hẹn</label>
+                    <label htmlFor="doctor-appointment-date">Ngày & giờ hẹn · giờ Việt Nam</label>
                     <input
+                      id="doctor-appointment-date"
                       type="datetime-local"
+                      min={appointmentDateTimeInput(appointmentNow)}
+                      aria-label="Ngày và giờ hẹn (giờ Việt Nam)"
+                      disabled={appointmentCreating}
                       value={appointmentData.appointmentDate}
                       onChange={(e) =>
                         setAppointmentData({
@@ -1621,8 +1609,10 @@ export default function DoctorDashboard() {
                   </div>
 
                   <div className="appointment-input">
-                    <label>Loại lịch hẹn</label>
+                    <label htmlFor="doctor-appointment-type">Loại lịch hẹn</label>
                     <select
+                      id="doctor-appointment-type"
+                      disabled={appointmentCreating}
                       value={appointmentData.type}
                       onChange={(e) =>
                         setAppointmentData({
@@ -1639,8 +1629,10 @@ export default function DoctorDashboard() {
                   </div>
 
                   <div className="appointment-input full">
-                    <label>Nội dung lịch hẹn</label>
+                    <label htmlFor="doctor-appointment-note">Nội dung lịch hẹn</label>
                     <textarea
+                      id="doctor-appointment-note"
+                      disabled={appointmentCreating}
                       placeholder="Nhập nội dung lịch hẹn..."
                       value={appointmentData.note}
                       onChange={(e) =>
@@ -1653,61 +1645,13 @@ export default function DoctorDashboard() {
                   </div>
                 </div>
 
-                <button className="create-appointment-btn" onClick={createAppointment}>
-                  <FaCalendarAlt /> Tạo lịch hẹn
+                <button type="submit" className="create-appointment-btn" disabled={appointmentCreating || !!appointmentActionId || !!reminderSendingId}>
+                  <FaCalendarAlt /> {appointmentCreating ? "Đang tạo lịch…" : "Tạo lịch hẹn"}
                 </button>
-              </section>
+              </form>
             )}
 
-            <section className="patient-table">
-              <div className="table-top">
-                <div>
-                  <h2>Lịch hẹn</h2>
-                  <p>Quản lý các cuộc hẹn đã tạo.</p>
-                </div>
-              </div>
 
-              <div className="appointment-list">
-                {appointments.map((a) => (
-                  <div className="appointment-row" id={`doctor-appointment-${a._id}`} tabIndex={-1} key={a._id}>
-                    <div className="appointment-date-icon"><FaCalendarAlt /></div>
-                    <div className="appointment-main">
-                      <strong>{a.patientId?.fullName || a.patientId?.username || "Bệnh nhân"}</strong>
-                      <span>{formatDate(a.appointmentDate)} · {a.type}</span>
-                      {a.note && <p>{a.note}</p>}
-                    </div>
-                    <span className={`appointment-status ${a.status}`}>
-                      {appointmentStatusLabel(a.status)}
-                    </span>
-                    <div className="appointment-actions">
-                      {["pending", "approved"].includes(a.status) && (
-                        <>
-                          <button
-                            className="reminder-btn"
-                            disabled={reminderSendingId === a._id}
-                            onClick={() => sendEmailReminder(a._id)}
-                          >
-                            <FaEnvelope />
-                            {reminderSendingId === a._id ? "Đang gửi" : "Nhắc email"}
-                          </button>
-                          <button
-                            className="close-btn"
-                            type="button"
-                            onClick={() => setCancelAppointment(a)}
-                          >
-                            Hủy
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {appointments.length === 0 && (
-                  <div className="empty-state"><FaCalendarAlt /> Chưa có lịch hẹn.</div>
-                )}
-              </div>
-            </section>
           </div>
         )}
 
@@ -1905,13 +1849,13 @@ export default function DoctorDashboard() {
                       <span className="section-kicker">05 · CARE PLAN</span>
                       <h3>Kế hoạch chăm sóc & ăn uống</h3>
                       <p className="care-plan-caption">Lịch trình đã lưu của bệnh nhân theo ngày và từng hoạt động.</p>
-                      {carePlan?.source === "AI" && <p className="care-plan-review-note">Đây là kế hoạch gợi ý tự tạo, chưa phải kế hoạch bác sĩ chốt. Rà soát trước khi lưu vào kế hoạch điều trị.</p>}
-                      {carePlan?.source === "DOCTOR" && <p className="care-plan-review-note">Kế hoạch do bác sĩ lưu{carePlan.status === "confirmed" ? " và chốt cho bệnh nhân" : " ở trạng thái nháp"}. Kế hoạch gợi ý không tự ghi đè nội dung này.</p>}
+                      {carePlan?.source === "AI" && <p className="care-plan-review-note">Đây là kế hoạch gợi ý tự tạo, chưa phải kế hoạch được bác sĩ xác nhận. Rà soát trước khi lưu vào kế hoạch điều trị.</p>}
+                      {carePlan?.source === "DOCTOR" && <p className="care-plan-review-note">Kế hoạch do bác sĩ lưu{carePlan.status === "confirmed" ? " và xác nhận cho bệnh nhân" : " ở trạng thái nháp"}. Kế hoạch gợi ý không tự ghi đè nội dung này.</p>}
                     </div>
                     <div className="care-plan-heading-actions">
                       {carePlan?.status && (
                         <span className={`plan-status ${carePlan.status}`}>
-                          {carePlan.source === "AI" ? "Chờ bác sĩ rà soát" : carePlan.status === "confirmed" ? "Đã chốt" : carePlan.status === "draft" ? "Bản nháp" : carePlan.status}
+                          {carePlan.source === "AI" ? "Chờ bác sĩ rà soát" : carePlan.status === "confirmed" ? "Đã xác nhận" : carePlan.status === "draft" ? "Đang xem xét" : carePlan.status}
                         </span>
                       )}
                       <button type="button" className="soft-btn" onClick={jumpToPrescriptionEditor}>
@@ -2013,7 +1957,7 @@ export default function DoctorDashboard() {
                       <textarea id="care-plan-doctor-note" rows={3} value={carePlanNote} onChange={(event) => setCarePlanNote(event.target.value)} placeholder="Trao đổi hoặc lưu ý theo dõi cho bệnh nhân..." />
                       <div className="care-plan-save-actions">
                         <button type="button" className="soft-btn" disabled={carePlanSaving} onClick={() => saveCarePlan("draft")}>{carePlanSaving ? "Đang lưu..." : "Lưu nháp"}</button>
-                        <button type="button" className="view-btn" disabled={carePlanSaving} onClick={() => saveCarePlan("confirmed")}>{carePlanSaving ? "Đang lưu..." : "Chốt cho bệnh nhân"}</button>
+                        <button type="button" className="view-btn" disabled={carePlanSaving} onClick={() => saveCarePlan("confirmed")}>{carePlanSaving ? "Đang lưu..." : "Xác nhận kế hoạch"}</button>
                       </div>
                     </div>
                   )}
@@ -2026,7 +1970,7 @@ export default function DoctorDashboard() {
                       <span className="section-kicker">06 · MEDICATION</span>
                       <h3>Đơn thuốc</h3>
                     </div>
-                    <span className="tool-stat">{activePrescriptionsCount} đơn đang chốt</span>
+                    <span className="tool-stat">{activePrescriptionsCount} đơn đã xác nhận</span>
                   </div>
 
                   <div className="prescription-list">
@@ -2038,7 +1982,7 @@ export default function DoctorDashboard() {
                             <h4>{prescription.title}</h4>
                             <span>
                               {prescription.status === "confirmed"
-                                ? `Đã chốt · ${formatDate(prescription.confirmedAt)}`
+                                ? `Đã xác nhận · ${formatDate(prescription.confirmedAt)}`
                                 : prescription.status === "cancelled"
                                 ? "Đã hủy"
                                 : "Bản nháp"}
@@ -2203,7 +2147,7 @@ export default function DoctorDashboard() {
                       onClick={createPrescription}
                     >
                       <FaCheckCircle />
-                      {savingPrescription ? "Đang chốt đơn..." : "Chốt đơn thuốc"}
+                      {savingPrescription ? "Đang xác nhận đơn..." : "Xác nhận đơn thuốc"}
                     </button>
                   </div>
                 </section>
@@ -2256,7 +2200,7 @@ export default function DoctorDashboard() {
           </aside>
         </div>
       )}
-      <CancelAppointmentDialog appointment={cancelAppointment} onClose={() => setCancelAppointment(null)} onCancelled={() => fetchAppointments()} />
+      <CancelAppointmentDialog appointment={cancelAppointment} onClose={() => setCancelAppointment(null)} onCancelled={updated => { acceptAppointment(updated); fetchAppointments(); setAppointmentFeedback({ type: "success", message: "Đã hủy lịch hẹn. Lịch được giữ trong lịch sử." }); }} />
     </div></MotionConfig>
   );
 }

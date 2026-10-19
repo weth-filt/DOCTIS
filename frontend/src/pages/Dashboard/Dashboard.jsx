@@ -2506,8 +2506,8 @@ export default function Dashboard() {
 
             <section className="care-week-shell-v6 doctor-approved-plan">
               <div className="care-section-head-v6">
-                <div><span className="care-section-kicker">KẾ HOẠCH BÁC SĨ</span><h3>Kế hoạch chăm sóc đã chốt</h3></div>
-                <span>{doctorCarePlan ? "Đã đồng bộ" : "Chưa có kế hoạch"}</span>
+                <div><span className="care-section-kicker">KẾ HOẠCH BÁC SĨ</span><h3>Kế hoạch chăm sóc từ bác sĩ</h3></div>
+                <span>{doctorCarePlan ? "Sẵn sàng thực hiện" : "Chờ bác sĩ cập nhật"}</span>
               </div>
               {doctorCarePlan ? (
                 <>
@@ -2526,7 +2526,7 @@ export default function Dashboard() {
                     ))}
                   </div>
                 </>
-              ) : <p>Bác sĩ chưa chốt kế hoạch chăm sóc cho bạn.</p>}
+              ) : <p>Kế hoạch chăm sóc sẽ hiển thị tại đây khi được bác sĩ xác nhận.</p>}
             </section>
 
             {nutritionMissingFields.length > 0 && (
@@ -2540,7 +2540,7 @@ export default function Dashboard() {
             {prescriptionError && (
               <div className="care-alert-v6 info">
                 <span className="care-alert-icon">💊</span>
-                <div><strong>Đơn thuốc chưa đồng bộ</strong><p>Khi bác sĩ chốt đơn, thuốc sẽ tự động xuất hiện trong lịch 7 ngày.</p></div>
+                <div><strong>Đơn thuốc chưa đồng bộ</strong><p>Khi bác sĩ xác nhận đơn, thuốc sẽ tự động xuất hiện trong lịch 7 ngày.</p></div>
               </div>
             )}
 
@@ -2572,7 +2572,7 @@ export default function Dashboard() {
                 <div className="care-empty-orb">✦</div>
                 <span className="care-section-kicker">BẮT ĐẦU HÔM NAY</span>
                 <h3>Tạo lịch chăm sóc 7 ngày của riêng bạn</h3>
-                <p>DOCTIS sẽ kết hợp dữ liệu sức khỏe gần nhất, hồ sơ dị ứng/bệnh nền và đơn thuốc đã chốt để tạo một lịch dễ theo dõi.</p>
+                <p>DOCTIS sẽ kết hợp dữ liệu sức khỏe gần nhất, hồ sơ dị ứng/bệnh nền và đơn thuốc đã xác nhận để tạo một lịch dễ theo dõi.</p>
                 <button type="button" className="generate-plan-btn" onClick={handleGeneratePlan} disabled={!savedCare.ready || nutritionMissingFields.length > 0}>✨ Bắt đầu tạo kế hoạch</button>
               </section>
             )}
@@ -2592,7 +2592,7 @@ export default function Dashboard() {
                     <h3>{careWeek[activeDay].label}</h3>
                     <p>{careWeek[activeDay].summary || nutritionPlan.summaryNote || "Lịch chăm sóc được cá nhân hóa cho hôm nay."}</p>
                   </div>
-                  <div className="care-source-v6"><span>🤖</span> AI + <span>👨‍⚕️</span> Đơn đã chốt</div>
+                  <div className="care-source-v6"><span>🤖</span> AI + <span>👨‍⚕️</span> Đơn đã xác nhận</div>
                 </div>
 
                 <div className="care-detail-list-v6">

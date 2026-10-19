@@ -1,6 +1,15 @@
-# Review local — luồng public Đà Nẵng, 19/10/2026
+# Sửa kế hoạch chăm sóc và lịch hẹn bác sĩ — 19/10/2026
 
-**Đợt hiện tại chưa push/deploy và không thay đổi production.** Phần phát hành bên dưới là lịch sử của bản trước.
+- Đổi nội dung hiển thị “đã chốt” thành “đã xác nhận”; kế hoạch nháp là “Đang xem xét”, kế hoạch bệnh nhân đã được xác nhận là “Sẵn sàng thực hiện”. Giữ nguyên các giá trị trạng thái API.
+- Bỏ danh sách duyệt lịch trùng ở Tổng quan. Mục Lịch hẹn quản lý tạo, duyệt, hoàn tất, hủy và nhắc email, có tìm kiếm và lọc trạng thái. Thu gọn card và hàng thông tin bác sĩ; điện thoại giữ nút thao tác tối thiểu 44px.
+- Nút Hoàn tất trước đây hiện cả cho lịch tương lai. Bản sửa khóa nút đến giờ hẹn, giải thích lý do và phản hồi API ngay trong danh sách; backend vẫn chặn hoàn tất sớm và kiểm tra quyền bác sĩ phụ trách. Gửi lại thao tác đã thành công không tạo báo lỗi sai.
+- Thời gian được nhập và hiển thị theo giờ Việt Nam; không lặp giờ. Giữ dữ liệu nhập khi tạo thất bại, cập nhật ngay bản ghi API trả về rồi tải lại danh sách. Không đổi dữ liệu lịch hẹn có sẵn.
+- Công cụ trình duyệt trả danh sách kết nối trống trong lượt này: chưa xác minh trực quan bản mới. Không duyệt, hoàn tất, hủy lịch thật hoặc gửi email để kiểm tra. Không chạy thêm bộ test trong đợt sửa này.
+- Build cuối thành công: preview `main.408c37eb.js` / `main.1ca37c4f.css`; kiểm tra cú pháp controller và `git diff --check` đạt. Tên JS production sẽ khác vì dùng URL API production.
+
+## Lịch sử review local — luồng public Đà Nẵng
+
+Phần dưới ghi lại review trước khi phát hành bản public `3971d41`; bản đó đã được đưa lên Vercel theo yêu cầu của chủ dự án.
 
 - Đã bổ sung đăng ký theo danh mục phường; admin tiếp nhận/điều phối/danh mục; bệnh viện–bác sĩ; thông báo polling lưu server; bệnh nhân xem/cập nhật địa chỉ; hủy lịch có xác nhận. Giữ thiết kế và đăng nhập cũ.
 - Phân công tách ba bước, unique/CAS/transaction; thu quyền doctor áp dụng ngay với JWT cũ. Không có bệnh viện giả, tọa độ giả hoặc xếp hạng “gần nhất”.

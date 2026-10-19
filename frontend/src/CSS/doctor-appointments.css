@@ -1,0 +1,404 @@
+/* Compact clinical panels. Chat, authentication and administration keep their own scale. */
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content :is(.patient-table,.appointment-box) {
+  padding:18px;
+  border-radius:16px;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content .patient-table {
+  margin-top:16px;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content :is(.table-top,.appointment-header) {
+  gap:12px;
+  margin-bottom:14px;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content :is(.table-top h2,.appointment-header h2) {
+  margin:0;
+  font-size:18px;
+  line-height:1.45;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content :is(.table-top p,.appointment-header p) {
+  margin:4px 0 0;
+  font-size:12px;
+  line-height:1.6;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content .appointment-header {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+}
+.doctor-layout.role-studio .appointment-page {
+  gap:14px;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content .appointment-page > .patient-table {
+  margin-top:0;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content .doctor-card {
+  min-height:94px;
+  padding:14px;
+  border-radius:15px;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content .patient-profile-card {
+  padding:14px;
+  border-radius:15px;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content .patient-profile-card .large-avatar {
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  font-size:15px;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content .patient-stat-row {
+  gap:7px;
+  margin:12px 0;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content .patient-stat-row > div {
+  padding:9px 8px;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content .patient-card-actions {
+  padding-top:10px;
+}
+.doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content .mini-patient {
+  gap:10px;
+  padding:11px 12px;
+  border-radius:12px;
+  box-shadow:none;
+}
+
+/* All appointment mutations live in this workspace. */
+.doctor-layout.role-studio .doctor-appointments {
+  min-width:0;
+  scroll-margin-top:20px;
+}
+.doctor-layout.role-studio .doctor-appointments .table-top {
+  flex-wrap:wrap;
+  align-items:center;
+}
+.doctor-layout.role-studio .doctor-appointment-count {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:26px;
+  padding:4px 9px;
+  border:1px solid var(--care-line);
+  border-radius:8px;
+  background:var(--care-soft);
+  color:var(--care-muted);
+  font-size:11px;
+  line-height:1.4;
+  white-space:nowrap;
+}
+.doctor-layout.role-studio .doctor-appointment-toolbar {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin:0 0 12px;
+}
+.doctor-layout.role-studio .doctor-appointment-toolbar label {
+  display:flex;
+  align-items:center;
+  flex:1 1 230px;
+  gap:9px;
+  min-width:0;
+  min-height:38px;
+  margin:0;
+  padding:0 11px;
+  border:1px solid var(--care-line);
+  border-radius:10px;
+  background:var(--care-paper);
+  color:var(--care-muted);
+  transition:border-color .18s,box-shadow .18s;
+}
+.doctor-layout.role-studio .doctor-appointment-toolbar label > svg {
+  flex:0 0 13px;
+  width:13px;
+  height:13px;
+}
+.doctor-layout.role-studio .doctor-appointment-toolbar label input {
+  width:100%;
+  min-width:0;
+  min-height:36px;
+  margin:0;
+  padding:6px 0;
+  border:0 !important;
+  border-radius:0;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.doctor-layout.role-studio .doctor-appointment-toolbar label input:focus {
+  outline:0 !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+.doctor-layout.role-studio .doctor-appointment-toolbar label:focus-within {
+  border-color:var(--care-teal);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--care-teal) 15%,transparent);
+}
+.doctor-layout.role-studio .doctor-appointment-refresh {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:36px;
+  padding:0 11px;
+  border:1px solid var(--care-line);
+  border-radius:9px;
+  background:var(--care-soft);
+  color:var(--care-link,var(--care-teal));
+  font:inherit;
+  font-size:11px;
+  font-weight:600;
+  cursor:pointer;
+}
+.doctor-layout.role-studio .doctor-appointment-filters {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:0 0 14px;
+}
+.doctor-layout.role-studio .doctor-appointment-filters button {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:34px;
+  padding:6px 10px;
+  border:1px solid var(--care-line);
+  border-radius:9px;
+  background:var(--care-paper);
+  color:var(--care-muted);
+  font:inherit;
+  font-size:11px;
+  line-height:1.4;
+  cursor:pointer;
+}
+.doctor-layout.role-studio .doctor-appointment-filters button :is(span,small) {
+  display:inline-grid;
+  place-items:center;
+  min-width:18px;
+  min-height:18px;
+  padding:0 4px;
+  border-radius:6px;
+  background:var(--care-soft);
+  color:inherit;
+  font-size:10px;
+}
+.doctor-layout.role-studio .doctor-appointment-filters button[aria-pressed="true"] {
+  border-color:var(--care-teal);
+  background:var(--care-accent-soft);
+  color:var(--care-link,var(--care-teal));
+}
+.doctor-layout.role-studio .doctor-appointment-filters button[aria-pressed="true"] :is(span,small) {
+  background:var(--care-paper);
+}
+.doctor-layout.role-studio .doctor-appointment-feedback {
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  margin:0 0 12px;
+  padding:10px 12px;
+  border:1px solid var(--care-line);
+  border-radius:10px;
+  background:var(--care-soft);
+  color:var(--care-ink);
+  font-size:12px;
+  line-height:1.6;
+  overflow-wrap:anywhere;
+}
+.doctor-layout.role-studio .doctor-appointment-feedback.is-success {
+  border-color:color-mix(in srgb,var(--care-teal) 28%,var(--care-line));
+  background:var(--care-accent-soft);
+  color:var(--care-link,var(--care-teal));
+}
+.doctor-layout.role-studio .doctor-appointment-feedback.is-error {
+  border-color:color-mix(in srgb,var(--care-danger) 35%,var(--care-line));
+  background:color-mix(in srgb,var(--care-danger) 7%,var(--care-paper));
+  color:var(--care-danger);
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-list {
+  display:grid;
+  gap:8px;
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-row {
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) auto auto;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  padding:12px;
+  border:1px solid var(--care-line);
+  border-radius:12px;
+  background:var(--care-paper);
+  box-shadow:none;
+  scroll-margin-top:20px;
+  transition:border-color .18s,background-color .18s,transform .18s;
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-row:hover {
+  border-color:color-mix(in srgb,var(--care-teal) 28%,var(--care-line));
+  box-shadow:none;
+  transform:translateY(-1px);
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-row:focus-visible {
+  outline:3px solid color-mix(in srgb,var(--care-teal) 40%,transparent);
+  outline-offset:3px;
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-date-icon {
+  display:grid;
+  place-items:center;
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  font-size:14px;
+  box-shadow:none;
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-main {
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-main strong {
+  display:block;
+  font-size:13px;
+  line-height:1.5;
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-main :is(span,p,.appointment-timing-note) {
+  display:block;
+  margin:3px 0 0;
+  color:var(--care-muted);
+  font-size:11px;
+  line-height:1.55;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-main .appointment-timing-note {
+  color:var(--care-link,var(--care-teal));
+  font-size:10px;
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-status {
+  justify-self:start;
+  padding:5px 8px;
+  font-size:9px;
+  line-height:1.4;
+  white-space:nowrap;
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-actions {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:6px;
+  min-width:0;
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-actions :is(.view-btn,.reminder-btn,.close-btn) {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-height:36px;
+  padding:0 10px;
+  border-radius:9px;
+  font:inherit;
+  font-size:11px;
+  font-weight:600;
+  line-height:1.35;
+  white-space:nowrap;
+  box-shadow:none;
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-actions .view-btn {
+  border-color:var(--care-button);
+  background:var(--care-button);
+  color:var(--care-on-primary);
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-actions .reminder-btn {
+  border-color:var(--care-line);
+  background:var(--care-soft);
+  color:var(--care-link,var(--care-teal));
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-actions .close-btn {
+  border-color:color-mix(in srgb,var(--care-danger) 25%,var(--care-line));
+  background:color-mix(in srgb,var(--care-danger) 5%,var(--care-paper));
+  color:var(--care-danger);
+}
+.doctor-layout.role-studio .doctor-appointments .appointment-actions :is(.view-btn,.reminder-btn,.close-btn):hover:not(:disabled) {
+  filter:brightness(.97);
+  box-shadow:none;
+  transform:translateY(-1px);
+}
+.doctor-layout.role-studio :is(.doctor-appointment-filters button,.doctor-appointment-refresh,.doctor-appointments .appointment-actions button):disabled {
+  opacity:.55;
+  cursor:not-allowed;
+  transform:none;
+}
+
+@media(max-width:1100px) {
+  .doctor-layout.role-studio .doctor-appointments .appointment-row {
+    grid-template-columns:34px minmax(0,1fr) auto;
+  }
+  .doctor-layout.role-studio .doctor-appointments .appointment-actions {
+    grid-column:2 / -1;
+    justify-content:flex-start;
+  }
+}
+@media(max-width:700px) {
+  .doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content :is(.patient-table,.appointment-box) {
+    padding:14px;
+    border-radius:14px;
+  }
+  .doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content :is(.table-top h2,.appointment-header h2) {
+    font-size:17px;
+  }
+  .doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content .doctor-card {
+    min-height:90px;
+    padding:12px;
+  }
+  .doctor-layout.role-studio .doctor-appointment-toolbar {
+    align-items:stretch;
+  }
+  .doctor-layout.role-studio .doctor-appointment-toolbar label {
+    min-height:44px;
+  }
+  .doctor-layout.role-studio .doctor-appointment-toolbar label input {
+    min-height:42px;
+    font-size:16px !important;
+  }
+  .doctor-layout.role-studio :is(.doctor-appointment-refresh,.doctor-appointment-filters button) {
+    min-height:44px;
+  }
+  .doctor-layout.role-studio .doctor-appointments .appointment-row {
+    grid-template-columns:34px minmax(0,1fr);
+    align-items:start;
+    gap:8px 10px;
+    padding:12px;
+  }
+  .doctor-layout.role-studio .doctor-appointments .appointment-date-icon {
+    grid-column:1;
+    grid-row:1 / 3;
+  }
+  .doctor-layout.role-studio .doctor-appointments .appointment-main {
+    grid-column:2;
+  }
+  .doctor-layout.role-studio .doctor-appointments .appointment-status {
+    grid-column:2;
+  }
+  .doctor-layout.role-studio .doctor-appointments .appointment-actions {
+    grid-column:1 / -1;
+    justify-content:flex-start;
+    gap:7px;
+  }
+  .doctor-layout.role-studio .doctor-appointments .appointment-actions :is(.view-btn,.reminder-btn,.close-btn) {
+    min-height:44px;
+    padding:0 11px;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .doctor-layout.role-studio .doctor-appointments :is(.appointment-row,button),
+  .doctor-layout.role-studio .doctor-appointment-toolbar label {
+    animation:none !important;
+    transition:none !important;
+    transform:none !important;
+  }
+}
+.doctor-layout.role-studio[data-studio-simple="true"] .doctor-appointments :is(.appointment-row,button) {
+  animation:none !important;
+  transition:none !important;
+  transform:none !important;
+}

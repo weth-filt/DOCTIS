@@ -79,10 +79,34 @@ function createAppointmentController({ AppointmentModel = Appointment, ReminderM
       if (!appointment) return res.status(404).json({ msg: "Không tìm thấy lịch hẹn." });
       if (!await assignment.requireAssignedDoctor(req, res, String(appointment.patientId))) return;
       const from = status === "approved" ? "pending" : "approved";
-      if (appointment.status !== from || (status === "completed" && new Date(appointment.appointmentDate) > now())) return res.status(409).json({ msg: "Trạng thái hoặc thời điểm lịch hẹn không cho phép thao tác này." });
-      const updated = await AppointmentModel.findOneAndUpdate({ _id: appointment._id, doctorId: req.user.id, status: from, ...availableLock(now()) }, { $set: { status } }, { new: true, runValidators: true }).lean();
-      if (!updated) return res.status(409).json({ msg: "Lịch hẹn vừa thay đổi. Vui lòng tải lại." });
-      return res.json({ msg: status === "approved" ? "Đã duyệt lịch hẹn." : "Đã đánh dấu hoàn thành.", appointment: updated });
+      const success = (value, alreadyUpdated = false) => res.json({ msg: alreadyUpdated ? status === "approved" ? "Lịch hẹn này đã được duyệt." : "Lịch hẹn này đã hoàn thành." : status === "approved" ? "Đã duyệt lịch hẹn." : "Đã đánh dấu hoàn thành.", appointment: value, alreadyUpdated });
+      const transitionError = (value, at) => {
+        if (value.status !== from) {
+          const label = { pending: "đang chờ duyệt", approved: "đã duyệt", completed: "đã hoàn thành", cancelled: "đã hủy" }[value.status] || "không xác định";
+          return { code: "APPOINTMENT_STATUS_CONFLICT", msg: `${status === "approved" ? "Chỉ có thể duyệt lịch đang chờ." : "Chỉ có thể hoàn tất lịch đã duyệt."} Lịch hiện ${label}. Vui lòng tải lại danh sách.` };
+        }
+        if (status === "completed") {
+          const date = new Date(value.appointmentDate);
+          if (!value.appointmentDate || !Number.isFinite(date.getTime())) return { code: "APPOINTMENT_DATE_INVALID", msg: "Lịch hẹn chưa có thời gian hợp lệ nên không thể đánh dấu hoàn thành. Vui lòng kiểm tra lại thông tin lịch." };
+          if (date > at) return { code: "APPOINTMENT_IN_FUTURE", msg: `Chưa thể hoàn tất lịch hẹn trong tương lai. Lịch diễn ra lúc ${date.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })} (giờ Việt Nam).` };
+        }
+        return null;
+      };
+      // A retry must not turn a successful transition into a misleading error.
+      // Authorization above still applies to every replay.
+      if (appointment.status === status) return success(appointment, true);
+      const at = now();
+      const invalid = transitionError(appointment, at);
+      if (invalid) return res.status(409).json({ ...invalid, appointment });
+      const updated = await AppointmentModel.findOneAndUpdate({ _id: appointment._id, doctorId: req.user.id, status: from, ...(status === "completed" ? { appointmentDate: { $lte: at } } : {}), ...availableLock(at) }, { $set: { status } }, { new: true, runValidators: true }).lean();
+      if (updated) return success(updated);
+      const latest = await AppointmentModel.findOne({ _id: appointment._id, doctorId: req.user.id }).lean();
+      if (!latest) return res.status(404).json({ code: "APPOINTMENT_NOT_FOUND", msg: "Không tìm thấy lịch hẹn thuộc quyền của bạn." });
+      if (latest.status === status) return success(latest, true);
+      const changed = transitionError(latest, now());
+      if (changed) return res.status(409).json({ ...changed, appointment: latest });
+      if (latest.operationLock && !(new Date(latest.operationLockAt).getTime() < now().getTime() - 120000)) return res.status(409).json({ code: "APPOINTMENT_BUSY", msg: "Lịch hẹn đang được xử lý nhắc lịch. Vui lòng chờ thao tác này hoàn tất rồi thử lại.", appointment: latest });
+      return res.status(409).json({ code: "APPOINTMENT_CHANGED", msg: "Lịch hẹn vừa được cập nhật. Vui lòng tải lại danh sách trước khi thao tác.", appointment: latest });
     } catch (error) { return failure(res, error); }
   };
   const remindAppointment = async (req, res) => {
