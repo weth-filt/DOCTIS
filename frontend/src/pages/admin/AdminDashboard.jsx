@@ -38,6 +38,8 @@ const displayName = (x) => {
   }
   return raw;
 };
+const assignmentGroup = patient => patient.needsReconciliation || patient.legacyAssignment ? "legacy" : patient.assignedDoctor ? "assigned" : "waiting";
+const assignmentHospital = patient => patient.hospital || patient.assignedHospital || (patient.intake?.hospitalId?.name ? patient.intake.hospitalId : null) || (patient.assignedDoctor?.hospitalId?.name ? patient.assignedDoctor.hospitalId : null);
 
 export default function AdminDashboard() {
   const prefs = useStudioPreferences();
@@ -61,7 +63,7 @@ export default function AdminDashboard() {
   const doctorLock = useRef(false);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
-  const [assignmentFilter, setAssignmentFilter] = useState("all");
+  const [assignmentFilter, setAssignmentFilter] = useState("waiting");
   const [feedback, setFeedback] = useState(null);
   const showFeedback = (text, type = "error") => setFeedback({ text, type });
   const [assignmentSearch, setAssignmentSearch] = useState("");
@@ -111,8 +113,9 @@ export default function AdminDashboard() {
   const doctors = useMemo(() => users.filter(x => x.role?.trim() === "doctor"), [users]);
   const patients = useMemo(() => users.filter(x => x.role?.trim() === "user"), [users]);
   const admins = useMemo(() => users.filter(x => x.role?.trim() === "admin"), [users]);
-  const unassignedCount = useMemo(() => assignPatients.filter(x => !x.assignedDoctor).length, [assignPatients]);
-  const assignedCount = Math.max(assignPatients.length - unassignedCount, 0);
+  const unassignedCount = useMemo(() => assignPatients.filter(x => assignmentGroup(x) === "waiting").length, [assignPatients]);
+  const assignedCount = useMemo(() => assignPatients.filter(x => assignmentGroup(x) === "assigned").length, [assignPatients]);
+  const legacyCount = useMemo(() => assignPatients.filter(x => assignmentGroup(x) === "legacy").length, [assignPatients]);
 
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -123,9 +126,9 @@ export default function AdminDashboard() {
 
   const filteredAssignments = useMemo(() => {
     const q = assignmentSearch.trim().toLowerCase();
-    const visible = assignPatients.filter(p => assignmentFilter === "all" || (assignmentFilter === "assigned" ? !!p.assignedDoctor : !p.assignedDoctor));
+    const visible = assignPatients.filter(p => assignmentFilter === "all" || assignmentGroup(p) === assignmentFilter);
     if (!q) return visible;
-    return visible.filter(p => [p.fullName,p.username,p.email,displayName(p.assignedDoctor)].filter(Boolean).some(v => String(v).toLowerCase().includes(q)));
+    return visible.filter(p => [p.fullName,p.username,p.email,p.ward,assignmentHospital(p)?.name,displayName(p.assignedDoctor)].filter(Boolean).some(v => String(v).toLowerCase().includes(q)));
   }, [assignPatients, assignmentSearch, assignmentFilter]);
 
   const changeRole = async (id, role) => {
@@ -191,10 +194,10 @@ export default function AdminDashboard() {
 
   const nav = [
     { id: "dashboard", label: "Tổng quan", hint: "Hệ thống", icon: <FaChartLine /> },
-    { id: "coordination", label: "Tiếp nhận và điều phối", hint: "Bệnh viện · tiếp nhận · bác sĩ", icon: <FaHospital /> },
-    { id: "catalog", label: "Danh mục phục vụ", hint: "Phường và bệnh viện", icon: <FaHospital /> },
-    { id: "assignment", label: "Phân công bệnh nhân", hint: "Đối chiếu dữ liệu hiện có", icon: <FaUserCog />, badge: unassignedCount },
-    { id: "users", label: "Người dùng & quyền", hint: `${users.length} tài khoản`, icon: <FaUsers /> },
+    { id: "coordination", label: "Điều phối chăm sóc", hint: "Bệnh viện và bác sĩ", icon: <FaHospital /> },
+    { id: "catalog", label: "Danh mục bệnh viện", hint: "Cơ sở và phường phục vụ", icon: <FaHospital /> },
+    { id: "assignment", label: "Phân công bệnh nhân", hint: "Bệnh nhân đang chờ", icon: <FaUserCog />, badge: unassignedCount },
+    { id: "users", label: "Tài khoản & quyền", hint: `${users.length} tài khoản`, icon: <FaUsers /> },
   ];
 
   return (
@@ -208,11 +211,10 @@ export default function AdminDashboard() {
         <div className="admin-sidebar-label">QUẢN TRỊ HỆ THỐNG</div>
         <nav className="admin-menu" aria-label="Điều hướng quản trị">
           {nav.map(item => (
-            <button key={item.id} type="button" className={`admin-menu-item ${view === item.id ? "is-active" : ""}`} title={item.label} aria-current={view === item.id ? "page" : undefined} onClick={() => setView(item.id)}>
+            <button key={item.id} type="button" className={`admin-menu-item ${view === item.id ? "is-active" : ""}`} title={item.label} aria-label={item.label} aria-current={view === item.id ? "page" : undefined} onClick={() => setView(item.id)}>
               {view === item.id && <motion.i className="role-nav-light" layoutId="admin-navigation-light" />}
               <span className="admin-menu-icon">{item.icon}</span>
-              <span className="admin-menu-copy"><strong>{item.label}</strong><small>{item.hint}</small></span>
-              {item.badge > 0 ? <span className="admin-menu-badge" title={`${item.badge} bệnh nhân chưa được phân công`}>{item.badge}</span> : <FaChevronRight className="admin-menu-arrow" aria-hidden="true" />}
+              <span className="admin-menu-copy"><strong>{item.label}</strong><span className="admin-menu-meta"><small>{item.hint}</small>{item.badge > 0 && <span className="admin-menu-badge" title={`${item.badge} bệnh nhân chưa được phân công`} aria-label={`${item.badge} bệnh nhân đang chờ`}>{item.badge}</span>}</span></span>
             </button>
           ))}
         </nav>
@@ -242,7 +244,7 @@ export default function AdminDashboard() {
         {error && <motion.div className="admin-error" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}}><FaTimes /><span>{error}</span><button type="button" onClick={() => setError("")}>Đóng</button></motion.div>}
 
         <div ref={screenRef} className="role-workspace-content">
-          {view === "coordination" && <AdminCoordination key={catalogVersion} focusIntakeId={focusIntakeId} focusRequestKey={focusRequestKey} onChanged={() => loadAssignmentData()} />}
+          {view === "coordination" && <AdminCoordination reloadKey={catalogVersion} focusIntakeId={focusIntakeId} focusRequestKey={focusRequestKey} onManageCatalog={() => setView("catalog")} onChanged={() => loadAssignmentData()} />}
           {view === "catalog" && <AdminCatalogManager onChanged={() => setCatalogVersion(value => value + 1)} />}
           {view === "dashboard" && (
             <section key="dashboard" className="admin-view">
@@ -264,7 +266,7 @@ export default function AdminDashboard() {
                   <div className="panel-heading"><div><span className="panel-kicker">CARE NETWORK</span><h3>Phân công bác sĩ</h3></div><button className="panel-link" type="button" onClick={() => setView("assignment")}>Quản lý <FaChevronRight /></button></div>
                   <div className="assignment-progress">
                     <div className="progress-ring"><svg viewBox="0 0 120 120"><circle className="progress-track" cx="60" cy="60" r="50" /><circle className="progress-value" cx="60" cy="60" r="50" style={{strokeDashoffset: 314 - 314 * (assignPatients.length ? assignedCount / assignPatients.length : 0)}} /></svg><strong>{assignPatients.length ? Math.round(assignedCount / assignPatients.length * 100) : 0}%</strong></div>
-                    <div className="assignment-progress-copy"><h4>{assignedCount} bệnh nhân đã có bác sĩ</h4><p>{unassignedCount ? `${unassignedCount} bệnh nhân đang chờ được phân công.` : "Tất cả bệnh nhân đã có bác sĩ phụ trách."}</p><div className="mini-legend"><span><i className="dot assigned" /> Đã phân công</span><span><i className="dot waiting" /> Chưa phân công</span></div></div>
+                    <div className="assignment-progress-copy"><h4>{assignedCount} bệnh nhân đang được phụ trách</h4><p>{unassignedCount ? `${unassignedCount} bệnh nhân đang chờ được phân công.` : "Không có bệnh nhân chờ phân công mới."}{legacyCount > 0 && ` ${legacyCount} phân công cũ cần đối chiếu bệnh viện.`}</p><div className="mini-legend"><span><i className="dot assigned" /> Đang phụ trách</span><span><i className="dot waiting" /> Chờ phân công</span></div></div>
                   </div>
                 </section>
 
@@ -289,25 +291,25 @@ export default function AdminDashboard() {
 
           {view === "assignment" && (
             <section key="assignment" className="admin-view">
-              <WorkspaceIntro title="Đối chiếu mạng lưới chăm sóc" description="Danh sách hiện có được giữ để đối chiếu. Ghi nhận phân công mới tại Tiếp nhận và điều phối, sau bước bệnh viện tiếp nhận." kind="chat">
-                <WorkspaceTabs label="Lọc tình trạng phân công" value={assignmentFilter} onChange={setAssignmentFilter} options={[{value:"all",label:"Tất cả",count:assignPatients.length},{value:"assigned",label:"Đã phân công",count:assignedCount},{value:"waiting",label:"Đang chờ",count:unassignedCount}]} />
+              <WorkspaceIntro title="Phân công bệnh nhân" description="Bệnh nhân chờ phân công được hiển thị trước. Hồ sơ đã có bác sĩ và quan hệ cũ cần đối chiếu được theo dõi ở từng mục riêng." kind="chat">
+                <WorkspaceTabs label="Lọc tình trạng phân công" value={assignmentFilter} onChange={setAssignmentFilter} options={[{value:"waiting",label:"Chờ phân công",count:unassignedCount},{value:"assigned",label:"Đang phụ trách",count:assignedCount},{value:"legacy",label:"Cần đối chiếu",count:legacyCount},{value:"all",label:"Tất cả",count:assignPatients.length}]} />
               </WorkspaceIntro>
               <div className="section-toolbar">
-                <div><span className="admin-eyebrow small"><i /> CARE MANAGEMENT</span><h2>Phân công đang được ghi nhận</h2><p>Quan hệ cũ chưa xác định bệnh viện cần được admin xử lý trong quy trình tiếp nhận.</p><button type="button" className="coord-primary" onClick={() => setView("coordination")}>Mở Tiếp nhận và điều phối</button></div>
-                <div className="toolbar-search"><FaSearch /><input value={assignmentSearch} onChange={e => setAssignmentSearch(e.target.value)} placeholder="Tìm bệnh nhân..." /></div>
+                <div><span className="admin-eyebrow small"><i /> CARE MANAGEMENT</span><h2>{assignmentFilter === "waiting" ? "Bệnh nhân chờ phân công" : assignmentFilter === "assigned" ? "Bệnh nhân đang được phụ trách" : assignmentFilter === "legacy" ? "Phân công cần đối chiếu" : "Mạng lưới chăm sóc"}</h2><p>Chọn bệnh viện theo khu vực sinh sống, sau đó chọn bác sĩ đang công tác tại bệnh viện đó.</p><button type="button" className="coord-primary" onClick={() => setView("coordination")}>Mở điều phối chăm sóc</button></div>
+                <div className="toolbar-search"><FaSearch /><input value={assignmentSearch} onChange={e => setAssignmentSearch(e.target.value)} placeholder="Tìm tên, phường, bệnh viện..." /></div>
               </div>
-              <div className="assignment-toolbar-stats"><div><span>Tổng bệnh nhân</span><strong>{assignPatients.length}</strong></div><div><span>Đã phân công</span><strong className="success">{assignedCount}</strong></div><div><span>Đang chờ</span><strong className="warning">{unassignedCount}</strong></div><div><span>Bác sĩ</span><strong>{assignDoctors.length}</strong></div></div>
+              <div className="assignment-toolbar-stats"><div><span>Tổng bệnh nhân</span><strong>{assignPatients.length}</strong></div><div><span>Đang phụ trách</span><strong className="success">{assignedCount}</strong></div><div><span>Chờ phân công</span><strong className="warning">{unassignedCount}</strong></div><div><span>Cần đối chiếu</span><strong className="warning">{legacyCount}</strong></div></div>
               <section className="admin-panel assignment-panel">
-                {assignmentLoading ? <LoadingState text="Đang tải mạng lưới bệnh nhân..." /> : !filteredAssignments.length ? <EmptyState icon={<FaUsers />} title="Không tìm thấy bệnh nhân" text="Hãy thử thay đổi từ khóa tìm kiếm." /> :
+                {assignmentLoading ? <LoadingState text="Đang tải mạng lưới bệnh nhân..." /> : !filteredAssignments.length ? <EmptyState icon={<FaUsers />} title={assignmentSearch ? "Không tìm thấy bệnh nhân" : assignmentFilter === "waiting" ? "Không có bệnh nhân chờ phân công" : assignmentFilter === "legacy" ? "Không có phân công cần đối chiếu" : "Chưa có bệnh nhân trong mục này"} text={assignmentSearch ? "Hãy thử thay đổi từ khóa tìm kiếm." : "Bạn có thể chọn mục khác để xem các hồ sơ đã được quản lý."} /> :
                   <div className="assignment-table-wrap"><table className="admin-table"><thead><tr><th>Bệnh nhân</th><th>Liên hệ</th><th>Bác sĩ hiện tại</th><th>Bệnh viện</th><th>Trạng thái</th><th className="assignment-actions-cell">Thao tác</th></tr></thead><tbody>
                     {filteredAssignments.map(patient => {
                       return <tr key={patient._id}>
                         <td data-label="Bệnh nhân"><button type="button" className="patient-cell" onClick={() => setSelectedPatient(patient)}><span className="patient-avatar">{(displayName(patient)[0] || "P").toUpperCase()}</span><span><strong>{displayName(patient)}</strong><small>@{patient.username || "patient"}</small></span></button></td>
                         <td data-label="Liên hệ"><span className="muted-cell">{patient.email || "—"}</span><small className="table-sub">{patient.phone || "Chưa có SĐT"}</small></td>
                         <td data-label="Bác sĩ hiện tại">{patient.assignedDoctor ? <div className="current-doctor"><span className="doctor-dot"><FaUserMd /></span><span><strong>{displayName(patient.assignedDoctor)}</strong><small>Bác sĩ phụ trách</small></span></div> : <span className="status-pill waiting"><i /> Chưa phân công</span>}</td>
-                        <td data-label="Bệnh viện"><span className="muted-cell">{patient.hospital?.name || patient.assignedDoctor?.hospitalId?.name || "Chưa xác định · cần đối chiếu"}</span></td>
-                        <td data-label="Trạng thái"><span className={`status-pill ${patient.assignedDoctor ? "assigned" : "waiting"}`}><i />{patient.assignedDoctor ? "Đang quản lý" : "Đang chờ"}</span></td>
-                        <td className="assignment-actions-cell" data-label="Thao tác"><div className="table-actions assignment-actions"><button type="button" className="action-primary" onClick={() => { setFocusIntakeId(entityId(patient.intake)); setView("coordination"); }}>Đi đến tiếp nhận</button>{patient.assignedDoctor && patient.legacyAssignment && <button type="button" className="action-danger" onClick={() => setLegacyEndPatient(patient)}>Kết thúc phân công cũ</button>}</div></td>
+                        <td data-label="Bệnh viện"><span className="muted-cell">{assignmentHospital(patient)?.name || "Chưa chọn bệnh viện"}</span>{assignmentHospital(patient)?.wardId?.name && <small className="table-sub">{assignmentHospital(patient).wardId.name}</small>}</td>
+                        <td data-label="Trạng thái"><span className={`status-pill ${assignmentGroup(patient) === "assigned" ? "assigned" : "waiting"}`}><i />{assignmentGroup(patient) === "legacy" ? "Cần đối chiếu" : patient.assignedDoctor ? "Đang phụ trách" : "Chờ phân công"}</span></td>
+                        <td className="assignment-actions-cell" data-label="Thao tác"><div className="table-actions assignment-actions"><button type="button" className="action-primary" onClick={() => { setFocusIntakeId(entityId(patient.intake)); setFocusRequestKey(value => value + 1); setView("coordination"); }}>{patient.assignedDoctor ? "Xem điều phối" : "Chọn bệnh viện & bác sĩ"}</button>{patient.assignedDoctor && patient.legacyAssignment && <button type="button" className="action-danger" onClick={() => setLegacyEndPatient(patient)}>Kết thúc phân công cũ</button>}</div></td>
                       </tr>;
                     })}
                   </tbody></table></div>}
@@ -340,7 +342,7 @@ export default function AdminDashboard() {
             <button type="button" className="modal-close" onClick={() => setSelectedPatient(null)}><FaTimes /></button>
             <span className="admin-eyebrow small"><i /> PATIENT PROFILE</span>
             <div className="modal-patient-head"><div className="modal-patient-avatar">{(displayName(selectedPatient)[0] || "P").toUpperCase()}</div><div><h2>{displayName(selectedPatient)}</h2><p>{selectedPatient.email || "Chưa có email"}</p></div></div>
-            <div className="modal-detail-grid"><div><span>Username</span><strong>{selectedPatient.username || "—"}</strong></div><div><span>Số điện thoại</span><strong>{selectedPatient.phone || "—"}</strong></div><div><span>Bác sĩ hiện tại</span><strong>{selectedPatient.assignedDoctor ? displayName(selectedPatient.assignedDoctor) : "Chưa phân công"}</strong></div><div><span>Ngày phân công</span><strong>{selectedPatient.assignedAt ? new Date(selectedPatient.assignedAt).toLocaleDateString("vi-VN") : "—"}</strong></div></div>
+            <div className="modal-detail-grid"><div><span>Username</span><strong>{selectedPatient.username || "—"}</strong></div><div><span>Số điện thoại</span><strong>{selectedPatient.phone || "—"}</strong></div><div><span>Bệnh viện phụ trách</span><strong>{assignmentHospital(selectedPatient)?.name || "Chưa chọn bệnh viện"}</strong></div><div><span>Bác sĩ hiện tại</span><strong>{selectedPatient.assignedDoctor ? displayName(selectedPatient.assignedDoctor) : "Chưa phân công"}</strong></div><div><span>Khu vực sinh sống</span><strong>{[selectedPatient.ward, selectedPatient.city].filter(Boolean).join(", ") || "Chưa có khu vực"}</strong></div><div><span>Ngày phân công</span><strong>{selectedPatient.assignedAt ? new Date(selectedPatient.assignedAt).toLocaleDateString("vi-VN") : "—"}</strong></div></div>
             <div className="modal-note"><FaShieldAlt /><p>Lịch sử phân công được lưu ở backend. Việc đổi bác sĩ không xóa bản ghi cũ.</p></div>
           </motion.aside>
         </motion.div>}

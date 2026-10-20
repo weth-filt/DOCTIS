@@ -1,0 +1,116 @@
+.coord-workflow { --coord-gap:20px; }
+.coord-workflow .coord-heading { align-items:flex-start; }
+.coord-workflow .coord-heading h2 { font-size:23px; margin:7px 0 8px; }
+.coord-workflow .coord-heading p { max-width:760px; margin:0; font-size:13px; line-height:1.7; }
+.coord-workflow .coord-kicker { font-size:10px; }
+.coord-workflow-tabs { display:flex; gap:5px; padding:5px; width:fit-content; max-width:100%; margin:0 0 20px; border:1px solid var(--care-line,#d8e6e2); border-radius:13px; background:var(--care-soft,#edf5f2); }
+.coord-workflow .coord-workflow-tabs>button { min-height:42px; padding:10px 18px; border:0; border-radius:9px; color:var(--care-muted,#66817a); background:transparent; font:inherit; font-size:13px; font-weight:600; line-height:1.5; }
+.coord-workflow .coord-workflow-tabs>button[aria-selected="true"] { color:var(--care-link,#087d7f); background:var(--care-paper,#fff); box-shadow:0 2px 8px #082f2310; }
+.coord-workflow .coord-primary,.coord-workflow .coord-secondary,.coord-workflow .coord-danger { flex-shrink:0; font-size:12px; min-height:42px; padding:10px 14px; }
+.coord-workflow :is(button,input,select,textarea):focus-visible { outline:3px solid var(--care-link,#087d7f); outline-offset:3px; }
+.coord-network-status { display:flex; align-items:center; gap:14px; padding:17px 18px; margin:0 0 20px; border:1px solid var(--care-line,#d8e6e2); border-radius:15px; background:var(--care-paper,#fff); }
+.coord-network-status>svg { flex:0 0 22px; color:var(--care-link,#087d7f); font-size:22px; }
+.coord-network-status>div { flex:1; min-width:0; }
+.coord-network-status strong,.coord-network-status span { display:block; }
+.coord-network-status strong { color:var(--care-ink,#173d3c); font-size:13px; font-weight:600; line-height:1.6; }
+.coord-network-status span { margin-top:3px; color:var(--care-muted,#66817a); font-size:12px; line-height:1.6; }
+.coord-workflow .coord-admin-grid { grid-template-columns:minmax(230px,300px) minmax(0,1fr); gap:var(--coord-gap); }
+.coord-workflow .coord-intake-list { gap:10px; max-height:850px; padding:0 3px 4px 0; }
+.coord-list-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:2px 6px 4px; color:var(--care-muted,#66817a); font-size:12px; }
+.coord-list-heading>span { display:grid; place-items:center; min-width:26px; height:26px; border:1px solid var(--care-line,#d8e6e2); border-radius:8px; color:var(--care-link,#087d7f); background:var(--care-paper,#fff); font-size:11px; }
+.coord-workflow .coord-intake-list>button { gap:7px; padding:17px; border-radius:15px; line-height:1.5; }
+.coord-workflow .coord-intake-list>button strong { font-size:14px; font-weight:600; overflow-wrap:anywhere; }
+.coord-workflow .coord-intake-list>button>span { font-size:12px; line-height:1.6; }
+.coord-workflow .coord-intake-list>button .coord-list-status { font-size:11px; padding:3px 8px; border-radius:6px; background:var(--care-soft,#edf5f2); }
+.coord-list-hospital { display:flex; align-items:flex-start; gap:7px; color:var(--care-muted,#66817a); }
+.coord-list-hospital>svg { flex:0 0 12px; margin-top:4px; }
+.coord-workflow .coord-intake-list time { font-size:11px; }
+.coord-workflow .coord-intake-detail { padding:24px; border-radius:20px; box-shadow:0 8px 30px #082f2308; }
+.coord-workflow .coord-intake-detail>header { gap:15px; flex-wrap:nowrap; align-items:flex-start; padding-bottom:19px; }
+.coord-workflow .coord-intake-detail>header>div { min-width:0; flex:1; }
+.coord-workflow .coord-intake-detail h3 { font-size:21px; line-height:1.45; overflow-wrap:anywhere; }
+.coord-workflow .coord-intake-detail>header p { font-size:13px; line-height:1.7; }
+.coord-workflow .coord-status { max-width:170px; font-size:11px; padding:7px 11px; text-align:center; }
+.coord-current-team { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:20px 0; }
+.coord-current-team>div { display:flex; gap:11px; align-items:flex-start; min-width:0; padding:15px; border:1px solid var(--care-line,#d8e6e2); border-radius:13px; background:var(--care-soft,#edf5f2); }
+.coord-current-team>div>div { min-width:0; }
+.coord-summary-icon { display:grid; place-items:center; width:34px; height:34px; flex:0 0 34px; border-radius:10px; color:var(--care-link,#087d7f); background:var(--care-paper,#fff); }
+.coord-current-team small { display:block; margin-bottom:5px; color:var(--care-muted,#66817a); font-size:9px; letter-spacing:.07em; font-weight:600; line-height:1.6; }
+.coord-current-team strong { display:block; color:var(--care-ink,#173d3c); font-size:13px; font-weight:600; line-height:1.6; overflow-wrap:anywhere; }
+.coord-stepper { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:23px 0 4px; padding:0; list-style:none; }
+.coord-stepper>li { display:flex; align-items:center; gap:7px; min-width:0; color:var(--care-muted,#66817a); font-size:11px; line-height:1.6; }
+.coord-stepper>li>span { display:grid; place-items:center; width:25px; height:25px; flex:0 0 25px; border:1px solid var(--care-line,#d8e6e2); border-radius:50%; background:var(--care-soft,#edf5f2); font-size:10px; }
+.coord-stepper>li.is-complete { color:var(--care-link,#087d7f); }
+.coord-stepper>li.is-complete>span { color:var(--care-on-primary,#fff); background:var(--care-button,#087d7f); border-color:transparent; }
+.coord-workflow .coord-step { padding:25px 0; }
+.coord-workflow .coord-step h4 { display:flex; align-items:center; gap:10px; font-size:15px; line-height:1.6; }
+.coord-workflow .coord-step h4>span { margin:0; flex:0 0 29px; height:29px; font-size:11px; }
+.coord-workflow .coord-step p { font-size:13px; margin:10px 0 16px; line-height:1.75; }
+.coord-workflow label { min-width:0; font-size:13px; line-height:1.6; }
+.coord-workflow :is(input,select,textarea) { font-size:13px; min-height:45px; padding:11px 13px; line-height:1.6; }
+.coord-workflow textarea { min-height:85px; }
+.coord-workflow .coord-filters input { padding-left:35px; }
+.coord-workflow .coord-filters>label>svg { top:16px; }
+.coord-workflow .coord-hospital-preview { padding:16px; margin:15px 0 19px; }
+.coord-workflow .coord-hospital-preview strong { font-size:14px; line-height:1.6; }
+.coord-workflow .coord-hospital-preview p { margin:5px 0; font-size:13px; }
+.coord-workflow .coord-hospital-preview small { font-size:12px; line-height:1.6; }
+.coord-readiness-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.coord-readiness-chips>span { max-width:100%; padding:5px 8px; border-radius:7px; color:var(--care-warning,#94601b); background:var(--care-soft,#edf5f2); border:1px solid var(--care-line,#d8e6e2); font-size:11px; line-height:1.5; overflow-wrap:anywhere; }
+.coord-readiness-chips>span.is-ready { color:var(--care-link,#087d7f); background:var(--care-accent-soft,#dff6ef); }
+.coord-roster-prompt { padding:14px; margin:12px 0 16px; border:1px dashed var(--care-line,#d8e6e2); border-radius:12px; }
+.coord-workflow .coord-roster-prompt p { margin:0 0 10px; }
+.coord-workflow .coord-detail-empty { min-height:360px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px; }
+.coord-detail-empty h3 { margin:18px 0 0; }
+.coord-detail-empty p { max-width:420px; font-size:13px; line-height:1.8; margin-bottom:20px; }
+.coord-workflow .coord-history h4 { font-size:15px; }
+.coord-workflow .coord-history li strong { font-size:13px; }
+.coord-workflow .coord-history li :is(span,small) { font-size:12px; line-height:1.7; }
+.coord-roster-heading { display:flex; gap:18px; align-items:flex-start; justify-content:space-between; margin:5px 0 20px; }
+.coord-roster-heading h3 { margin:0 0 8px; font-size:20px; line-height:1.5; }
+.coord-roster-heading p { max-width:700px; margin:0; color:var(--care-muted,#66817a); font-size:13px; line-height:1.75; }
+.coord-roster-selectors { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.7fr); gap:16px; }
+.coord-roster-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
+.coord-roster-card { min-width:0; padding:24px; border:1px solid var(--care-line,#d8e6e2); border-radius:18px; background:var(--care-paper,#fff); }
+.coord-roster-card h4 { font-size:16px; line-height:1.6; margin:0 0 12px; }
+.coord-roster-card p { font-size:13px; line-height:1.75; color:var(--care-muted,#66817a); }
+.coord-hospital-identity { display:flex; align-items:flex-start; gap:13px; }
+.coord-hospital-identity>span { display:grid; place-items:center; width:42px; height:42px; flex:0 0 42px; border-radius:12px; background:var(--care-accent-soft,#dff6ef); color:var(--care-link,#087d7f); font-size:19px; }
+.coord-hospital-identity>div { min-width:0; }
+.coord-hospital-identity h4 { margin:0 0 5px; }
+.coord-hospital-identity p { margin:0; }
+.coord-roster-card .coord-roster-count { display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:20px; margin-top:20px; border-top:1px solid var(--care-line,#d8e6e2); font-size:14px; }
+.coord-roster-count>span { padding:3px 9px; border-radius:7px; color:var(--care-link,#087d7f); background:var(--care-accent-soft,#dff6ef); font-size:12px; }
+.coord-doctor-list { list-style:none; padding:0; margin:0; }
+.coord-doctor-list>li { display:flex; gap:12px; align-items:center; padding:13px 0; border-bottom:1px solid var(--care-line,#d8e6e2); }
+.coord-doctor-list>li:last-child { border:0; padding-bottom:0; }
+.coord-doctor-avatar { display:grid; place-items:center; flex:0 0 33px; height:33px; border-radius:10px; color:var(--care-link,#087d7f); background:var(--care-soft,#edf5f2); }
+.coord-doctor-list strong { display:block; font-size:13px; line-height:1.6; font-weight:600; }
+.coord-doctor-list>li>div,.coord-doctor-selection>div { min-width:0; }
+.coord-doctor-list :is(strong,small),.coord-doctor-selection :is(strong,small) { overflow-wrap:anywhere; }
+.coord-doctor-list small { display:block; color:var(--care-muted,#66817a); margin-top:3px; font-size:12px; line-height:1.6; }
+.coord-workflow .coord-roster-checkbox { flex-direction:row; align-items:flex-start; font-size:12px; font-weight:400; gap:9px; margin:18px 0; }
+.coord-workflow .coord-roster-checkbox input { min-width:18px; width:18px; height:18px; min-height:18px; padding:0; margin:2px 0 0; flex:0 0 18px; accent-color:var(--care-button,#087d7f); }
+.coord-doctor-selection { display:flex; align-items:flex-start; gap:11px; padding:14px; border-radius:12px; background:var(--care-soft,#edf5f2); margin:0 0 16px; }
+.coord-doctor-selection>svg { flex:0 0 16px; margin-top:3px; color:var(--care-link,#087d7f); }
+.coord-doctor-selection strong { display:block; font-size:13px; }
+.coord-doctor-selection small { display:block; margin-top:7px; font-size:12px; line-height:1.65; color:var(--care-muted,#66817a); overflow-wrap:anywhere; }
+.coord-roster-card .coord-roster-footnote { font-size:12px; padding-top:15px; border-top:1px solid var(--care-line,#d8e6e2); }
+.coord-roster-empty { padding:48px 24px; text-align:center; background:var(--care-paper,#fff); border:1px dashed var(--care-line,#d8e6e2); border-radius:16px; }
+.coord-roster-empty>svg { font-size:32px; color:var(--care-link,#087d7f); }
+.coord-roster-empty h4 { margin:17px 0 8px; font-size:17px; }
+.coord-roster-empty p { margin:0; font-size:13px; line-height:1.8; color:var(--care-muted,#66817a); }
+.coord-return-patient { display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center; margin:0 0 20px; padding:14px 16px; border:1px solid var(--care-line,#d8e6e2); border-radius:13px; background:var(--care-accent-soft,#dff6ef); font-size:13px; line-height:1.7; }
+.coord-catalog .coord-catalog-filters { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px; }
+.coord-catalog .coord-catalog-filters input,.coord-catalog .coord-catalog-filters select { font-size:13px; }
+.coord-catalog .coord-catalog-list>button { padding:16px; gap:8px; }
+.coord-catalog .coord-catalog-list>button.is-selected { border-color:var(--care-link,#087d7f); background:var(--care-accent-soft,#dff6ef); }
+.coord-catalog .coord-catalog-list strong { font-size:14px; }
+.coord-catalog .coord-catalog-list :is(span,small) { font-size:12px; }
+.coord-catalog .coord-catalog-form { padding:21px; border:1px solid var(--care-line,#d8e6e2); border-radius:16px; background:var(--care-paper,#fff); }
+.coord-catalog .coord-catalog-form label { font-size:13px; }
+.coord-catalog .coord-catalog-form :is(input,select) { font-size:13px; }
+.coord-catalog .coord-catalog-form .coord-check { font-size:12px; }
+@media(max-width:1200px) { .coord-workflow .coord-admin-grid { grid-template-columns:minmax(210px,240px) minmax(0,1fr); gap:14px; }.coord-workflow .coord-intake-detail { padding:20px; }.coord-current-team { grid-template-columns:1fr; }.coord-stepper>li { flex-direction:column; text-align:center; }.coord-roster-grid { gap:14px; }.coord-roster-card { padding:19px; } }
+@media(max-width:1000px) { .coord-workflow .coord-admin-grid { grid-template-columns:1fr; }.coord-workflow .coord-intake-list { display:flex; overflow:auto; max-height:none; padding:0 0 8px; }.coord-list-heading { display:none; }.coord-workflow .coord-intake-list>button { flex:0 0 250px; }.coord-current-team { grid-template-columns:repeat(2,minmax(0,1fr)); }.coord-roster-grid { grid-template-columns:1fr; } }
+@media(max-width:700px) { .coord-workflow .coord-heading { flex-wrap:wrap; }.coord-workflow .coord-heading h2 { font-size:21px; }.coord-workflow-tabs { display:grid; grid-template-columns:1fr 1fr 1fr; width:100%; box-sizing:border-box; gap:3px; }.coord-workflow .coord-workflow-tabs>button { padding:9px 7px; font-size:12px; }.coord-network-status { flex-wrap:wrap; padding:15px; }.coord-network-status>div { flex-basis:calc(100% - 40px); }.coord-network-status>button { width:100%; }.coord-workflow .coord-intake-detail { padding:18px 15px; }.coord-workflow .coord-intake-detail>header { flex-wrap:wrap; }.coord-workflow .coord-intake-detail>header>div { flex-basis:100%; }.coord-workflow .coord-status { max-width:none; }.coord-current-team { grid-template-columns:1fr; }.coord-stepper { gap:6px; }.coord-workflow :is(input,select,textarea),.coord-catalog .coord-catalog-form :is(input,select),.coord-catalog .coord-catalog-filters :is(input,select) { font-size:16px; }.coord-roster-selectors,.coord-catalog .coord-catalog-filters { grid-template-columns:1fr; gap:0; }.coord-roster-heading { flex-wrap:wrap; }.coord-roster-card { padding:18px; }.coord-workflow .coord-actions { flex-direction:column; }.coord-workflow .coord-actions>button { width:100%; }.coord-catalog .coord-catalog-form { padding:17px; } }

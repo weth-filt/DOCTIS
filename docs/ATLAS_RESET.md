@@ -2,6 +2,8 @@
 
 CLI bảo trì một lần: `backend/scripts/resetAtlasNonAdmin.js`. Việc tạo file này **chưa thay đổi cơ sở dữ liệu**.
 
+Đợt bảo trì đã hoàn tất ngày 19/10/2026 theo yêu cầu chủ dự án: xóa 15 tài khoản bệnh nhân, 3 bác sĩ cùng dữ liệu liên quan; giữ 1 admin, 23 phường và 25 cơ sở y tế. Đọc lại Atlas và đăng nhập admin qua API Vercel đã xác nhận kết quả. Đây là kết quả của đợt cũ, không phải chỉ dẫn xóa những tài khoản được đăng ký sau đó. Không chạy lại reset nếu chưa có yêu cầu mới.
+
 ## Cấu hình riêng
 
 Người vận hành điền hai biến vào `backend/.env.maintenance.local` đã được Git bỏ qua:

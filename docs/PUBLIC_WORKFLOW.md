@@ -27,10 +27,12 @@ Luồng: **Chờ cập nhật bệnh viện → Đã chọn bệnh viện → B�
 - Điều kiện: admin đang đăng nhập. Nhập tên, địa chỉ, phường, liên hệ, trạng thái tiếp nhận, URL nguồn HTTPS và xác nhận đã đối chiếu.
 - Thêm/sửa/ngừng hoạt động phường và bệnh viện tại **Danh mục phục vụ**. Sửa dùng revision để phát hiện thao tác đồng thời; “xóa” danh mục là ngừng hoạt động, không xóa bản ghi.
 - Bệnh viện đang có hồ sơ/phân công phải được xử lý liên quan trước khi ngừng hoạt động/ngừng xác minh. Đổi bệnh viện của bác sĩ đang có bệnh nhân cũng bị chặn.
-- Danh mục bệnh viện hiện để trống theo yêu cầu chủ dự án; không có bệnh viện, bác sĩ hoặc tọa độ dựng sẵn. Chưa xếp hạng khoảng cách; admin đối chiếu địa chỉ để chọn phù hợp. Không có dịch vụ bản đồ trả phí.
+- Danh mục bệnh viện đã được nhập theo nguồn được cung cấp; cơ sở chưa đối chiếu hoặc chưa bật tiếp nhận vẫn hiển thị cho admin kèm điều kiện cần bổ sung. Không tự xác minh, bật tiếp nhận hoặc tạo bác sĩ. Chưa xếp hạng khoảng cách; admin đối chiếu địa chỉ/đường đi để chọn phù hợp.
 
 ### Chọn bệnh viện, ghi nhận tiếp nhận và phân công
 
+- **Điều phối chăm sóc → Bác sĩ & bệnh viện**: chọn phường của bệnh viện, chọn cơ sở và bố trí tài khoản bác sĩ vào cơ sở đó. Có bộ lọc bác sĩ theo phường đăng ký; nơi ở không tự quyết định bệnh viện làm việc. Chỉ cập nhật `hospitalId`, giữ các thông tin khác của bác sĩ; chặn chuyển đơn vị khi còn phân công đang hoạt động.
+- **Chờ điều phối** chỉ hiển thị hồ sơ chưa có bác sĩ. **Đã phân công** giữ người đã có bác sĩ và các quan hệ cũ cần đối chiếu. Tài khoản chuyển sang vai trò bác sĩ được loại khỏi danh sách bệnh nhân. Trạng thái khác nhau của hồ sơ cũ được hiển thị, không tự tạo xác nhận tiếp nhận.
 - Điều kiện: admin; bệnh nhân có hồ sơ tiếp nhận và địa chỉ hợp lệ. Tìm/lọc theo phường, trạng thái hoặc tên/liên hệ; có tải thêm danh sách.
 - Chọn bệnh viện active/verified/đang tiếp nhận, nhập lý do → lưu lịch sử, người thực hiện và thời gian → thông báo bệnh nhân.
 - Khi có xác nhận thực tế từ bệnh viện, admin bấm **Ghi nhận tiếp nhận**. Chỉ sau đó mới ghi nhận bác sĩ do bệnh viện quyết định.
@@ -85,7 +87,7 @@ Nguồn quy tắc cảnh báo duy nhất là `backend/config/monitoringRules.jso
 | GET /api/public/wards | Public, chỉ danh mục active/verified Đà Nẵng; không có thông tin người dân |
 | POST /api/auth/register | Đăng ký và tạo hồ sơ tiếp nhận nguyên tử |
 | GET/POST /api/admin/catalog/wards, hospitals | Admin liệt kê/thêm; PATCH/DELETE /:id sửa/ngừng hoạt động có revision |
-| GET /api/admin/intakes, /:id | Admin danh sách/chi tiết tiếp nhận |
+| GET /api/admin/intakes, /:id | Admin danh sách/chi tiết; mặc định `queue=open`, `queue=assigned` xem đã phân công, `queue=all` xem toàn bộ |
 | POST /api/admin/intakes/:id/hospital, accept, assign, unassign | Admin lưu từng bước có revision |
 | GET /api/care-team; PATCH /address | Bệnh nhân đọc/sửa địa chỉ của mình |
 | GET /api/notifications; PATCH /:id/read | Đọc và đánh dấu đúng notification của tài khoản |
@@ -122,14 +124,25 @@ Script này dùng MongoClient đọc số lượng quan hệ chưa xác minh, ph
 
 ## 5. Mở preview riêng để xem giao diện
 
-Bản review dùng `http://127.0.0.1:5001`, DB local `doctis_public_preview` trên replica set `doctis-local-review`, cổng Mongo 27028. Không dùng tài khoản/dữ liệu Atlas; không nạp bệnh viện hoặc hồ sơ giả. Tài khoản cũ trên Atlas không tự có trong DB review này.
+Bản review dùng `http://127.0.0.1:5001`, DB local `doctis_public_preview` trên replica set `doctis-local-review`, cổng Mongo 27028. Server preview không đọc/ghi Atlas; không nạp bệnh viện hoặc hồ sơ giả. Tài khoản cũ trên Atlas không tự có trong DB review này. Một tài khoản admin đã được chủ dự án yêu cầu sao chép sang local để dùng lại thông tin đăng nhập.
 
 ```powershell
 # MongoDB replica set local 27028 phải đang chạy.
 node backend/scripts/startPublicPreview.js
 ```
 
-Preview đọc build tại `.local-public-check/frontend-build`, không đọc backend/.env; khóa JWT local nằm trong thư mục ignored. SMTP và scheduler bị tắt, AI chọn Ollama local, không gửi dữ liệu sang cloud. Để xem toàn bộ admin, đăng ký tài khoản của chính bạn tại `/register`, sau đó chuẩn bị quyền CHỈ cho DB review này:
+Preview đọc build tại `.local-public-check/frontend-build`, không đọc backend/.env; khóa JWT local nằm trong thư mục ignored. SMTP và scheduler bị tắt, AI chọn Ollama local, không gửi dữ liệu sang cloud.
+
+Nếu đã có admin trên Atlas, có thể sao chép riêng tài khoản đó vào preview khi được chủ dự án cho phép. Cấu hình nguồn lấy từ `backend/.env.maintenance.local`; đích cố định DB local 27028. Công cụ chỉ đọc Atlas, giữ bcrypt hash, không lấy dữ liệu sức khỏe/OTP/reset token, không in khóa hoặc hash và không ghi đè khi trùng tài khoản local:
+
+```powershell
+node backend/scripts/copyAdminToLocalPreview.js --email <email-admin>
+node backend/scripts/copyAdminToLocalPreview.js --email <email-admin> --apply
+```
+
+Đăng nhập lại tại `http://127.0.0.1:5001/` bằng email/mật khẩu của tài khoản vừa sao chép. Chỉ dùng bản local đã lưu; thay đổi mật khẩu Atlas sau đó không tự đồng bộ vào preview.
+
+Nếu muốn dùng tài khoản local riêng, đăng ký tại `/register`, sau đó cấp quyền CHỈ cho DB review này:
 
 ```powershell
 node backend/scripts/promoteLocalPreviewAdmin.js <email-cua-ban> --apply
@@ -154,8 +167,8 @@ Nếu Mongo 27028 đã tắt, chạy mongod với dbpath `.local-public-check/mo
 - Kiểm tra thực: đăng ký và replay/rollback/validation; catalog CRUD/CAS; ba bước tiếp nhận; cạnh tranh phân công; quyền doctor cũ/ngoài phân công; thông báo lưu/read-state; đăng nhập bcrypt/JWT legacy; hủy đồng thời một notification; health/profile ownership; thiếu glucose; cảnh báo khác nhãn mô hình; chat hai chiều; kế hoạch nháp/chốt; đơn thuốc xác nhận và lịch sử.
 - SMTP được thay bằng stub trong test; ML service dùng HTTP stub để kiểm hợp đồng, Python chỉ kiểm bộ quy tắc không cần load model. Không khẳng định đã gửi email thật hoặc đánh giá chất lượng mô hình/AI cloud.
 - Chưa kiểm tra trực quan desktop/điện thoại: công cụ trả inventory `apps:[], browsers:[]`. Chưa có ảnh/video mới của bản public workflow. React DOM tests không thay thế kiểm tra hình ảnh/chuyển động thật.
-- Production còn thiếu bệnh viện/bác sĩ-bệnh viện đã xác minh, nạp ward catalog, SMTP được thử thật và lịch gọi scheduler nếu muốn gửi nhắc trên Vercel. Trigger có bảo vệ đã có; chưa cấu hình dịch vụ gọi tự động.
-- Bản preview chỉ local. Các trạng thái/phép kiểm tra trên không phải bằng chứng đã triển khai trên Vercel.
+- Production đã có 23 phường và 25 cơ sở y tế (5 đã đối chiếu, 20 bản chờ đối chiếu). Admin cần kiểm tra nguồn, bật tiếp nhận và gắn tài khoản bác sĩ vào đúng bệnh viện. SMTP thật và lịch gọi scheduler vẫn cần cấu hình nếu muốn gửi nhắc trên Vercel.
+- Preview mô tả ở mục 5 chỉ dùng local. Web/API/mobile đã được phát hành trên Vercel; các kiểm thử local không chứng minh mọi tương tác production đã được kiểm tra trực quan.
 
 ### Chạy kiểm thử
 
@@ -170,4 +183,4 @@ $env:CI='true'
 npm.cmd test -- --watchAll=false --runInBand
 ```
 
-Các test Mongo opt-in cố định DB local khác nhau trên 27028, không lấy MONGO_URI từ môi trường. Test Python rule cần PYTHON_EXE trỏ tới Python có sẵn; không cần Flask/sklearn cho test này. Xem kết quả tổng hợp ở đầu `frontend/UI_REVIEW.md`.
+Các test Mongo opt-in cố định DB local khác nhau trên 27028, không lấy MONGO_URI từ môi trường. Test Python rule cần PYTHON_EXE trỏ tới Python có sẵn; không cần Flask/sklearn cho test này. Ghi chú UI và giới hạn xác minh nằm trong [UI_REVIEW.md](../frontend/UI_REVIEW.md).

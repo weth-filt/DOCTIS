@@ -3,6 +3,7 @@ const Hospital = require("../models/Hospital");
 const User = require("../models/User");
 const SupportRequest = require("../models/SupportRequest");
 const DoctorAssignment = require("../models/DoctorAssignment");
+const { hospitalAvailability } = require("../services/hospitalAvailability");
 const { CITY, clean, requireId, requireCity, requireRevision, sourceUrl, problem, runTransaction, sendProblem } = require("../services/coordinationUtils");
 function createAdminCatalogController({ WardModel = Ward, HospitalModel = Hospital, UserModel = User, Intake = SupportRequest, Assignment = DoctorAssignment, transaction = runTransaction, now = () => new Date() } = {}) {
   const admin = req => { if (req.user?.role !== "admin") throw problem("ADMIN_REQUIRED", "Chỉ admin mới được quản lý danh mục.", 403); requireId(req.user.id, "Tài khoản"); };
@@ -10,7 +11,22 @@ function createAdminCatalogController({ WardModel = Ward, HospitalModel = Hospit
   const controller = {};
   for (const kind of ["wards", "hospitals"]) {
     const Model = kind === "wards" ? WardModel : HospitalModel;
-    controller[`list_${kind}`] = wrap(async (req, res) => { const values = await Model.find().sort({ name: 1 }).lean().exec(); return res.json({ [kind]: values.map(value => ({ ...value, id: String(value._id) })), distanceRanking: "not_available" }); });
+    controller[`list_${kind}`] = wrap(async (req, res) => {
+      const values = await Model.find().sort({ name: 1 }).lean().exec();
+      if (kind === "wards") return res.json({ wards: values.map(value => ({ ...value, id: String(value._id) })), distanceRanking: "not_available" });
+      const [wards, doctors] = await Promise.all([
+        WardModel.find({ _id: { $in: values.map(value => value.wardId).filter(Boolean) } }).select("_id code name city active verified").lean().exec(),
+        UserModel.find({ role: "doctor", hospitalId: { $in: values.map(value => value._id) } }).select("_id hospitalId").lean().exec(),
+      ]);
+      const wardById = new Map(wards.map(ward => [String(ward._id), ward]));
+      const doctorCounts = new Map();
+      for (const doctor of doctors) doctorCounts.set(String(doctor.hospitalId), (doctorCounts.get(String(doctor.hospitalId)) || 0) + 1);
+      const hospitals = values.map(value => {
+        const ward = wardById.get(String(value.wardId)) || null;
+        return { ...value, id: String(value._id), ward, doctorCount: doctorCounts.get(String(value._id)) || 0, ...hospitalAvailability(value, ward) };
+      });
+      return res.json({ hospitals, distanceRanking: "not_available" });
+    });
     const save = create => wrap(async (req, res) => {
       const value = await transaction(async session => {
         const body = req.body || {}; requireCity(body.city);

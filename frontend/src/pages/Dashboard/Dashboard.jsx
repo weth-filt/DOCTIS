@@ -39,6 +39,8 @@ import {
   FaSave,
   FaTimes,
   FaUtensils,
+  FaCapsules,
+  FaRunning,
   FaCheck,
   FaCheckDouble,
   FaBars,
@@ -68,6 +70,7 @@ import "../../CSS/health-clarity.css";
 import "../../CSS/health-studio.css";
 import "../../CSS/patient-redesign.css";
 import "../../CSS/profile-address.css";
+import "../../CSS/care-day-detail.css";
 
 const SERVICE_CITY = "Đà Nẵng";
 const profileAddress = value => ({ address: value?.address || "", wardId: String(getId(value?.wardId) || ""), ward: typeof value?.ward === "string" ? value.ward : value?.ward?.name || "", city: value?.city || value?.province || "" });
@@ -2689,14 +2692,14 @@ export default function Dashboard() {
             )}
 
             {nutritionPlan && !nutritionLoading && careWeek[activeDay] && (
-              <section className="care-detail-shell-v6">
+              <section className="care-detail-shell-v6 patient-care-detail" aria-label="Chi tiết lịch chăm sóc trong ngày">
                 <div className="care-detail-head-v6">
                   <div>
                     <span className="care-section-kicker">CHI TIẾT NGÀY</span>
                     <h3>{careWeek[activeDay].label}</h3>
                     <p>{careWeek[activeDay].summary || nutritionPlan.summaryNote || "Lịch chăm sóc được cá nhân hóa cho hôm nay."}</p>
                   </div>
-                  <div className="care-source-v6"><span>🤖</span> AI + <span>👨‍⚕️</span> Đơn đã xác nhận</div>
+                  <div className="care-source-v6"><FaRobot aria-hidden="true" /><span>AI hỗ trợ</span>{careWeek[activeDay].medications?.some(item => item.source === "DOCTOR") && <><span className="care-source-divider" aria-hidden="true" /><FaNotesMedical aria-hidden="true" /><span>Theo đơn bác sĩ</span></>}</div>
                 </div>
 
                 <div className="care-detail-list-v6">
@@ -2709,18 +2712,18 @@ export default function Dashboard() {
                     const sent = emailRemindedIds.has(reminderId);
                     return (
                       <div className={`care-detail-row-v6 ${item.kind} ${item.done ? "completed" : ""}`} key={`${item.id}-${item.time}`}>
-                        <div className="care-detail-time-v6">{item.time}</div>
-                        <div className="care-detail-icon-v6">{item.icon}</div>
+                        <time className="care-detail-time-v6" dateTime={item.time}>{item.time}</time>
+                        <div className="care-detail-icon-v6" aria-hidden="true">{item.kind === "meal" ? <FaUtensils /> : item.kind === "medication" ? <FaCapsules /> : <FaRunning />}</div>
                         <div className="care-detail-content-v6">
                           <div className="care-detail-title-v6"><h4>{item.title || item.label}</h4><span>{item.kind === "meal" ? "Ăn uống" : item.kind === "medication" ? "Thuốc" : "Vận động"}</span></div>
                           <p>{item.text || item.description || ""}</p>
-                          {item.source === "DOCTOR" && <small>👨‍⚕️ Theo đơn bác sĩ</small>}
+                          {item.source === "DOCTOR" && <small><FaNotesMedical aria-hidden="true" /> Theo đơn bác sĩ</small>}
                         </div>
                         <div className="care-detail-actions-v6">
                           <button type="button" className={`care-reminder-btn ${sent ? "sent" : ""}`} title={!careWeek[activeDay]?.date ? "Tạo lại kế hoạch để đặt ngày nhắc chính xác" : undefined} onClick={() => handleEmailReminder(careWeek[activeDay], item)} disabled={!careWeek[activeDay]?.date || reminderSendingId === reminderId}>
-                            <FaBell /> {reminderSendingId === reminderId ? "Đang tạo..." : sent ? "Đã bật email" : "Nhắc email"}
+                            <FaBell aria-hidden="true" /><span>{reminderSendingId === reminderId ? "Đang tạo..." : sent ? "Đã bật email" : "Nhắc email"}</span>
                           </button>
-                          <button type="button" className="care-done-btn" disabled={!!savedCare.pendingItem || savedCare.saving} onClick={() => toggleCareActivity(activeDay, item.id)}>{item.done ? "✓ Đã xong" : "Đánh dấu xong"}</button>
+                          <button type="button" className="care-done-btn" aria-pressed={!!item.done} disabled={!!savedCare.pendingItem || savedCare.saving} onClick={() => toggleCareActivity(activeDay, item.id)}>{item.done && <FaCheck aria-hidden="true" />}<span>{item.done ? "Đã xong" : "Đánh dấu xong"}</span></button>
                         </div>
                       </div>
                     );

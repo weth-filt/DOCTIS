@@ -3127,40 +3127,87 @@
   line-height:1.45;
 }
 
-/* Reserve a separate trailing column for counts in the expanded sidebar. */
+/* Keep labels on a broad text column; counts sit beside the subtitle. */
+.admin-page.role-studio .admin-sidebar .admin-menu {
+  gap:6px;
+  padding-right:4px;
+  scrollbar-width:thin;
+  scrollbar-gutter:stable;
+}
 .admin-page.role-studio .admin-sidebar .admin-menu-item {
   display:grid;
-  grid-template-columns:34px minmax(0,1fr) auto;
+  grid-template-columns:32px minmax(0,1fr);
   align-items:center;
-  column-gap:8px;
+  column-gap:10px;
+  min-height:76px;
+  padding:12px 10px;
+}
+.admin-page.role-studio .admin-sidebar .admin-menu-icon {
+  width:32px;
+  height:36px;
+  border-radius:11px;
+  font-size:15px;
 }
 .admin-page.role-studio .admin-sidebar .admin-menu-copy {
+  display:grid;
+  gap:5px;
   min-width:0;
+  text-align:left;
 }
 .admin-page.role-studio .admin-sidebar .admin-menu-copy strong {
+  font-size:12.5px;
+  font-weight:650;
   white-space:normal;
   overflow-wrap:normal;
   word-break:normal;
-  line-height:1.45;
+  line-height:1.4;
+  text-wrap:balance;
+}
+.admin-page.role-studio .admin-sidebar .admin-menu-meta {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  min-width:0;
 }
 .admin-page.role-studio .admin-sidebar .admin-menu-copy small {
-  line-height:1.5;
-}
-.admin-page.role-studio .admin-sidebar :is(.admin-menu-badge,.admin-menu-arrow) {
-  position:static;
-  justify-self:end;
-  align-self:center;
+  min-width:0;
   margin:0;
-  transform:none;
+  font-size:10px;
+  line-height:1.45;
+  overflow-wrap:normal;
+  word-break:normal;
 }
 .admin-page.role-studio .admin-sidebar .admin-menu-badge {
-  min-width:24px;
-  height:24px;
+  position:static;
+  flex:0 0 auto;
+  margin:0;
+  transform:none;
+  min-width:22px;
+  height:22px;
   padding:0 6px;
   white-space:nowrap;
   line-height:1;
+  font-size:10px;
   font-variant-numeric:tabular-nums;
   box-shadow:none;
+}
+.admin-page.role-studio .admin-sidebar-label {
+  margin:20px 10px 10px;
+  font-size:9px;
+  letter-spacing:1.2px;
+}
+.admin-page.role-studio .admin-sidebar-footer {
+  padding-top:12px;
+}
+.admin-page.role-studio .admin-security-card {
+  padding:14px 12px;
+}
+.admin-page.role-studio .admin-security-card strong {
+  font-size:12px;
+}
+.admin-page.role-studio .admin-security-card span {
+  font-size:10px;
 }
 
 @media(min-width:901px) {
@@ -3173,6 +3220,7 @@
     display:none;
   }
   .admin-page.role-studio[data-sidebar-collapsed="true"] .admin-sidebar .admin-menu-badge {
+    display:grid;
     position:absolute;
     top:3px;
     right:0;
@@ -3181,6 +3229,22 @@
     padding:0 4px;
     margin:0;
     font-size:9px;
+  }
+  .admin-page.role-studio[data-sidebar-collapsed="true"] .admin-sidebar .admin-menu-meta {
+    display:contents;
+  }
+  .admin-page.role-studio[data-sidebar-collapsed="true"] .admin-sidebar .admin-menu-copy {
+    display:contents;
+    position:static;
+    width:auto;
+    height:auto;
+    margin:0;
+    overflow:visible;
+    clip:auto;
+    white-space:normal;
+  }
+  .admin-page.role-studio[data-sidebar-collapsed="true"] .admin-sidebar .admin-menu-copy :is(strong,small) {
+    display:none;
   }
 }
 @media(max-width:1100px) {

@@ -76,20 +76,6 @@ exports.getPatients = async (req, res) => {
       )
       .lean();
 
-    /*
-    |--------------------------------------------------------------------------
-    | LẤY HEALTH
-    |--------------------------------------------------------------------------
-    |
-    | QUAN TRỌNG:
-    | Health của project đang lưu bằng:
-    |
-    | userId: req.user.id
-    |
-    | nên phải tìm bằng userId.
-    |
-    */
-
     const result = await Promise.all(
       patients.map(async (patient) => {
         const history = await Health.find({

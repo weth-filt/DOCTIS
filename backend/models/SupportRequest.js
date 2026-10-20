@@ -4,6 +4,7 @@ const historySchema = new mongoose.Schema({
   fromStatus: String, toStatus: String,
   hospitalId: { type: mongoose.Schema.Types.ObjectId, ref: "Hospital", default: null },
   doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+  previousDoctorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   actorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   reason: { type: String, default: "", maxlength: 1000 },
   at: { type: Date, default: Date.now },

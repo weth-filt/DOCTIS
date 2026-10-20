@@ -1,12 +1,14 @@
 const User = require("../models/User");
 const Hospital = require("../models/Hospital");
+const Ward = require("../models/Ward");
 const SupportRequest = require("../models/SupportRequest");
 const DoctorAssignment = require("../models/DoctorAssignment");
 const { createNotification } = require("./notificationService");
 const { validateAddress } = require("./serviceArea");
 const { clean, problem, requireId, requireRevision, runTransaction } = require("./coordinationUtils");
+const { hospitalAvailability } = require("./hospitalAvailability");
 
-function createCareCoordinationService({ UserModel = User, HospitalModel = Hospital, Intake = SupportRequest, Assignment = DoctorAssignment, notify = createNotification, addressValidator = validateAddress, transaction = runTransaction, now = () => new Date() } = {}) {
+function createCareCoordinationService({ UserModel = User, HospitalModel = Hospital, WardModel = Ward, Intake = SupportRequest, Assignment = DoctorAssignment, notify = createNotification, addressValidator = validateAddress, transaction = runTransaction, now = () => new Date() } = {}) {
   const getIntake = async (id, session) => {
     requireId(id, "Hồ sơ tiếp nhận");
     const value = await Intake.findById(id).session(session).lean().exec();
@@ -20,15 +22,20 @@ function createCareCoordinationService({ UserModel = User, HospitalModel = Hospi
     requireId(String(id || ""), "Bệnh viện");
     const value = await HospitalModel.findOne({ _id: id, active: true, verified: true, acceptingPatients: true }).session(session).lean().exec();
     if (!value) throw problem("HOSPITAL_UNAVAILABLE", "Bệnh viện chưa được xác minh, đã ngừng hoạt động hoặc chưa tiếp nhận bệnh nhân.", 409);
+    const ward = value.wardId ? await WardModel.findById(value.wardId).session(session).lean().exec() : null;
+    const availability = hospitalAvailability(value, ward);
+    if (!availability.coordinationEligible) throw problem("HOSPITAL_UNAVAILABLE", availability.coordinationIssues.map(issue => issue.message).join(" "), 409);
+    const reservedWard = await WardModel.updateOne({ _id: value.wardId, active: true, verified: true }, { $inc: { __v: 1 } }, { session });
+    if (!reservedWard.matchedCount) throw problem("HOSPITAL_UNAVAILABLE", "Danh mục phường của bệnh viện vừa thay đổi. Vui lòng tải lại.", 409);
     // Serialize catalog changes against admission/assignment without altering
     // the public revision used by the catalog editor.
     const reserved = await HospitalModel.updateOne({ _id: id, active: true, verified: true, acceptingPatients: true }, { $inc: { __v: 1 } }, { session });
     if (!reserved.matchedCount) throw problem("HOSPITAL_UNAVAILABLE", "Thông tin bệnh viện vừa thay đổi. Vui lòng tải lại.", 409);
     return value;
   };
-  const change = async (intake, patch, action, actorId, reason, session) => {
+  const change = async (intake, patch, action, actorId, reason, session, audit = {}) => {
     const revision = intake.revision + 1;
-    const history = { action, fromStatus: intake.status, toStatus: patch.status || intake.status, actorId, hospitalId: patch.hospitalId ?? intake.hospitalId, doctorId: Object.prototype.hasOwnProperty.call(patch, "assignedDoctorId") ? patch.assignedDoctorId : intake.assignedDoctorId || null, reason: clean(reason, 1000), at: now(), revision };
+    const history = { action, fromStatus: intake.status, toStatus: patch.status || intake.status, actorId, hospitalId: patch.hospitalId ?? intake.hospitalId, doctorId: Object.prototype.hasOwnProperty.call(patch, "assignedDoctorId") ? patch.assignedDoctorId : intake.assignedDoctorId || null, ...(audit.previousDoctorId ? { previousDoctorId: audit.previousDoctorId } : {}), reason: clean(reason, 1000), at: now(), revision };
     const updated = await Intake.findOneAndUpdate({ _id: intake._id, revision: intake.revision }, { $set: patch, $inc: { revision: 1 }, $push: { history } }, { returnDocument: "after", session }).lean().exec();
     if (!updated) throw problem("STALE_INTAKE", "Hồ sơ vừa được cập nhật. Vui lòng tải lại.", 409);
     return updated;
@@ -83,10 +90,14 @@ function createCareCoordinationService({ UserModel = User, HospitalModel = Hospi
     }),
     unassign: (id, { revision, reason, actorId }) => transaction(async session => {
       const intake = await getIntake(id, session); version(intake, revision);
-      const previous = await endActive(intake.patientId, actorId, reason || "Admin ghi nhận kết thúc phân công.", session);
-      if (!previous.length && intake.status !== "assigned") return intake;
-      const updated = await change(intake, { status: intake.acceptedAt ? "accepted" : intake.hospitalId ? "hospital_selected" : "waiting_hospital", assignedDoctorId: null }, "unassign_doctor", actorId, reason, session);
-      await inform(updated, "doctor_unassigned", "Đã cập nhật trạng thái bác sĩ phụ trách", "Phân công cũ đã kết thúc. Hồ sơ được giữ nguyên và đang chờ bệnh viện quyết định bác sĩ tiếp theo.", session);
+      const patient = await UserModel.findOne({ _id: intake.patientId, role: "user" }).select("doctorId").session(session).lean().exec();
+      const auditReason = clean(reason, 1000) || "Admin ghi nhận kết thúc phân công hoặc tham chiếu bác sĩ cũ sau khi đối chiếu hồ sơ.";
+      const previous = await endActive(intake.patientId, actorId, auditReason, session);
+      if (!previous.length && intake.status !== "assigned" && !intake.assignedDoctorId && !patient?.doctorId) return intake;
+      const legacyReferenceOnly = !previous.length && Boolean(patient?.doctorId);
+      const previousDoctorId = previous[0]?.doctorId || patient?.doctorId || intake.assignedDoctorId || null;
+      const updated = await change(intake, { status: intake.acceptedAt ? "accepted" : intake.hospitalId ? "hospital_selected" : "waiting_hospital", assignedDoctorId: null }, legacyReferenceOnly ? "unassign_legacy_doctor_reference" : "unassign_doctor", actorId, auditReason, session, { previousDoctorId });
+      await inform(updated, "doctor_unassigned", "Đã cập nhật trạng thái bác sĩ phụ trách", legacyReferenceOnly ? "Admin đã gỡ thông tin bác sĩ cũ sau khi đối chiếu. Hồ sơ và lịch sử được giữ nguyên để tiếp tục điều phối." : "Phân công cũ đã kết thúc. Hồ sơ được giữ nguyên và đang chờ bệnh viện quyết định bác sĩ tiếp theo.", session);
       for (const old of previous) await notify({ recipientId: old.doctorId, recipientRole: "doctor", eventKey: `assignment:${old._id}:ended`, type: "assignment_ended", title: "Đã kết thúc phân công", entityType: "patient", entityId: intake.patientId }, { session });
       return updated;
     }),

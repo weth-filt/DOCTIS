@@ -1,17 +1,32 @@
 # Đưa DOCTIS lên Vercel
 
+## Bản cập nhật ngày 20/10/2026
+
+Chủ dự án yêu cầu triển khai bản điều phối và giao diện mới lên các project hiện có.
+
+- Menu admin, khung chi tiết chăm sóc và nút thao tác được cân lại; các icon
+  chăm sóc hiển thị theo loại hoạt động của dữ liệu đã lưu.
+- Điều phối tách hồ sơ chờ, hồ sơ đã phân công và quan hệ cũ cần đối chiếu.
+  Admin bố trí bác sĩ vào bệnh viện trước khi chọn bác sĩ phụ trách bệnh nhân.
+- Danh mục trả rõ bệnh viện, phường, số bác sĩ và điều kiện tiếp nhận còn thiếu.
+  Cùng phường là nhóm gợi ý, chưa phải kết quả tính khoảng cách gần nhất.
+- Không chạy công cụ reset/import/copy admin khi deploy. Các script preview
+  chỉ chạy thủ công trên máy phát triển; dữ liệu local không được tải lên.
+
 ## Phát hành luồng public ngày 19/10/2026
 
 Chủ dự án đã duyệt form đăng ký đồng nhất và yêu cầu phát hành toàn bộ thay đổi.
 Web/API/mobile tiếp tục dùng ba project riêng bên dưới. Những dòng “chưa deploy”
 trong tài liệu review local mô tả giai đoạn trước khi duyệt phát hành này.
 
-- Đăng ký mới cần Ward active/verified trong database production. JSON trong repo
-  không tự nạp database. Chỉ thêm danh mục phường còn thiếu từ nguồn đã đối chiếu;
-  không tự điền bệnh viện hoặc bác sĩ. Chủ dự án nhập dữ liệu bệnh viện đã xác minh
-  tại Admin → Danh mục phục vụ, sau đó gắn bệnh viện cho bác sĩ.
-- Tài khoản cũ vẫn đăng nhập được; bổ sung địa chỉ tại mục Bệnh viện và bác sĩ phụ
-  trách. Không chạy script promoteLocalPreviewAdmin trên production.
+- Đăng ký mới cần Ward active/verified trong database production. Đợt nhập danh
+  mục đã bổ sung 23 phường và 25 cơ sở y tế (5 đã đối chiếu, 20 chờ đối chiếu).
+  JSON trong repo không tự nạp database. Admin kiểm tra nguồn và bật tiếp nhận
+  cho cơ sở phù hợp tại Danh mục phục vụ, rồi gắn bệnh viện cho tài khoản bác sĩ.
+- Địa chỉ được bổ sung/chỉnh sửa tại Hồ sơ → Thông tin địa chỉ. Bản bảo trì đã
+  xóa các tài khoản bệnh nhân/bác sĩ cũ theo yêu cầu chủ dự án để đăng ký lại;
+  giữ tài khoản admin và danh mục. Không chạy script promoteLocalPreviewAdmin
+  trên production.
 - Giữ cấu hình Gemini cloud hiện có. Python model là dịch vụ riêng, cần
   AI_SERVICE_URL truy cập được nếu muốn nhãn dự đoán ML online. Khi không có,
   số đo và cảnh báo quy tắc vẫn được lưu, prediction báo unavailable.
