@@ -12,3 +12,11 @@
 .patient-care-team .care-team-profile-link { display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px; }.patient-care-team .care-team-profile-link p { margin:0;flex:1 1 260px; }.patient-care-team .care-team-profile-link button { flex:0 0 auto; }
 @media(max-width:700px) { .studio-profile-page .profile-address-form { grid-template-columns:minmax(0,1fr);gap:14px; }.studio-profile-page .profile-address-actions button { min-height:44px; }.studio-profile-page .profile-address-form :is(input,select) { font-size:16px; } }
 @media(prefers-reduced-motion:reduce) { .studio-profile-page .profile-address-actions button { transition:none;transform:none; } }
+
+.health-studio-layout[data-studio-theme] .studio-profile-field.has-error :is(input,select,textarea) {
+  border-color:var(--care-danger,#b94459)!important;
+  box-shadow:0 0 0 1px var(--care-danger,#b94459);
+}
+.studio-profile-page .studio-profile-field .profile-field-error {
+  margin:0;color:var(--care-danger,#b94459);font-size:12px;line-height:1.6;overflow-wrap:anywhere;
+}

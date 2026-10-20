@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const User = require("../models/User");
+const { validateProfileFormats } = require("../utils/profileValidation");
 
 // =====================================================
 // CÁC FIELD ĐƯỢC PHÉP CẬP NHẬT
@@ -181,6 +182,17 @@ exports.updateProfile = async (req, res) => {
       }
     });
 
+    // Validate all supplied contact/identity fields before assigning anything to the user.
+    // Partial updates leave omitted fields untouched, including legacy records.
+    const fieldErrors = validateProfileFormats(data);
+    if (Object.keys(fieldErrors).length) {
+      return res.status(400).json({
+        code: "INVALID_PROFILE_FORMAT",
+        msg: "Vui lòng kiểm tra lại các thông tin chưa đúng định dạng.",
+        fieldErrors
+      });
+    }
+
     // ===================================================
     // VALIDATE HỌ TÊN
     // ===================================================
@@ -201,15 +213,6 @@ exports.updateProfile = async (req, res) => {
     if (data.email !== undefined) {
       data.email = data.email.toLowerCase();
 
-      const emailRegex =
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (!emailRegex.test(data.email)) {
-        return res.status(400).json({
-          msg: "Email không hợp lệ"
-        });
-      }
-
       const existingEmail =
         await User.findOne({
           email: data.email,
@@ -220,7 +223,8 @@ exports.updateProfile = async (req, res) => {
 
       if (existingEmail) {
         return res.status(400).json({
-          msg: "Email đã được sử dụng bởi tài khoản khác"
+          msg: "Email đã được sử dụng bởi tài khoản khác",
+          fieldErrors: { email: "Email đã được sử dụng bởi tài khoản khác" }
         });
       }
     }
@@ -230,12 +234,6 @@ exports.updateProfile = async (req, res) => {
     // ===================================================
 
     if (data.cccd !== undefined) {
-      if (!data.cccd) {
-        return res.status(400).json({
-          msg: "CCCD không được để trống"
-        });
-      }
-
       const existingCccd =
         await User.findOne({
           cccd: data.cccd,
@@ -246,7 +244,8 @@ exports.updateProfile = async (req, res) => {
 
       if (existingCccd) {
         return res.status(400).json({
-          msg: "CCCD đã được sử dụng bởi tài khoản khác"
+          msg: "CCCD đã được sử dụng bởi tài khoản khác",
+          fieldErrors: { cccd: "CCCD đã được sử dụng bởi tài khoản khác" }
         });
       }
     }
@@ -397,7 +396,8 @@ exports.updateProfile = async (req, res) => {
       }
 
       return res.status(400).json({
-        msg: message
+        msg: message,
+        ...(["email", "cccd"].includes(duplicateField) ? { fieldErrors: { [duplicateField]: message } } : {})
       });
     }
 

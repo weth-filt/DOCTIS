@@ -5,6 +5,7 @@ Cập nhật ngày 20/10/2026. Tài liệu này giữ trạng thái hiện tại
 ## Các phần đã triển khai
 
 - Hồ sơ: các nhóm thông tin, dị ứng/bệnh nền, ảnh đại diện và chế độ xem/chỉnh sửa. Địa chỉ đăng ký hiển thị tại Thông tin địa chỉ, lưu qua API địa chỉ riêng và giữ bản nháp khi đổi chức năng.
+- Cập nhật hồ sơ: kiểm tra CCCD đúng 12 chữ số, email và định dạng SĐT Việt Nam ở cả form và API. Hiện lỗi dưới từng ô khi rời ô/bấm lưu; số liên hệ phụ được để trống, nhưng nếu nhập phải đúng định dạng. API trả HTTP 400 cùng lỗi từng trường trước khi ghi, giữ kiểm tra trùng CCCD/email; không tự sửa dữ liệu cũ.
 - Nhập sức khỏe: form gọn có nhãn/đơn vị, BMI và phản hồi API. Biểu đồ dùng timestamp thật, tooltip theo lần đo, tách khoảng thiếu dữ liệu và không chèn giá trị 0 giả.
 - Chuyển chức năng: rời/vào theo nhóm nội dung, trạng thái hover/press/loading, chỉ báo điều hướng; hỗ trợ reduced motion và giao diện đơn giản. Không dùng chuyển cảnh để tạo lại dữ liệu hoặc hội thoại.
 - Chat: lịch sử, vị trí đọc, tin mới, bản nháp và tệp đính kèm. Tin người dùng căn phải; danh sách và hội thoại thích ứng trên điện thoại.
@@ -15,6 +16,7 @@ Cập nhật ngày 20/10/2026. Tài liệu này giữ trạng thái hiện tại
 
 ## Phạm vi xác minh
 
+- Sửa định dạng hồ sơ ngày 20/10: build production thành công, controller và helper backend qua kiểm tra cú pháp. Chưa chạy bộ test hoặc thao tác lưu hồ sơ thật; không thay đổi dữ liệu đã lưu trên Atlas trong đợt sửa này.
 - Bộ chọn bệnh viện được thay bằng thẻ có tìm kiếm, lọc trạng thái/cùng phường, số bác sĩ và nhãn thai phụ. Dùng chung trong điều phối, bố trí bác sĩ và chỉnh hồ sơ bác sĩ. Danh mục theo Excel còn 12 cơ sở; Atlas đã đối chiếu giữ 10, thêm 2, xóa 15 không có tham chiếu.
 - Build production cho bộ chọn mới thành công. Computer Use tìm thấy Chrome nhưng bị dừng ở bước xác định URL trước khi chụp ảnh; chưa có xác minh trực quan bản này bằng trình duyệt thật.
 - Bản phát hành theo yêu cầu ngày 20/10/2026: menu admin có nhãn/badge riêng; chi tiết ngày có icon theo loại hoạt động; thêm hàng chờ/đã phân công và bố trí bác sĩ theo bệnh viện.

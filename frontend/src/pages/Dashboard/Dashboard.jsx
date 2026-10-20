@@ -49,6 +49,7 @@ import {
 
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import API from "../../services/api";
+import { validateProfileFormats } from "../../utils/profileValidation";
 import PatientOverview from "../../components/PatientOverview";
 import { useConversationMotion } from "../../components/ConversationMotion";
 import { useWorkspaceMotion } from "../../components/WorkspaceMotion";
@@ -278,6 +279,14 @@ export default function Dashboard() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaveFeedback, setProfileSaveFeedback] = useState(null);
+  const [profileFieldErrors, setProfileFieldErrors] = useState({});
+  const profileErrorFocus = useRef(null);
+  useEffect(() => {
+    if (!profileSaving && profileErrorFocus.current) {
+      document.querySelector(`.profile-editor [name="${profileErrorFocus.current}"]`)?.focus();
+      profileErrorFocus.current = null;
+    }
+  }, [profileSaving, profileFieldErrors]);
   const [addressDraft, setAddressDraft] = useState({ address: "", wardId: "" });
   const [savedAddress, setSavedAddress] = useState(null);
   const [addressWards, setAddressWards] = useState([]);
@@ -744,7 +753,35 @@ export default function Dashboard() {
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfileSaveFeedback(null);
+    if (profileFieldErrors[name]) {
+      const error = validateProfileFormats({ [name]: value })[name];
+      setProfileFieldErrors(previous => {
+        const next = { ...previous };
+        if (error) next[name] = error;
+        else delete next[name];
+        return next;
+      });
+    }
     setProfile((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleProfileBlur = (event) => {
+    const { name, value } = event.target;
+    if (!["cccd", "email", "phone", "fatherPhone", "motherPhone", "emergencyContactPhone"].includes(name)) return;
+    const error = validateProfileFormats({ [name]: value })[name];
+    setProfileFieldErrors(previous => {
+      const next = { ...previous };
+      // Keep a server uniqueness error until the field is edited.
+      if (error) next[name] = error;
+      return next;
+    });
+    if (error) setProfileSaveFeedback(null);
+  };
+
+  const focusProfileError = (errors) => {
+    const name = ["cccd", "email", "phone", "fatherPhone", "motherPhone", "emergencyContactPhone"].find(field => errors[field]);
+    // Wait for error rendering and for the editor to be enabled after an API failure.
+    profileErrorFocus.current = name || null;
   };
 
   const changeServiceAddress = event => {
@@ -1064,6 +1101,18 @@ export default function Dashboard() {
   const saveProfile = async () => {
     if (profileSaving || addressWriteLock.current) return;
 
+    const fieldErrors = validateProfileFormats({
+      cccd: profile.cccd ?? "", email: profile.email ?? "", phone: profile.phone ?? "",
+      fatherPhone: profile.fatherPhone ?? "", motherPhone: profile.motherPhone ?? "",
+      emergencyContactPhone: profile.emergencyContactPhone ?? "",
+    });
+    setProfileFieldErrors(fieldErrors);
+    if (Object.keys(fieldErrors).length) {
+      setProfileSaveFeedback({ type: "error", text: "Chưa lưu hồ sơ. Vui lòng sửa các ô được báo lỗi." });
+      focusProfileError(fieldErrors);
+      return;
+    }
+
        const required = [
       ["fullName", "Vui lòng nhập họ và tên."],
       ["dateOfBirth", "Vui lòng chọn ngày sinh."],
@@ -1199,6 +1248,13 @@ export default function Dashboard() {
       setProfileSaveFeedback({ type: "success", text: "Hồ sơ đã được lưu." });
     } catch (err) {
       if (process.env.NODE_ENV !== "production") console.error("SAVE PROFILE ERROR =", err);
+      const errors = err.response?.data?.fieldErrors;
+      if (errors && typeof errors === "object" && !Array.isArray(errors)) {
+        const knownErrors = Object.fromEntries(Object.entries(errors).filter(([field, message]) =>
+          ["cccd", "email", "phone", "fatherPhone", "motherPhone", "emergencyContactPhone"].includes(field) && typeof message === "string"));
+        setProfileFieldErrors(knownErrors);
+        focusProfileError(knownErrors);
+      }
       setProfileSaveFeedback({
         type: "error",
         text: err.response?.data?.msg || err.response?.data?.message || "Cập nhật hồ sơ thất bại. Vui lòng thử lại.",
@@ -1796,7 +1852,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <nav className="profile-section-nav" aria-label="Các phần trong hồ sơ">{["Thông tin cá nhân","Thông tin người thân","Thông tin địa chỉ","Thông tin y tế cơ bản","Người liên hệ khẩn cấp"].map((title,index) => <button type="button" key={title} onClick={() => document.getElementById(profileSectionId(title))?.scrollIntoView({behavior:reducedMotion ? "instant" : "smooth",block:"start"})}><span>{String(index+1).padStart(2,"0")}</span>{title}</button>)}</nav>
-              <fieldset className="profile-editor" disabled={profileReadOnly} aria-label={profileReadOnly ? "Hồ sơ ở chế độ xem" : "Chỉnh sửa hồ sơ"}>
+              <fieldset className="profile-editor" disabled={profileReadOnly || profileSaving} onBlur={handleProfileBlur} aria-label={profileReadOnly ? "Hồ sơ ở chế độ xem" : "Chỉnh sửa hồ sơ"}>
 
               <ProfileSection title="Thông tin cá nhân" icon={<FaUser />}>
                 <ProfileField
@@ -1835,17 +1891,19 @@ export default function Dashboard() {
                   </select>
                 </ProfileField>
 
-                <ProfileField label="Số CCCD / Căn cước *" icon={<FaIdCard />}>
+                <ProfileField label="Số CCCD / Căn cước *" icon={<FaIdCard />} error={profileFieldErrors.cccd}>
                   <input
                     type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
                     name="cccd"
                     value={profile.cccd || ""}
                     onChange={handleProfileChange}
-                    placeholder="Nhập số CCCD"
+                    placeholder="Nhập đủ 12 chữ số"
                   />
                 </ProfileField>
 
-                <ProfileField label="Email / Gmail *">
+                <ProfileField label="Email / Gmail *" error={profileFieldErrors.email}>
                   <input
                     type="email"
                     name="email"
@@ -1855,10 +1913,11 @@ export default function Dashboard() {
                   />
                 </ProfileField>
 
-                <ProfileField label="Số điện thoại *" icon={<FaPhone />}>
+                <ProfileField label="Số điện thoại *" icon={<FaPhone />} error={profileFieldErrors.phone}>
                   <input
                     type="tel"
                     name="phone"
+                    autoComplete="tel"
                     value={profile.phone || ""}
                     onChange={handleProfileChange}
                     placeholder="Nhập số điện thoại"
@@ -1870,7 +1929,7 @@ export default function Dashboard() {
                 title="Thông tin người thân"
                 icon={<FaAddressBook />}
               >
-                <ProfileField label="Số điện thoại bố *">
+                <ProfileField label="Số điện thoại bố *" error={profileFieldErrors.fatherPhone}>
                   <input
                     type="tel"
                     name="fatherPhone"
@@ -1880,7 +1939,7 @@ export default function Dashboard() {
                   />
                 </ProfileField>
 
-                <ProfileField label="Số điện thoại mẹ *">
+                <ProfileField label="Số điện thoại mẹ *" error={profileFieldErrors.motherPhone}>
                   <input
                     type="tel"
                     name="motherPhone"
@@ -2077,7 +2136,7 @@ export default function Dashboard() {
                   />
                 </ProfileField>
 
-                <ProfileField label="Số điện thoại">
+                <ProfileField label="Số điện thoại" error={profileFieldErrors.emergencyContactPhone}>
                   <input
                     type="tel"
                     name="emergencyContactPhone"
@@ -2766,14 +2825,19 @@ function ProfileSection({ title, icon, children }) {
   );
 }
 
-function ProfileField({ label, icon, full = false, children }) {
+function ProfileField({ label, icon, full = false, children, error }) {
   const fieldId = useId();
   const childList = Children.toArray(children);
   const control = childList.find((child) => isValidElement(child) && ["input", "select", "textarea"].includes(child.type));
   const controlId = control?.props.id || fieldId;
-  const labelledChildren = childList.map((child) => child === control ? cloneElement(child, { id: controlId }) : child);
+  const errorId = `${controlId}-error`;
+  const labelledChildren = childList.map((child) => child === control ? cloneElement(child, {
+    id: controlId,
+    "aria-invalid": error ? true : undefined,
+    "aria-describedby": [child.props["aria-describedby"], error ? errorId : ""].filter(Boolean).join(" ") || undefined,
+  }) : child);
   return (
-    <div className={`studio-profile-field ${full ? "full" : ""}`}>
+    <div className={`studio-profile-field ${full ? "full" : ""} ${error ? "has-error" : ""}`}>
       <label htmlFor={control ? controlId : undefined}>{label}</label>
 
       {icon ? (
@@ -2784,6 +2848,7 @@ function ProfileField({ label, icon, full = false, children }) {
       ) : (
         labelledChildren
       )}
+      {error && <p id={errorId} className="profile-field-error" role="alert">{error}</p>}
     </div>
   );
 }
