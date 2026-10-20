@@ -1,48 +1,46 @@
-# Danh mục cơ sở y tế từ NIPT Đà Nẵng
+# Danh mục bệnh viện chăm sóc đái tháo đường type 2
 
-Nguồn người dùng yêu cầu: [danh sách bệnh viện/phòng khám](https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/). Dữ liệu được rà soát ngày 19/10/2026 trong `danang-hospitals.source.json`.
+## Nguồn lựa chọn ngày 20/10/2026
 
-## Phạm vi và mức xác minh
+Chủ dự án cung cấp `Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx`, gồm 7 bệnh viện công lập/quân y và 5 bệnh viện tư nhân/quốc tế. Bản trích cấu trúc, sheet và ô nguồn nằm trong `danang-diabetes-hospitals.selection.json`; file Excel gốc không bị sửa.
 
-- 24 bệnh viện và 1 phòng khám điều trị được giữ trong dataset, gồm cả mục Mắt Sài Gòn Sông Hàn nằm ngoài danh sách đánh số.
-- 5 cơ sở có đủ nguồn chính thức cho tên, địa chỉ, phường hiện hành và điện thoại: Medic Sài Gòn, Hoàn Mỹ, Gia Đình, Vinmec và Bệnh viện 199. Nguồn và các trường đã đối chiếu nằm trong `verificationSources` của từng hàng.
-- 20 cơ sở còn lại được nhập dạng **bản nháp**, `verified=false`, `wardId=null`. Địa chỉ cũ được giữ có chủ đích để admin rà soát; không suy phường hiện hành từ tên quận cũ. Mắt Sài Gòn Sông Hàn có bằng chứng phường mới nhưng còn thiếu đối chiếu điện thoại chính thức, nên vẫn là bản nháp.
-- 8 trung tâm/chi cục có thông tin nguồn được giữ riêng trong `excludedSourceUnits`, không nhập thành bệnh viện. Một số có dịch vụ y tế công cộng nhưng chưa xác minh là cơ sở điều trị độc lập phù hợp workflow. Taxi và phương tiện vận chuyển không nằm trong dataset.
-- Không lấy số di động cá nhân của lãnh đạo. Vì mục Bệnh viện Tâm thần chỉ công bố các số cá nhân đó, điện thoại của bản nháp để trống.
-- Không tạo bác sĩ, không gán địa bàn phục vụ, không tính khoảng cách hay suy cơ sở gần nhất.
+`danang-hospitals.source.json` hiện chỉ có 12 cơ sở này trong `facilities`. Giữ `datasetId` và các `sourceKey` cũ để không đổi ID, tạo trùng hoặc mất liên kết. 15 cơ sở ngoài lựa chọn được ghi trong `retiredFacilities` để đối chiếu lần chuyển danh mục, không dùng cho điều phối mới.
 
-**Tất cả bản ghi mới có `acceptingPatients=false`.** Xác minh thông tin danh mục không đồng nghĩa bệnh viện đã tham gia DOCTIS hoặc đồng ý nhận bệnh nhân. Admin phải đối chiếu việc tiếp nhận và nhân sự thật trước khi bật.
+- Thêm Bệnh viện Giao thông Vận tải Đà Nẵng và Bệnh viện Y học Cổ truyền Đà Nẵng.
+- Bệnh viện C17 được ghi tên Bệnh viện Quân y 17, giữ tên cũ làm alias.
+- Bệnh viện Phụ sản – Nhi có nhãn đối tượng thai phụ; không trình bày như lựa chọn chung cho mọi bệnh nhân trưởng thành.
+- Các mô tả trên thẻ là tóm tắt trung tính từ file cung cấp, không dùng nhận định xếp hạng như “tốt nhất” hoặc “cực tốt”.
+- Có tên trong danh sách không tự bật tiếp nhận, xác minh địa chỉ/phường mới hoặc tạo bác sĩ. Không lấy tên quận/phường cũ trong Excel để đoán phường hiện hành.
 
-## Chạy công cụ
+4 hàng trong JSON giữ bằng chứng danh mục đã đối chiếu trước đó: Hoàn Mỹ, Gia Đình, Vinmec và 199. 8 hàng còn lại là bản chờ hoàn thiện. Cấu hình admin đã cập nhật trên database được giữ khi đối chiếu, nên trạng thái thực tế có thể đầy đủ hơn JSON nguồn.
 
-Mặc định chỉ đọc JSON cục bộ, không kết nối MongoDB:
+## Nhập các cơ sở còn thiếu
 
 ```powershell
 node backend/scripts/importHospitalCatalog.js
-```
-
-Chế độ ghi yêu cầu `--apply` và biến môi trường **`CATALOG_MONGO_URI` được cung cấp rõ ràng bởi người vận hành**. Công cụ không tự đọc `.env` và không in chuỗi kết nối. Không ghi khóa/URI vào lệnh lưu trong repository hoặc ảnh chụp.
-
-```powershell
+# Chỉ ghi khi người vận hành truyền rõ CATALOG_MONGO_URI:
 node backend/scripts/importHospitalCatalog.js --apply
 ```
 
-Trước khi apply:
+Công cụ chỉ thêm bản ghi thiếu. Không ghi đè các cờ, địa chỉ, phường hoặc điện thoại đã quản lý. Các bản ghi mới chưa bật tiếp nhận.
 
-1. Triển khai schema Hospital hỗ trợ draft: `wardId=null` và `phone=''` chỉ khi `verified=false`; draft không được bật tiếp nhận.
-2. Nhập danh mục phường đã xác minh bằng `importVerifiedWards.js`. Công cụ bệnh viện chỉ dùng `Ward` đúng code, thành phố Đà Nẵng, `verified=true`, `active=true`. Thiếu phường của một hàng verified sẽ dừng trước khi ghi bất kỳ hàng nào.
-3. Xem kết quả offline và danh mục hiện tại. Danh sách nguồn có tên cũ, đặc biệt C17, Vĩnh Toàn và các trung tâm y tế quận/huyện; không tự xác nhận tình trạng hoạt động hiện nay.
+## Đối chiếu và loại cơ sở ngoài danh sách
 
-## Tính lặp lại và bảo toàn dữ liệu
+```powershell
+# Chỉ đọc, cấu hình nguồn ở backend/.env.maintenance.local:
+node backend/scripts/reconcileDiabetesHospitals.js
+# Ghi theo đúng fingerprint vừa đọc:
+node backend/scripts/reconcileDiabetesHospitals.js --apply --expected-plan=<fingerprint>
+# DB preview cố định, tách biệt Atlas:
+node backend/scripts/reconcileDiabetesHospitals.js --local
+```
 
-- `_id` được tạo ổn định bằng SHA-256 từ namespace, `datasetId` và `sourceKey`. Không đổi các khóa này sau lần nhập đầu.
-- Nếu đã có cùng ID, tên/alias đã chuẩn hóa, hoặc cùng địa chỉ và điện thoại, giữ nguyên bản ghi hiện có. Không cập nhật tên, cờ tiếp nhận, tình trạng xác minh, phường hay quan hệ của bệnh viện đã được quản trị viên quản lý.
-- Chạy lại cùng dataset sẽ giữ các bản ghi đã nhập. Hai tiến trình nhập cùng dataset dùng cùng ID nên khóa `_id` ngăn tạo hai hàng cho cùng sourceKey. Không chạy đồng thời với thao tác tạo danh mục của admin: schema hiện chưa có unique key chung cho tên cơ sở.
-- Không xóa bệnh viện, không sửa người dùng/phân công, không tự nâng bản nháp lên verified ở các lần chạy sau. Việc rà soát và nâng cấp bản nháp thực hiện qua quản trị danh mục.
-- Nguồn directory và các bằng chứng chính thức đầy đủ được lưu trong JSON; trường `sourceUrl` của Hospital trỏ nguồn đã dùng cho mức xác minh của hàng đó.
+Công cụ tạo bản lưu danh mục cũ trong thư mục ignored `.local-public-check/catalog-snapshots`, kiểm tra lại danh mục và tham chiếu trong transaction. Cơ sở ngoài danh sách không có tham chiếu được xóa; cơ sở còn liên kết chỉ được loại khỏi lựa chọn mới, giữ lịch sử và quyền chăm sóc hiện hành. Công cụ không sửa tài khoản, hồ sơ, lịch hẹn, đơn thuốc hoặc phân công.
 
-## Giới hạn cần admin hoàn thiện
+Lần áp dụng trên Atlas ngày 20/10/2026: giữ 10, thêm 2, xóa 15 không có tham chiếu; đọc lại có đúng 12 cơ sở. Các cờ tiếp nhận, xác minh, phường và thông tin liên hệ của 10 cơ sở được giữ.
 
-- Bệnh viện Hòa Vang có địa chỉ tại Hòa Nhơn cũ, có thể thuộc xã ngoài danh mục 23 phường hiện có. Không gán một phường khác để vượt qua validation; cần mở rộng địa bàn bằng nguồn chính thức nếu phù hợp.
-- Điện thoại Vinmec và Bệnh viện 199 trên website chính thức khác directory. Dataset dùng số chính thức hiện được công bố, giữ mô tả khác biệt trong `reviewNotes`.
-- Công cụ không xác nhận giấy phép, hợp đồng tham gia DOCTIS hoặc số chỗ tiếp nhận; các cờ nghiệp vụ vẫn do admin quyết định.
+## Chọn bệnh viện trên giao diện
+
+Bộ chọn có tìm kiếm theo tên/địa chỉ/phường, bộ lọc đang tiếp nhận/cùng phường, thẻ riêng cho tên, địa chỉ, nhóm cơ sở, phạm vi chăm sóc và số bác sĩ. Mục chưa sẵn sàng có trạng thái và lý do riêng. Không dùng cùng phường làm kết luận bệnh viện gần nhất theo khoảng cách.
+
+Backend kiểm tra cùng danh mục khi tiếp nhận hoặc gắn bác sĩ vào bệnh viện. Việc giữ lịch sử của một cơ sở không làm cơ sở đó được chọn cho hồ sơ mới.

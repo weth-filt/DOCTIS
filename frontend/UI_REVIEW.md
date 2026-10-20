@@ -15,6 +15,8 @@ Cập nhật ngày 20/10/2026. Tài liệu này giữ trạng thái hiện tại
 
 ## Phạm vi xác minh
 
+- Bộ chọn bệnh viện được thay bằng thẻ có tìm kiếm, lọc trạng thái/cùng phường, số bác sĩ và nhãn thai phụ. Dùng chung trong điều phối, bố trí bác sĩ và chỉnh hồ sơ bác sĩ. Danh mục theo Excel còn 12 cơ sở; Atlas đã đối chiếu giữ 10, thêm 2, xóa 15 không có tham chiếu.
+- Build production cho bộ chọn mới thành công. Computer Use tìm thấy Chrome nhưng bị dừng ở bước xác định URL trước khi chụp ảnh; chưa có xác minh trực quan bản này bằng trình duyệt thật.
 - Bản phát hành theo yêu cầu ngày 20/10/2026: menu admin có nhãn/badge riêng; chi tiết ngày có icon theo loại hoạt động; thêm hàng chờ/đã phân công và bố trí bác sĩ theo bệnh viện.
 - Bệnh viện trong danh mục đều hiển thị cho admin; từng cơ sở có lý do chưa đủ điều kiện. Bệnh viện cùng phường được nhóm trước; không coi cùng phường là gần nhất theo khoảng cách.
 - Công cụ phiên này trả `apps:[], browsers:[]`; mở IAB báo `Browser is not available: iab`. Chưa có kiểm tra trực quan bản sửa điều phối trên trình duyệt thật.

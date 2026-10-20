@@ -38,7 +38,7 @@ function facilityId(sourceKey) {
 
 function validateCatalog() {
   if (catalog.city !== 'Đà Nẵng' || !validUrl(catalog.sourceUrl)
-      || !Array.isArray(catalog.facilities) || catalog.facilities.length !== 25
+      || !Array.isArray(catalog.facilities) || catalog.facilities.length !== 12
       || catalog.policy.acceptingPatients !== false) fail('INVALID_DATASET');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(catalog.checkedAt)
       || !Number.isFinite(Date.parse(catalog.checkedAt))) fail('INVALID_CHECK_DATE');
@@ -94,6 +94,7 @@ function payloadFor(row, wards) {
     verifiedAt: row.verified ? new Date(`${catalog.checkedAt}T00:00:00.000Z`) : null,
     verifiedBy: null,
     active: true,
+    diabetesCare: row.diabetesCare,
     revision: 0,
   };
 }

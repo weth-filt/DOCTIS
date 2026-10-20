@@ -11,6 +11,19 @@ const schema = new mongoose.Schema({
   verifiedAt: { type: Date, default: null },
   verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   active: { type: Boolean, default: true },
+  diabetesCare: {
+    eligible: { type: Boolean, default: false },
+    selectionId: { type: String, default: "" },
+    group: { type: String, default: "" },
+    groupLabel: { type: String, default: "" },
+    focus: { type: String, default: "" },
+    summary: { type: String, default: "" },
+    population: { type: String, default: "general" },
+    website: { type: String, default: "" },
+    sourceWorkbook: { type: String, default: "" },
+    sheet: { type: String, default: "" },
+    range: { type: String, default: "" },
+  },
   revision: { type: Number, default: 0 },
 }, { timestamps: true });
 schema.index({ active: 1, verified: 1, acceptingPatients: 1, wardId: 1 });

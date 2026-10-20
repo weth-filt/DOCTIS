@@ -1,9 +1,9 @@
 {
   "datasetId": "niptdanang-treatment-facilities-v1",
   "city": "Đà Nẵng",
-  "checkedAt": "2026-10-19",
+  "checkedAt": "2026-10-20",
   "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-  "scope": "24 bệnh viện và 1 phòng khám có trong trang nguồn. Không phải danh sách cơ sở đã ký tiếp nhận trên DOCTIS.",
+  "scope": "Danh sách bệnh viện do chủ dự án chọn cho luồng chăm sóc đái tháo đường type 2. Không tự xác nhận địa chỉ hiện hành, hợp đồng tiếp nhận hoặc nhân sự.",
   "policy": {
     "acceptingPatients": false,
     "unknownWardId": null,
@@ -15,159 +15,13 @@
   },
   "facilities": [
     {
-      "sourceKey": "medic-sai-gon",
-      "facilityType": "clinic",
-      "sourceName": "Phòng khám Chẩn đoán Medic Sài Gòn",
-      "name": "Phòng khám Chẩn đoán Medic Sài Gòn",
-      "aliases": ["Phòng khám Medic Sài Gòn"],
-      "sourceAddress": "97 Hải Phòng, Hải Châu, Tp Đà Nẵng",
-      "address": "97 Hải Phòng, phường Hải Châu, thành phố Đà Nẵng",
-      "phone": "0236 3822 866",
-      "wardCode": "DN-HAI-CHAU",
-      "verified": true,
-      "sourceUrl": "https://phongkhammedic.com/lien-he/",
-      "verificationSources": [
-        { "url": "https://phongkhammedic.com/lien-he/", "fields": ["name", "address", "currentWard", "phone"] }
-      ],
-      "reviewNotes": []
-    },
-    {
-      "sourceKey": "mat-sai-gon-song-han",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Mắt Sài Gòn Sông Hàn",
-      "name": "Bệnh viện Mắt Sài Gòn Sông Hàn",
-      "aliases": [],
-      "sourceAddress": "357 Lê Văn Hiến, phường Hòa Hải, quận Ngũ Hành Sơn, thành phố Đà Nẵng",
-      "address": "357 Lê Văn Hiến, phường Ngũ Hành Sơn, thành phố Đà Nẵng",
-      "phone": "0236 3939 222",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [
-        { "url": "https://www.matsaigon.com/", "fields": ["name", "address", "currentWard"] }
-      ],
-      "reviewNotes": ["Website hệ thống ghi địa chỉ phường Ngũ Hành Sơn; chưa đối chiếu được điện thoại trên trang chính thức trong lần rà soát này. Điện thoại giữ từ directory, chưa đánh dấu verified."]
-    },
-    {
-      "sourceKey": "binh-dan-da-nang",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Bình Dân Đà Nẵng",
-      "name": "Bệnh viện Bình Dân Đà Nẵng",
-      "aliases": ["Bệnh viện Đa khoa Bình Dân Đà Nẵng"],
-      "sourceAddress": "376 Trần Cao Vân, Thanh Khê, Đà Nẵng",
-      "address": "376 Trần Cao Vân, Thanh Khê, Đà Nẵng",
-      "phone": "0236 3714 552",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Chưa xác minh phường hiện hành và điện thoại bằng website chính thức. Không lấy số di động cá nhân của giám đốc."]
-    },
-    {
-      "sourceKey": "hoan-my-da-nang",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Hoàn Mỹ Đà Nẵng",
-      "name": "Bệnh viện Hoàn Mỹ Đà Nẵng",
-      "aliases": ["Bệnh viện Đa khoa Hoàn Mỹ Đà Nẵng"],
-      "sourceAddress": "291 Nguyễn Văn Linh, Đà Nẵng",
-      "address": "291 Nguyễn Văn Linh, phường Thanh Khê, thành phố Đà Nẵng",
-      "phone": "0236 3650 676",
-      "wardCode": "DN-THANH-KHE",
-      "verified": true,
-      "sourceUrl": "https://hoanmy.com/danang/thongtinbenhvien/",
-      "verificationSources": [
-        { "url": "https://hoanmy.com/danang/thongtinbenhvien/", "fields": ["name", "address", "currentWard", "phone"] }
-      ],
-      "reviewNotes": []
-    },
-    {
-      "sourceKey": "gia-dinh-da-nang",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Gia Đình Đà Nẵng",
-      "name": "Bệnh viện Đa khoa Gia Đình Đà Nẵng",
-      "aliases": ["Bệnh viện Gia Đình Đà Nẵng", "Bệnh viện Đa khoa Gia Đình", "Family Hospital"],
-      "sourceAddress": "73 Nguyễn Hữu Thọ, Hải Châu, Đà Nẵng",
-      "address": "73 Nguyễn Hữu Thọ, phường Hòa Cường, thành phố Đà Nẵng",
-      "phone": "1900 2250",
-      "wardCode": "DN-HOA-CUONG",
-      "verified": true,
-      "sourceUrl": "https://familyhospital.vn/",
-      "verificationSources": [
-        { "url": "https://familyhospital.vn/", "fields": ["name", "address", "currentWard", "phone"] },
-        { "url": "https://familyhospital.vn/lien-he/", "fields": ["phone"] }
-      ],
-      "reviewNotes": []
-    },
-    {
-      "sourceKey": "tam-tri-da-nang",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Tâm Trí Đà Nẵng",
-      "name": "Bệnh viện Tâm Trí Đà Nẵng",
-      "aliases": ["Bệnh viện Đa khoa Tâm Trí Đà Nẵng"],
-      "sourceAddress": "64 Cách Mạng Tháng 8, Cẩm Lệ, Đà Nẵng",
-      "address": "64 Cách Mạng Tháng 8, Cẩm Lệ, Đà Nẵng",
-      "phone": "0236 3679 555",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [
-        { "url": "https://bvtamtridanang.com.vn/vnt_upload/news/04_2024/4818_-_QuyYt_YYnh_phe_duyYt_danh_mYc_kY_thuYt_bY_sung_lYn_2.pdf", "fields": ["name", "historicalAddress"] }
-      ],
-      "reviewNotes": ["Tài liệu chính thức trước sắp xếp hành chính ghi số 64, phường Khuê Trung cũ. Chưa xác minh phường hiện hành; không suy phường từ tên quận Cẩm Lệ."]
-    },
-    {
-      "sourceKey": "vinmec-da-nang",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Quốc tế Vinmec Đà Nẵng",
-      "name": "Bệnh viện Đa khoa Quốc tế Vinmec Đà Nẵng",
-      "aliases": ["Bệnh viện Quốc tế Vinmec Đà Nẵng", "Vinmec Đà Nẵng"],
-      "sourceAddress": "Đường 30/4, quận Hải Châu, thành phố Đà Nẵng",
-      "address": "Đường 30 tháng 4, Khu dân cư số 4, phường Hòa Cường, thành phố Đà Nẵng",
-      "phone": "0236 3711 111",
-      "wardCode": "DN-HOA-CUONG",
-      "verified": true,
-      "sourceUrl": "https://www.vinmec.com/vie/co-so-y-te/benh-vien-da-khoa-vinmec-da-nang",
-      "verificationSources": [
-        { "url": "https://www.vinmec.com/vie/co-so-y-te/benh-vien-da-khoa-vinmec-da-nang", "fields": ["name", "address", "currentWard", "phone"] }
-      ],
-      "reviewNotes": ["Dùng số điện thoại 0236 3711 111 trên website Vinmec thay cho số khác trong directory."]
-    },
-    {
-      "sourceKey": "vinh-toan",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Đa khoa tư nhân Vĩnh Toàn",
-      "name": "Bệnh viện Đa khoa tư nhân Vĩnh Toàn",
-      "aliases": ["Bệnh viện Vĩnh Toàn"],
-      "sourceAddress": "49 Lê Duẩn, thành phố Đà Nẵng",
-      "address": "49 Lê Duẩn, thành phố Đà Nẵng",
-      "phone": "0236 3892 920",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Cần kiểm tra lại tên pháp lý, tình trạng hoạt động, địa chỉ và phường hiện hành trước khi xác minh. Chuẩn hóa lỗi gõ tên đường Lê Duân trong directory thành Lê Duẩn; không suy tọa độ hay địa bàn tiếp nhận."]
-    },
-    {
-      "sourceKey": "benh-vien-da-nang",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Đà Nẵng",
-      "name": "Bệnh viện Đà Nẵng",
-      "aliases": ["Bệnh viện Đa khoa Đà Nẵng"],
-      "sourceAddress": "124 Hải Phòng, Thạch Thang, thành phố Đà Nẵng",
-      "address": "124 Hải Phòng, Thạch Thang, thành phố Đà Nẵng",
-      "phone": "0236 3821 118",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Địa chỉ nguồn còn tên phường Thạch Thang cũ; cần đối chiếu nguồn chính thức hiện hành."]
-    },
-    {
       "sourceKey": "benh-vien-c",
       "facilityType": "hospital",
       "sourceName": "Bệnh viện C",
       "name": "Bệnh viện C Đà Nẵng",
-      "aliases": ["Bệnh viện C"],
+      "aliases": [
+        "Bệnh viện C"
+      ],
       "sourceAddress": "122 Hải Phòng, Thạch Thang, Hải Châu, Đà Nẵng",
       "address": "122 Hải Phòng, Thạch Thang, Hải Châu, Đà Nẵng",
       "phone": "0236 3821 480",
@@ -175,14 +29,64 @@
       "verified": false,
       "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
       "verificationSources": [],
-      "reviewNotes": ["Địa chỉ nguồn còn tên phường/quận cũ; cần xác minh phường hiện hành bằng nguồn chính thức."]
+      "reviewNotes": [
+        "Địa chỉ nguồn còn tên phường/quận cũ; cần xác minh phường hiện hành bằng nguồn chính thức."
+      ],
+      "diabetesCare": {
+        "eligible": true,
+        "selectionId": "danang-type2-diabetes-user-selection-2026-10-20",
+        "group": "public",
+        "groupLabel": "Công lập & quân y",
+        "focus": "Nội tiết & đái tháo đường",
+        "summary": "Nội tiết, theo dõi đường huyết và chăm sóc biến chứng.",
+        "population": "general",
+        "website": "https://bvcdn.org.vn",
+        "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+        "sheet": "Bệnh viện Công lập & Quân y",
+        "range": "A4:D4"
+      }
+    },
+    {
+      "sourceKey": "benh-vien-da-nang",
+      "facilityType": "hospital",
+      "sourceName": "Bệnh viện Đà Nẵng",
+      "name": "Bệnh viện Đà Nẵng",
+      "aliases": [
+        "Bệnh viện Đa khoa Đà Nẵng"
+      ],
+      "sourceAddress": "124 Hải Phòng, Thạch Thang, thành phố Đà Nẵng",
+      "address": "124 Hải Phòng, Thạch Thang, thành phố Đà Nẵng",
+      "phone": "0236 3821 118",
+      "wardCode": null,
+      "verified": false,
+      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
+      "verificationSources": [],
+      "reviewNotes": [
+        "Địa chỉ nguồn còn tên phường Thạch Thang cũ; cần đối chiếu nguồn chính thức hiện hành."
+      ],
+      "diabetesCare": {
+        "eligible": true,
+        "selectionId": "danang-type2-diabetes-user-selection-2026-10-20",
+        "group": "public",
+        "groupLabel": "Công lập & quân y",
+        "focus": "Nội khoa & biến chứng",
+        "summary": "Khám nội khoa và điều trị các biến chứng liên quan.",
+        "population": "general",
+        "website": "http://bvdn.danang.gov.vn",
+        "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+        "sheet": "Bệnh viện Công lập & Quân y",
+        "range": "A5:D5"
+      }
     },
     {
       "sourceKey": "benh-vien-c17",
       "facilityType": "hospital",
       "sourceName": "Bệnh viện C17",
-      "name": "Bệnh viện C17",
-      "aliases": ["Bệnh viện Quân y 17", "Bệnh viện Quân y C17"],
+      "name": "Bệnh viện Quân y 17",
+      "aliases": [
+        "Bệnh viện Quân y C17",
+        "Bệnh viện C17"
+      ],
       "sourceAddress": "2 Nguyễn Hữu Thọ, Hòa Thuận Nam, Hải Châu, Đà Nẵng",
       "address": "2 Nguyễn Hữu Thọ, Hòa Thuận Nam, Hải Châu, Đà Nẵng",
       "phone": "0236 3816 692",
@@ -190,14 +94,33 @@
       "verified": false,
       "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
       "verificationSources": [],
-      "reviewNotes": ["Cần đối chiếu tên hiện hành Bệnh viện Quân y 17, số điện thoại và địa chỉ hành chính. Giữ tên nguồn cho bản nháp; alias chỉ dùng chống nhập trùng, không tự đổi tên đã được admin quản lý."]
+      "reviewNotes": [
+        "Cần đối chiếu tên hiện hành Bệnh viện Quân y 17, số điện thoại và địa chỉ hành chính. Giữ tên nguồn cho bản nháp; alias chỉ dùng chống nhập trùng, không tự đổi tên đã được admin quản lý."
+      ],
+      "diabetesCare": {
+        "eligible": true,
+        "selectionId": "danang-type2-diabetes-user-selection-2026-10-20",
+        "group": "public",
+        "groupLabel": "Công lập & quân y",
+        "focus": "Nội tổng hợp",
+        "summary": "Theo dõi và quản lý đường huyết mạn tính.",
+        "population": "general",
+        "website": "https://benhvienquany17.com",
+        "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+        "sheet": "Bệnh viện Công lập & Quân y",
+        "range": "A6:D6"
+      }
     },
     {
       "sourceKey": "benh-vien-199",
       "facilityType": "hospital",
       "sourceName": "Bệnh viện 199",
       "name": "Bệnh viện 199",
-      "aliases": ["Bệnh viện 199 - Bộ Công an", "Bệnh viện 199 - BCA"],
+      "aliases": [
+        "Bệnh viện 199 - Bộ Công an",
+        "Bệnh viện 199 - BCA",
+        "Bệnh viện 199 (Bộ Công An)"
+      ],
       "sourceAddress": "216 Nguyễn Công Trứ, quận Sơn Trà, thành phố Đà Nẵng",
       "address": "216 Nguyễn Công Trứ, phường An Hải, thành phố Đà Nẵng",
       "phone": "1900 98 68 68",
@@ -205,137 +128,48 @@
       "verified": true,
       "sourceUrl": "https://benhvien199.vn/",
       "verificationSources": [
-        { "url": "https://benhvien199.vn/", "fields": ["name", "address", "currentWard"] },
-        { "url": "https://benhvien199.vn/post/benh-vien-199-phat-trien-y-hoc-bien-gop-phan-giu-gin-chu-quyen-bien-dao_dt_d9160443-ed49-484f-d25d-08dbd3030f22", "fields": ["name", "phone"] }
+        {
+          "url": "https://benhvien199.vn/",
+          "fields": [
+            "name",
+            "address",
+            "currentWard"
+          ]
+        },
+        {
+          "url": "https://benhvien199.vn/post/benh-vien-199-phat-trien-y-hoc-bien-gop-phan-giu-gin-chu-quyen-bien-dao_dt_d9160443-ed49-484f-d25d-08dbd3030f22",
+          "fields": [
+            "name",
+            "phone"
+          ]
+        }
       ],
-      "reviewNotes": ["Dùng hotline CSKH 1900 98 68 68 từ website chính thức thay cho số khác trong directory. Không lấy số di động cá nhân của lãnh đạo."]
-    },
-    {
-      "sourceKey": "hai-chau",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Hải Châu (Bệnh viện Teresa)",
-      "name": "Bệnh viện Hải Châu",
-      "aliases": ["Trung tâm Y tế Hải Châu", "Trung tâm Y tế quận Hải Châu"],
-      "sourceAddress": "38 Cao Thắng, phường Thanh Bình, quận Hải Châu, thành phố Đà Nẵng",
-      "address": "38 Cao Thắng, phường Thanh Bình, quận Hải Châu, thành phố Đà Nẵng",
-      "phone": "0236 3895 192 / 0236 3895 006",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Cần kiểm tra tên đơn vị, tình trạng hoạt động và phường hiện hành. Tên trong ngoặc Teresa được lưu ở sourceName, chưa xác nhận là tên pháp lý."]
-    },
-    {
-      "sourceKey": "thanh-khe",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Thanh Khê",
-      "name": "Bệnh viện Thanh Khê",
-      "aliases": ["Trung tâm Y tế Thanh Khê", "Trung tâm Y tế quận Thanh Khê"],
-      "sourceAddress": "K62/32 Hà Huy Tập, quận Thanh Khê, Đà Nẵng",
-      "address": "K62/32 Hà Huy Tập, quận Thanh Khê, Đà Nẵng",
-      "phone": "0236 6256 179",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Tên quận trong địa chỉ không chứng minh phường hiện hành; cần xác minh tên đơn vị và cơ sở tiếp nhận."]
-    },
-    {
-      "sourceKey": "lien-chieu",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Liên Chiểu",
-      "name": "Bệnh viện Liên Chiểu",
-      "aliases": ["Trung tâm Y tế Liên Chiểu", "Trung tâm Y tế quận Liên Chiểu"],
-      "sourceAddress": "525 Tôn Đức Thắng, quận Liên Chiểu, thành phố Đà Nẵng",
-      "address": "525 Tôn Đức Thắng, quận Liên Chiểu, thành phố Đà Nẵng",
-      "phone": "0236 3734 535",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Cần xác minh tên đơn vị và phường hiện hành, không tự gán phường Liên Chiểu từ tên quận cũ."]
-    },
-    {
-      "sourceKey": "cam-le",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Cẩm Lệ",
-      "name": "Bệnh viện Cẩm Lệ",
-      "aliases": ["Trung tâm Y tế Cẩm Lệ", "Trung tâm Y tế quận Cẩm Lệ"],
-      "sourceAddress": "105 Nguyễn Nhàn, phường Hòa Thọ Đông, quận Cẩm Lệ, Đà Nẵng",
-      "address": "105 Nguyễn Nhàn, phường Hòa Thọ Đông, quận Cẩm Lệ, Đà Nẵng",
-      "phone": "0236 3672 477",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Địa chỉ còn tên phường Hòa Thọ Đông cũ; cần đối chiếu phường và tên đơn vị hiện hành."]
-    },
-    {
-      "sourceKey": "hoa-vang",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Hòa Vang",
-      "name": "Bệnh viện Hòa Vang",
-      "aliases": ["Trung tâm Y tế Hòa Vang", "Trung tâm Y tế huyện Hòa Vang"],
-      "sourceAddress": "Thạch Nham Đông, Hòa Nhơn, Hòa Vang, thành phố Đà Nẵng",
-      "address": "Thạch Nham Đông, Hòa Nhơn, Hòa Vang, thành phố Đà Nẵng",
-      "phone": "0236 3789 123",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Địa bàn nguồn là Hòa Nhơn cũ; có thể thuộc xã ngoài danh mục 23 phường hiện có. Không gán phường bất kỳ; cần xác minh tên/cơ sở và mở rộng danh mục xã bằng nguồn chính thức nếu phù hợp."]
-    },
-    {
-      "sourceKey": "ngu-hanh-son",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Ngũ Hành Sơn",
-      "name": "Bệnh viện Ngũ Hành Sơn",
-      "aliases": ["Trung tâm Y tế Ngũ Hành Sơn", "Trung tâm Y tế quận Ngũ Hành Sơn"],
-      "sourceAddress": "82 Lê Văn Hiến, quận Ngũ Hành Sơn, Đà Nẵng",
-      "address": "82 Lê Văn Hiến, quận Ngũ Hành Sơn, Đà Nẵng",
-      "phone": "0236 3847 520",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Cần xác minh tên đơn vị, địa chỉ và phường hiện hành; tên quận cũ không thay thế bằng chứng phường."]
-    },
-    {
-      "sourceKey": "son-tra",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Sơn Trà",
-      "name": "Bệnh viện Sơn Trà",
-      "aliases": ["Trung tâm Y tế Sơn Trà", "Trung tâm Y tế quận Sơn Trà"],
-      "sourceAddress": "1118 Ngô Quyền, phường An Hải Tây, quận Sơn Trà, thành phố Đà Nẵng",
-      "address": "1118 Ngô Quyền, phường An Hải Tây, quận Sơn Trà, thành phố Đà Nẵng",
-      "phone": "0236 3831 215",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Địa chỉ nguồn còn phường An Hải Tây cũ; cần xác minh tên đơn vị và phường hiện hành."]
-    },
-    {
-      "sourceKey": "ung-buou-da-nang",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Ung bướu Đà Nẵng",
-      "name": "Bệnh viện Ung bướu Đà Nẵng",
-      "aliases": [],
-      "sourceAddress": "Đường Hoàng Thị Loan, tổ 28, phường Hòa Minh, quận Liên Chiểu, thành phố Đà Nẵng",
-      "address": "Đường Hoàng Thị Loan, tổ 28, phường Hòa Minh, quận Liên Chiểu, thành phố Đà Nẵng",
-      "phone": "0236 3717 717",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Địa chỉ còn phường Hòa Minh cũ; chưa đối chiếu đủ địa chỉ, phường và điện thoại bằng nguồn chính thức trong lần nhập này."]
+      "reviewNotes": [
+        "Dùng hotline CSKH 1900 98 68 68 từ website chính thức thay cho số khác trong directory. Không lấy số di động cá nhân của lãnh đạo."
+      ],
+      "diabetesCare": {
+        "eligible": true,
+        "selectionId": "danang-type2-diabetes-user-selection-2026-10-20",
+        "group": "public",
+        "groupLabel": "Công lập & quân y",
+        "focus": "Nội khoa & phục hồi chức năng",
+        "summary": "Theo dõi đái tháo đường và hỗ trợ phục hồi chức năng.",
+        "population": "general",
+        "website": "https://benhvien199.vn",
+        "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+        "sheet": "Bệnh viện Công lập & Quân y",
+        "range": "A7:D7"
+      }
     },
     {
       "sourceKey": "phu-san-nhi-da-nang",
       "facilityType": "hospital",
       "sourceName": "Bệnh viện Phụ sản – Nhi Đà Nẵng",
       "name": "Bệnh viện Phụ sản – Nhi Đà Nẵng",
-      "aliases": ["Bệnh viện Phụ sản Nhi Đà Nẵng", "Bệnh viện Phụ sản - Nhi Đà Nẵng"],
+      "aliases": [
+        "Bệnh viện Phụ sản Nhi Đà Nẵng",
+        "Bệnh viện Phụ sản - Nhi Đà Nẵng"
+      ],
       "sourceAddress": "402 Lê Văn Hiến, quận Ngũ Hành Sơn, thành phố Đà Nẵng",
       "address": "402 Lê Văn Hiến, quận Ngũ Hành Sơn, thành phố Đà Nẵng",
       "phone": "0236 3957 777",
@@ -343,77 +177,440 @@
       "verified": false,
       "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
       "verificationSources": [],
-      "reviewNotes": ["Cần đối chiếu điện thoại/phường hiện hành; không lấy số di động cá nhân của giám đốc."]
+      "reviewNotes": [
+        "Cần đối chiếu điện thoại/phường hiện hành; không lấy số di động cá nhân của giám đốc."
+      ],
+      "diabetesCare": {
+        "eligible": true,
+        "selectionId": "danang-type2-diabetes-user-selection-2026-10-20",
+        "group": "public",
+        "groupLabel": "Công lập & quân y",
+        "focus": "Đái tháo đường & thai kỳ",
+        "summary": "Theo danh sách cung cấp: dành cho thai phụ mắc đái tháo đường thai kỳ hoặc type 2 mang thai.",
+        "population": "pregnancy",
+        "website": "https://phusannhidanang.org.vn",
+        "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+        "sheet": "Bệnh viện Công lập & Quân y",
+        "range": "A8:D8"
+      }
     },
     {
-      "sourceKey": "mat-da-nang",
+      "sourceKey": "giao-thong-van-tai-da-nang",
       "facilityType": "hospital",
-      "sourceName": "Bệnh viện Mắt Đà Nẵng",
-      "name": "Bệnh viện Mắt Đà Nẵng",
-      "aliases": ["Bệnh viện Mắt thành phố Đà Nẵng"],
-      "sourceAddress": "68 Phan Đăng Lưu, quận Hải Châu, thành phố Đà Nẵng",
-      "address": "68 Phan Đăng Lưu, quận Hải Châu, thành phố Đà Nẵng",
-      "phone": "0236 3624 283",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Cần nguồn chính thức chứng minh phường hiện hành và thông tin liên hệ; không suy phường từ đánh giá/bản đồ bên thứ ba."]
-    },
-    {
-      "sourceKey": "da-lieu-da-nang",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Da liễu Đà Nẵng",
-      "name": "Bệnh viện Da liễu Đà Nẵng",
-      "aliases": [],
-      "sourceAddress": "91 Dũng Sĩ Thanh Khê, quận Thanh Khê, Đà Nẵng",
-      "address": "91 Dũng Sĩ Thanh Khê, quận Thanh Khê, Đà Nẵng",
-      "phone": "0236 3756 951",
-      "wardCode": null,
-      "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
-      "verificationSources": [],
-      "reviewNotes": ["Chưa xác minh phường hiện hành và điện thoại bằng nguồn chính thức."]
-    },
-    {
-      "sourceKey": "tam-than-da-nang",
-      "facilityType": "hospital",
-      "sourceName": "Bệnh viện Tâm thần Đà Nẵng",
-      "name": "Bệnh viện Tâm thần Đà Nẵng",
-      "aliases": [],
-      "sourceAddress": "193 Nguyễn Lương Bằng, Liên Chiểu, Đà Nẵng",
-      "address": "193 Nguyễn Lương Bằng, Liên Chiểu, Đà Nẵng",
+      "sourceName": "Bệnh viện Giao thông Vận tải Đà Nẵng",
+      "sourceAddress": "68 Hoàng Văn Thái, Hòa Minh, Liên Chiểu, Đà Nẵng",
+      "address": "68 Hoàng Văn Thái, Hòa Minh, Liên Chiểu, Đà Nẵng",
       "phone": "",
       "wardCode": null,
       "verified": false,
-      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
+      "sourceUrl": "https://giaothonghospital.vn",
       "verificationSources": [],
-      "reviewNotes": ["Trang nguồn chỉ nêu số di động cá nhân của lãnh đạo, đã loại bỏ. Cần tìm số liên hệ công khai của cơ sở và xác minh phường hiện hành."]
+      "reviewNotes": [],
+      "name": "Bệnh viện Giao thông Vận tải Đà Nẵng",
+      "aliases": [],
+      "diabetesCare": {
+        "eligible": true,
+        "selectionId": "danang-type2-diabetes-user-selection-2026-10-20",
+        "group": "public",
+        "groupLabel": "Công lập & quân y",
+        "focus": "Quản lý đái tháo đường type 2",
+        "summary": "Theo dõi nội khoa và điều trị nội, ngoại trú.",
+        "population": "general",
+        "website": "https://giaothonghospital.vn",
+        "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+        "sheet": "Bệnh viện Công lập & Quân y",
+        "range": "A9:D9"
+      }
     },
     {
-      "sourceKey": "rang-ham-mat-da-nang",
+      "sourceKey": "y-hoc-co-truyen-da-nang",
       "facilityType": "hospital",
-      "sourceName": "Bệnh viện Răng Hàm Mặt thành phố Đà Nẵng",
-      "name": "Bệnh viện Răng Hàm Mặt thành phố Đà Nẵng",
-      "aliases": ["Bệnh viện Răng Hàm Mặt Đà Nẵng"],
-      "sourceAddress": "118 Lê Đình Lý, quận Thanh Khê, thành phố Đà Nẵng",
-      "address": "118 Lê Đình Lý, quận Thanh Khê, thành phố Đà Nẵng",
-      "phone": "0236 3747 086 / 0236 3893 079",
+      "sourceName": "Bệnh viện Y học Cổ truyền Đà Nẵng",
+      "sourceAddress": "09 Trần Thủ Độ, Khuê Trung, Cẩm Lệ, Đà Nẵng",
+      "address": "09 Trần Thủ Độ, Khuê Trung, Cẩm Lệ, Đà Nẵng",
+      "phone": "",
+      "wardCode": null,
+      "verified": false,
+      "sourceUrl": "https://yhoccotruyendanang.vn",
+      "verificationSources": [],
+      "reviewNotes": [],
+      "name": "Bệnh viện Y học Cổ truyền Đà Nẵng",
+      "aliases": [],
+      "diabetesCare": {
+        "eligible": true,
+        "selectionId": "danang-type2-diabetes-user-selection-2026-10-20",
+        "group": "public",
+        "groupLabel": "Công lập & quân y",
+        "focus": "Nội khoa & y học cổ truyền",
+        "summary": "Theo dõi nội khoa và hỗ trợ điều trị theo chỉ định bác sĩ.",
+        "population": "general",
+        "website": "https://yhoccotruyendanang.vn",
+        "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+        "sheet": "Bệnh viện Công lập & Quân y",
+        "range": "A10:D10"
+      }
+    },
+    {
+      "sourceKey": "gia-dinh-da-nang",
+      "facilityType": "hospital",
+      "sourceName": "Bệnh viện Gia Đình Đà Nẵng",
+      "name": "Bệnh viện Đa khoa Gia Đình Đà Nẵng",
+      "aliases": [
+        "Bệnh viện Gia Đình Đà Nẵng",
+        "Bệnh viện Đa khoa Gia Đình",
+        "Family Hospital",
+        "Bệnh viện Đa khoa Gia Đình (Family Hospital)"
+      ],
+      "sourceAddress": "73 Nguyễn Hữu Thọ, Hải Châu, Đà Nẵng",
+      "address": "73 Nguyễn Hữu Thọ, phường Hòa Cường, thành phố Đà Nẵng",
+      "phone": "1900 2250",
+      "wardCode": "DN-HOA-CUONG",
+      "verified": true,
+      "sourceUrl": "https://familyhospital.vn/",
+      "verificationSources": [
+        {
+          "url": "https://familyhospital.vn/",
+          "fields": [
+            "name",
+            "address",
+            "currentWard",
+            "phone"
+          ]
+        },
+        {
+          "url": "https://familyhospital.vn/lien-he/",
+          "fields": [
+            "phone"
+          ]
+        }
+      ],
+      "reviewNotes": [],
+      "diabetesCare": {
+        "eligible": true,
+        "selectionId": "danang-type2-diabetes-user-selection-2026-10-20",
+        "group": "private",
+        "groupLabel": "Tư nhân & quốc tế",
+        "focus": "Nội tiết & đái tháo đường",
+        "summary": "Quản lý bệnh mạn tính và tư vấn dinh dưỡng.",
+        "population": "general",
+        "website": "https://familyhospital.vn",
+        "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+        "sheet": "Bệnh viện Tư nhân & Quốc tế",
+        "range": "A4:D4"
+      }
+    },
+    {
+      "sourceKey": "hoan-my-da-nang",
+      "facilityType": "hospital",
+      "sourceName": "Bệnh viện Hoàn Mỹ Đà Nẵng",
+      "name": "Bệnh viện Hoàn Mỹ Đà Nẵng",
+      "aliases": [
+        "Bệnh viện Đa khoa Hoàn Mỹ Đà Nẵng"
+      ],
+      "sourceAddress": "291 Nguyễn Văn Linh, Đà Nẵng",
+      "address": "291 Nguyễn Văn Linh, phường Thanh Khê, thành phố Đà Nẵng",
+      "phone": "0236 3650 676",
+      "wardCode": "DN-THANH-KHE",
+      "verified": true,
+      "sourceUrl": "https://hoanmy.com/danang/thongtinbenhvien/",
+      "verificationSources": [
+        {
+          "url": "https://hoanmy.com/danang/thongtinbenhvien/",
+          "fields": [
+            "name",
+            "address",
+            "currentWard",
+            "phone"
+          ]
+        }
+      ],
+      "reviewNotes": [],
+      "diabetesCare": {
+        "eligible": true,
+        "selectionId": "danang-type2-diabetes-user-selection-2026-10-20",
+        "group": "private",
+        "groupLabel": "Tư nhân & quốc tế",
+        "focus": "Chăm sóc đái tháo đường",
+        "summary": "Theo dõi nội khoa kết hợp tư vấn dinh dưỡng và biến chứng.",
+        "population": "general",
+        "website": "https://hoanmydanang.com",
+        "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+        "sheet": "Bệnh viện Tư nhân & Quốc tế",
+        "range": "A5:D5"
+      }
+    },
+    {
+      "sourceKey": "vinmec-da-nang",
+      "facilityType": "hospital",
+      "sourceName": "Bệnh viện Quốc tế Vinmec Đà Nẵng",
+      "name": "Bệnh viện Đa khoa Quốc tế Vinmec Đà Nẵng",
+      "aliases": [
+        "Bệnh viện Quốc tế Vinmec Đà Nẵng",
+        "Vinmec Đà Nẵng"
+      ],
+      "sourceAddress": "Đường 30/4, quận Hải Châu, thành phố Đà Nẵng",
+      "address": "Đường 30 tháng 4, Khu dân cư số 4, phường Hòa Cường, thành phố Đà Nẵng",
+      "phone": "0236 3711 111",
+      "wardCode": "DN-HOA-CUONG",
+      "verified": true,
+      "sourceUrl": "https://www.vinmec.com/vie/co-so-y-te/benh-vien-da-khoa-vinmec-da-nang",
+      "verificationSources": [
+        {
+          "url": "https://www.vinmec.com/vie/co-so-y-te/benh-vien-da-khoa-vinmec-da-nang",
+          "fields": [
+            "name",
+            "address",
+            "currentWard",
+            "phone"
+          ]
+        }
+      ],
+      "reviewNotes": [
+        "Dùng số điện thoại 0236 3711 111 trên website Vinmec thay cho số khác trong directory."
+      ],
+      "diabetesCare": {
+        "eligible": true,
+        "selectionId": "danang-type2-diabetes-user-selection-2026-10-20",
+        "group": "private",
+        "groupLabel": "Tư nhân & quốc tế",
+        "focus": "Nội tiết & tầm soát biến chứng",
+        "summary": "Khám nội tiết và theo dõi các biến chứng liên quan.",
+        "population": "general",
+        "website": "https://www.vinmec.com",
+        "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+        "sheet": "Bệnh viện Tư nhân & Quốc tế",
+        "range": "A6:D6"
+      }
+    },
+    {
+      "sourceKey": "tam-tri-da-nang",
+      "facilityType": "hospital",
+      "sourceName": "Bệnh viện Tâm Trí Đà Nẵng",
+      "name": "Bệnh viện Đa khoa Tâm Trí Đà Nẵng",
+      "aliases": [
+        "Bệnh viện Tâm Trí Đà Nẵng"
+      ],
+      "sourceAddress": "64 Cách Mạng Tháng 8, Cẩm Lệ, Đà Nẵng",
+      "address": "64 Cách Mạng Tháng 8, Cẩm Lệ, Đà Nẵng",
+      "phone": "0236 3679 555",
+      "wardCode": null,
+      "verified": false,
+      "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
+      "verificationSources": [
+        {
+          "url": "https://bvtamtridanang.com.vn/vnt_upload/news/04_2024/4818_-_QuyYt_YYnh_phe_duyYt_danh_mYc_kY_thuYt_bY_sung_lYn_2.pdf",
+          "fields": [
+            "name",
+            "historicalAddress"
+          ]
+        }
+      ],
+      "reviewNotes": [
+        "Tài liệu chính thức trước sắp xếp hành chính ghi số 64, phường Khuê Trung cũ. Chưa xác minh phường hiện hành; không suy phường từ tên quận Cẩm Lệ."
+      ],
+      "diabetesCare": {
+        "eligible": true,
+        "selectionId": "danang-type2-diabetes-user-selection-2026-10-20",
+        "group": "private",
+        "groupLabel": "Tư nhân & quốc tế",
+        "focus": "Đái tháo đường & chăm sóc biến chứng",
+        "summary": "Giáo dục sức khỏe và hỗ trợ chăm sóc biến chứng.",
+        "population": "general",
+        "website": "http://bvtamtridanang.com.vn",
+        "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+        "sheet": "Bệnh viện Tư nhân & Quốc tế",
+        "range": "A7:D7"
+      }
+    },
+    {
+      "sourceKey": "binh-dan-da-nang",
+      "facilityType": "hospital",
+      "sourceName": "Bệnh viện Bình Dân Đà Nẵng",
+      "name": "Bệnh viện Bình Dân Đà Nẵng",
+      "aliases": [
+        "Bệnh viện Đa khoa Bình Dân Đà Nẵng"
+      ],
+      "sourceAddress": "376 Trần Cao Vân, Thanh Khê, Đà Nẵng",
+      "address": "376 Trần Cao Vân, Thanh Khê, Đà Nẵng",
+      "phone": "0236 3714 552",
       "wardCode": null,
       "verified": false,
       "sourceUrl": "https://niptdanang.com/danh-sach-tong-hop-benh-vien-phong-kham-tai-da-nang/",
       "verificationSources": [],
-      "reviewNotes": ["Cần xác minh tên cơ sở, phường hiện hành và điện thoại trên nguồn chính thức."]
+      "reviewNotes": [
+        "Chưa xác minh phường hiện hành và điện thoại bằng website chính thức. Không lấy số di động cá nhân của giám đốc."
+      ],
+      "diabetesCare": {
+        "eligible": true,
+        "selectionId": "danang-type2-diabetes-user-selection-2026-10-20",
+        "group": "private",
+        "groupLabel": "Tư nhân & quốc tế",
+        "focus": "Khám nội tiết",
+        "summary": "Khám nội tiết và theo dõi đái tháo đường.",
+        "population": "general",
+        "website": "https://binhdanhospital.vn",
+        "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+        "sheet": "Bệnh viện Tư nhân & Quốc tế",
+        "range": "A8:D8"
+      }
     }
   ],
   "excludedSourceUnits": [
-    { "name": "Trung tâm Y tế dự phòng", "sourceAddress": "315 Phan Châu Trinh, quận Hải Châu, Đà Nẵng; cơ sở tiêm chủng 103 Hùng Vương", "sourcePhone": "0236 3821 469", "reason": "Đơn vị y tế dự phòng/tiêm chủng, chưa xác minh là bệnh viện hoặc phòng khám tiếp nhận điều trị độc lập hiện hành." },
-    { "name": "Trung tâm Chăm sóc sức khỏe sinh sản", "sourceAddress": "06 Phan Chu Trinh, quận Hải Châu, Đà Nẵng", "sourcePhone": "0236 3826 880", "reason": "Cần xác minh mô hình và tên đơn vị hiện hành; không tự đưa vào danh mục bệnh viện tiếp nhận." },
-    { "name": "Trung tâm Cấp cứu", "sourceAddress": "Đường Thanh Tịnh, quận Liên Chiểu, Đà Nẵng", "sourcePhone": "0236 3741 738", "reason": "Đơn vị cấp cứu/vận chuyển; không coi là bệnh viện có bác sĩ phân công trong workflow hiện tại." },
-    { "name": "Trung tâm Phòng chống HIV/AIDS", "sourceAddress": "311/42 Trường Chinh, Đà Nẵng", "sourcePhone": "0236 3727 412", "reason": "Đơn vị y tế công cộng chuyên trách; cần xác minh tên và cơ sở điều trị hiện hành trước khi thêm vào catalog." },
-    { "name": "Trung tâm Kiểm dịch y tế quốc tế", "sourceAddress": "120 Nguyễn Chí Thanh, quận Hải Châu, Đà Nẵng", "sourcePhone": "0236 3812 857", "reason": "Đơn vị kiểm dịch; không phải bệnh viện/phòng khám trong danh sách điều trị đã chọn." },
-    { "name": "Trung tâm Kiểm nghiệm", "sourceAddress": "51 Trần Quốc Toản, quận Hải Châu, Đà Nẵng", "sourcePhone": "0236 3810 247", "reason": "Đơn vị kiểm nghiệm; không phải cơ sở phân công bác sĩ điều trị." },
-    { "name": "Chi cục An toàn vệ sinh thực phẩm", "sourceAddress": "89 Ngô Gia Tự, quận Hải Châu, Đà Nẵng", "sourcePhone": "0236 3843 298", "reason": "Cơ quan quản lý an toàn thực phẩm, không nhập thành bệnh viện." },
-    { "name": "Chi cục Dân số – Kế hoạch hóa gia đình", "sourceAddress": "66 Phan Đăng Lưu, quận Hải Châu, Đà Nẵng", "sourcePhone": "0236 3620 055", "reason": "Cơ quan dân số/kế hoạch hóa gia đình, không nhập thành bệnh viện." }
-  ]
+    {
+      "name": "Trung tâm Y tế dự phòng",
+      "sourceAddress": "315 Phan Châu Trinh, quận Hải Châu, Đà Nẵng; cơ sở tiêm chủng 103 Hùng Vương",
+      "sourcePhone": "0236 3821 469",
+      "reason": "Đơn vị y tế dự phòng/tiêm chủng, chưa xác minh là bệnh viện hoặc phòng khám tiếp nhận điều trị độc lập hiện hành."
+    },
+    {
+      "name": "Trung tâm Chăm sóc sức khỏe sinh sản",
+      "sourceAddress": "06 Phan Chu Trinh, quận Hải Châu, Đà Nẵng",
+      "sourcePhone": "0236 3826 880",
+      "reason": "Cần xác minh mô hình và tên đơn vị hiện hành; không tự đưa vào danh mục bệnh viện tiếp nhận."
+    },
+    {
+      "name": "Trung tâm Cấp cứu",
+      "sourceAddress": "Đường Thanh Tịnh, quận Liên Chiểu, Đà Nẵng",
+      "sourcePhone": "0236 3741 738",
+      "reason": "Đơn vị cấp cứu/vận chuyển; không coi là bệnh viện có bác sĩ phân công trong workflow hiện tại."
+    },
+    {
+      "name": "Trung tâm Phòng chống HIV/AIDS",
+      "sourceAddress": "311/42 Trường Chinh, Đà Nẵng",
+      "sourcePhone": "0236 3727 412",
+      "reason": "Đơn vị y tế công cộng chuyên trách; cần xác minh tên và cơ sở điều trị hiện hành trước khi thêm vào catalog."
+    },
+    {
+      "name": "Trung tâm Kiểm dịch y tế quốc tế",
+      "sourceAddress": "120 Nguyễn Chí Thanh, quận Hải Châu, Đà Nẵng",
+      "sourcePhone": "0236 3812 857",
+      "reason": "Đơn vị kiểm dịch; không phải bệnh viện/phòng khám trong danh sách điều trị đã chọn."
+    },
+    {
+      "name": "Trung tâm Kiểm nghiệm",
+      "sourceAddress": "51 Trần Quốc Toản, quận Hải Châu, Đà Nẵng",
+      "sourcePhone": "0236 3810 247",
+      "reason": "Đơn vị kiểm nghiệm; không phải cơ sở phân công bác sĩ điều trị."
+    },
+    {
+      "name": "Chi cục An toàn vệ sinh thực phẩm",
+      "sourceAddress": "89 Ngô Gia Tự, quận Hải Châu, Đà Nẵng",
+      "sourcePhone": "0236 3843 298",
+      "reason": "Cơ quan quản lý an toàn thực phẩm, không nhập thành bệnh viện."
+    },
+    {
+      "name": "Chi cục Dân số – Kế hoạch hóa gia đình",
+      "sourceAddress": "66 Phan Đăng Lưu, quận Hải Châu, Đà Nẵng",
+      "sourcePhone": "0236 3620 055",
+      "reason": "Cơ quan dân số/kế hoạch hóa gia đình, không nhập thành bệnh viện."
+    }
+  ],
+  "retiredFacilities": [
+    {
+      "sourceKey": "medic-sai-gon",
+      "name": "Phòng khám Chẩn đoán Medic Sài Gòn",
+      "aliases": [
+        "Phòng khám Medic Sài Gòn"
+      ]
+    },
+    {
+      "sourceKey": "mat-sai-gon-song-han",
+      "name": "Bệnh viện Mắt Sài Gòn Sông Hàn",
+      "aliases": []
+    },
+    {
+      "sourceKey": "vinh-toan",
+      "name": "Bệnh viện Đa khoa tư nhân Vĩnh Toàn",
+      "aliases": [
+        "Bệnh viện Vĩnh Toàn"
+      ]
+    },
+    {
+      "sourceKey": "hai-chau",
+      "name": "Bệnh viện Hải Châu",
+      "aliases": [
+        "Trung tâm Y tế Hải Châu",
+        "Trung tâm Y tế quận Hải Châu"
+      ]
+    },
+    {
+      "sourceKey": "thanh-khe",
+      "name": "Bệnh viện Thanh Khê",
+      "aliases": [
+        "Trung tâm Y tế Thanh Khê",
+        "Trung tâm Y tế quận Thanh Khê"
+      ]
+    },
+    {
+      "sourceKey": "lien-chieu",
+      "name": "Bệnh viện Liên Chiểu",
+      "aliases": [
+        "Trung tâm Y tế Liên Chiểu",
+        "Trung tâm Y tế quận Liên Chiểu"
+      ]
+    },
+    {
+      "sourceKey": "cam-le",
+      "name": "Bệnh viện Cẩm Lệ",
+      "aliases": [
+        "Trung tâm Y tế Cẩm Lệ",
+        "Trung tâm Y tế quận Cẩm Lệ"
+      ]
+    },
+    {
+      "sourceKey": "hoa-vang",
+      "name": "Bệnh viện Hòa Vang",
+      "aliases": [
+        "Trung tâm Y tế Hòa Vang",
+        "Trung tâm Y tế huyện Hòa Vang"
+      ]
+    },
+    {
+      "sourceKey": "ngu-hanh-son",
+      "name": "Bệnh viện Ngũ Hành Sơn",
+      "aliases": [
+        "Trung tâm Y tế Ngũ Hành Sơn",
+        "Trung tâm Y tế quận Ngũ Hành Sơn"
+      ]
+    },
+    {
+      "sourceKey": "son-tra",
+      "name": "Bệnh viện Sơn Trà",
+      "aliases": [
+        "Trung tâm Y tế Sơn Trà",
+        "Trung tâm Y tế quận Sơn Trà"
+      ]
+    },
+    {
+      "sourceKey": "ung-buou-da-nang",
+      "name": "Bệnh viện Ung bướu Đà Nẵng",
+      "aliases": []
+    },
+    {
+      "sourceKey": "mat-da-nang",
+      "name": "Bệnh viện Mắt Đà Nẵng",
+      "aliases": [
+        "Bệnh viện Mắt thành phố Đà Nẵng"
+      ]
+    },
+    {
+      "sourceKey": "da-lieu-da-nang",
+      "name": "Bệnh viện Da liễu Đà Nẵng",
+      "aliases": []
+    },
+    {
+      "sourceKey": "tam-than-da-nang",
+      "name": "Bệnh viện Tâm thần Đà Nẵng",
+      "aliases": []
+    },
+    {
+      "sourceKey": "rang-ham-mat-da-nang",
+      "name": "Bệnh viện Răng Hàm Mặt thành phố Đà Nẵng",
+      "aliases": [
+        "Bệnh viện Răng Hàm Mặt Đà Nẵng"
+      ]
+    }
+  ],
+  "sourceWorkbook": "Danh_sach_Benh_vien_Dieu_tri_Dai_thao_duong_Da_Nang_Full.xlsx",
+  "selectionId": "danang-type2-diabetes-user-selection-2026-10-20"
 }

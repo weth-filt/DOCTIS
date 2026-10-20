@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { FaCheck, FaHospital, FaMapMarkerAlt, FaSearch, FaSyncAlt, FaUserMd } from "react-icons/fa";
 import API from "../../services/api";
 import HospitalDoctorRoster from "./HospitalDoctorRoster";
-import { entityId, errorText, hospitalIssues, hospitalReady, INTAKE_LABELS, intakeLabel, localDate, personName } from "./coordinationUtils";
+import HospitalPicker from "./HospitalPicker";
+import { entityId, errorText, hospitalReady, INTAKE_LABELS, intakeLabel, localDate, personName } from "./coordinationUtils";
 import "../../CSS/coordination.css";
 import "../../CSS/hospital-routing.css";
 import "../../CSS/coordination-workspace.css";
@@ -125,9 +126,6 @@ export default function AdminCoordination({ focusIntakeId = "", focusRequestKey 
   const patientWard = wards.find(item => entityId(item) === patientWardId) || selected?.ward;
   const addressReady = Boolean(selectedPatient.address?.trim() && patientWardId);
   const eligibleHospitals = hospitals.filter(item => hospitalReady(item, wards));
-  const sameWardHospitals = eligibleHospitals.filter(item => entityId(item.wardId) === patientWardId);
-  const otherHospitals = eligibleHospitals.filter(item => entityId(item.wardId) !== patientWardId);
-  const unavailableHospitals = hospitals.filter(item => !hospitalReady(item, wards));
   const chosenHospital = hospitals.find(item => entityId(item) === hospitalId) || (hospitalId === acceptedHospitalId ? selected?.hospital : null);
   const chosenWard = wards.find(item => entityId(item) === entityId(chosenHospital?.wardId)) || chosenHospital?.ward;
   const routeUrl = addressReady && chosenHospital ? `https://www.google.com/maps/dir/?api=1&${new URLSearchParams({ origin: [selectedPatient.address, patientWard?.name, selectedPatient.city || "Đà Nẵng"].filter(Boolean).join(", "), destination: `${chosenHospital.name}, ${chosenHospital.address}, Đà Nẵng` }).toString()}` : "";
@@ -153,7 +151,6 @@ export default function AdminCoordination({ focusIntakeId = "", focusRequestKey 
     setIntakes([]); setFilters(old => ({ ...old, status: "" })); setError(""); setNotice("");
   };
   const refresh = () => { loadCatalog(); setRosterVersion(old => old + 1); if (scope !== "team") loadList(queueParams(filters, scope)); };
-  const showHospital = hospital => `${hospital.name} — ${wards.find(ward => entityId(ward) === entityId(hospital.wardId))?.name || "Chưa có phường"}`;
 
   return <section className="coord-admin-workspace coord-workflow">
     <header className="coord-heading"><div><span className="coord-kicker">MẠNG LƯỚI CHĂM SÓC</span><h2>Điều phối bệnh viện & bác sĩ</h2><p>Bố trí bác sĩ tại bệnh viện, chọn cơ sở phù hợp với địa chỉ bệnh nhân và phân công người phụ trách.</p></div><button type="button" className="coord-secondary" onClick={refresh} disabled={loading || catalogLoading || Boolean(busy)}><FaSyncAlt aria-hidden="true" />Cập nhật</button></header>
@@ -171,7 +168,7 @@ export default function AdminCoordination({ focusIntakeId = "", focusRequestKey 
           {!addressReady && <p className="coord-warning">Cần bổ sung địa chỉ/phường tại “Hồ sơ → Thông tin địa chỉ” trước khi chọn bệnh viện.</p>}
           <ol className="coord-stepper" aria-label="Tiến trình điều phối">{[["Chọn bệnh viện", Boolean(acceptedHospitalId)], ["Ghi nhận tiếp nhận", Boolean(selected.acceptedAt) && ["accepted", "assigned"].includes(selected.status)], ["Phân công bác sĩ", hasAssignedDoctor]].map(([label, complete], index) => <li key={label} className={complete ? "is-complete" : ""}><span>{complete ? <FaCheck aria-hidden="true" /> : `0${index + 1}`}</span>{label}</li>)}</ol>
           <form className="coord-step" onSubmit={recordHospital}><h4><span>01</span> Chọn bệnh viện phù hợp</h4><p>Ưu tiên cơ sở cùng phường {patientWard?.name || "với bệnh nhân"}. Đối chiếu địa chỉ và đường đi trước khi lưu.</p>
-            <label>Bệnh viện tiếp nhận<select value={hospitalId} onChange={event => { setHospitalId(event.target.value); setDoctorId(""); }} disabled={Boolean(busy) || catalogLoading}><option value="">Chọn trong danh mục bệnh viện</option>{sameWardHospitals.length > 0 && <optgroup label={`Cùng phường ${patientWard?.name || "bệnh nhân"}`}>{sameWardHospitals.map(hospital => <option key={entityId(hospital)} value={entityId(hospital)}>{showHospital(hospital)}</option>)}</optgroup>}{otherHospitals.length > 0 && <optgroup label="Cơ sở đang tiếp nhận tại phường khác">{otherHospitals.map(hospital => <option key={entityId(hospital)} value={entityId(hospital)}>{showHospital(hospital)}</option>)}</optgroup>}{unavailableHospitals.length > 0 && <optgroup label="Chưa sẵn sàng — cập nhật trong Danh mục bệnh viện">{unavailableHospitals.map(hospital => <option key={entityId(hospital)} value={entityId(hospital)} disabled>{hospital.name} — {hospitalIssues(hospital, wards).join("; ")}</option>)}</optgroup>}</select></label>
+            <HospitalPicker hospitals={hospitals} wards={wards} value={hospitalId} selectedHospital={chosenHospital} patientWardId={patientWardId} disabled={Boolean(busy)} loading={catalogLoading} onChange={nextId => { setHospitalId(nextId); setDoctorId(""); }} />
             {chosenHospital && <section className="coord-hospital-preview" aria-label="Thông tin bệnh viện đang chọn"><div className="coord-hospital-preview-icon"><FaHospital aria-hidden="true" /></div><div><strong>{chosenHospital.name}</strong><p>{chosenHospital.address}</p><small>{chosenWard?.name ? `Phường ${chosenWard.name}` : "Chưa có phường"}{chosenHospital.phone ? ` · ${chosenHospital.phone}` : ""}</small><div className="coord-readiness-chips">{entityId(chosenHospital.wardId) === patientWardId && <span className="is-ready">Cùng phường bệnh nhân</span>}<span>{doctorsLoading ? "Đang tải đội ngũ…" : `${doctors.length} bác sĩ tại bệnh viện`}</span></div>{routeUrl && <a href={routeUrl} target="_blank" rel="noopener noreferrer">Mở đường đi để đối chiếu ↗</a>}</div></section>}
             {!catalogLoading && !eligibleHospitals.length && <p className="coord-warning">Đã tải {hospitals.length} cơ sở, hiện chưa có cơ sở đủ điều kiện tiếp nhận. Mở Danh mục bệnh viện để bổ sung phường, đối chiếu và bật tiếp nhận.</p>}
             <label>Ghi chú điều phối<textarea value={reason} maxLength={1000} onChange={event => setReason(event.target.value)} rows={2} disabled={Boolean(busy)} placeholder="Lý do chọn cơ sở, thông tin cần bàn giao…" /></label>

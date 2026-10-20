@@ -4,6 +4,7 @@ const User = require("../models/User");
 const SupportRequest = require("../models/SupportRequest");
 const DoctorAssignment = require("../models/DoctorAssignment");
 const { hospitalAvailability } = require("../services/hospitalAvailability");
+const { selectedHospitalCare } = require("../services/diabetesHospitalCatalog");
 const { CITY, clean, requireId, requireCity, requireRevision, sourceUrl, problem, runTransaction, sendProblem } = require("../services/coordinationUtils");
 function createAdminCatalogController({ WardModel = Ward, HospitalModel = Hospital, UserModel = User, Intake = SupportRequest, Assignment = DoctorAssignment, transaction = runTransaction, now = () => new Date() } = {}) {
   const admin = req => { if (req.user?.role !== "admin") throw problem("ADMIN_REQUIRED", "Chỉ admin mới được quản lý danh mục.", 403); requireId(req.user.id, "Tài khoản"); };
@@ -23,8 +24,8 @@ function createAdminCatalogController({ WardModel = Ward, HospitalModel = Hospit
       for (const doctor of doctors) doctorCounts.set(String(doctor.hospitalId), (doctorCounts.get(String(doctor.hospitalId)) || 0) + 1);
       const hospitals = values.map(value => {
         const ward = wardById.get(String(value.wardId)) || null;
-        return { ...value, id: String(value._id), ward, doctorCount: doctorCounts.get(String(value._id)) || 0, ...hospitalAvailability(value, ward) };
-      });
+        return { ...value, id: String(value._id), ward, diabetesCare: selectedHospitalCare(value) || { eligible: false }, doctorCount: doctorCounts.get(String(value._id)) || 0, ...hospitalAvailability(value, ward) };
+      }).filter(value => value.diabetesCare.eligible || req.query?.includeExcluded === "true");
       return res.json({ hospitals, distanceRanking: "not_available" });
     });
     const save = create => wrap(async (req, res) => {

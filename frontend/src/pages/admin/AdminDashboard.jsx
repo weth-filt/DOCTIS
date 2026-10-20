@@ -2,6 +2,7 @@ import { WorkspaceIntro, WorkspaceNotice, WorkspaceTabs } from "../../components
 import { useWorkspaceMotion } from "../../components/WorkspaceMotion";
 import AdminCoordination from "../../components/coordination/AdminCoordination";
 import AdminCatalogManager from "../../components/coordination/AdminCatalogManager";
+import HospitalPicker from "../../components/coordination/HospitalPicker";
 import NotificationInbox from "../../components/coordination/NotificationInbox";
 import LegacyUnassignDialog from "../../components/coordination/LegacyUnassignDialog";
 import { entityId, verifiedActive } from "../../components/coordination/coordinationUtils";
@@ -390,7 +391,7 @@ export default function AdminDashboard() {
                 <label><span>Username *</span><div className="editor-input"><FaUserCog /><input value={doctorForm.username} onChange={e => setDoctorForm(p => ({ ...p, username: e.target.value }))} placeholder="doctor01" /></div></label>
                 <label><span>Email</span><div className="editor-input"><FaEnvelope /><input type="email" value={doctorForm.email} onChange={e => setDoctorForm(p => ({ ...p, email: e.target.value }))} placeholder="doctor@doctis.vn" /></div></label>
                 <label><span>Số điện thoại</span><div className="editor-input"><FaPhone /><input value={doctorForm.phone} onChange={e => setDoctorForm(p => ({ ...p, phone: e.target.value }))} placeholder="09xxxxxxxx" /></div></label>
-                <label><span>Bệnh viện của bác sĩ</span><select value={doctorForm.hospitalId} onChange={event => setDoctorForm(old => ({ ...old, hospitalId: event.target.value }))} disabled={savingDoctor}><option value="">Chưa xác định bệnh viện</option>{hospitals.filter(verifiedActive).map(hospital => <option key={entityId(hospital)} value={entityId(hospital)}>{hospital.name}</option>)}</select></label>
+                <HospitalPicker label="Bệnh viện của bác sĩ" mode="membership" hospitals={hospitals} value={doctorForm.hospitalId} disabled={savingDoctor} onChange={nextId => setDoctorForm(old => ({ ...old, hospitalId: nextId }))} />
               </div>
               {hospitalError && <p className="coord-error" role="alert">{hospitalError}</p>}
               {!hospitals.filter(verifiedActive).length && <p className="coord-warning">Chưa có bệnh viện đã xác minh. Bổ sung danh mục trước khi gắn bác sĩ; không tự suy ra bệnh viện cho tài khoản cũ.</p>}
