@@ -22,5 +22,7 @@ const adviceSchema = new mongoose.Schema(
   }
 );
 
+adviceSchema.index({ patientId: 1, createdAt: -1 });
+
 module.exports =
 mongoose.model("Advice", adviceSchema);

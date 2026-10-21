@@ -16,9 +16,12 @@ exports.getPatientsWithAssignment = wrap(async (req, res) => {
     decorate(DoctorAssignment.find({ status: "active" })).populate("hospitalId", HOSPITAL_FIELDS).lean().exec(),
     SupportRequest.find().select("_id patientId hospitalId status revision acceptedAt assignedDoctorId").populate("hospitalId", HOSPITAL_FIELDS).lean().exec(),
   ]);
+  const assignmentByPatient = new Map();
+  assignments.forEach(row => { const key = String(row.patientId); if (!assignmentByPatient.has(key)) assignmentByPatient.set(key, row); });
+  const intakeByPatient = new Map(intakes.map(row => [String(row.patientId), row]));
   const result = patients.map(patient => {
-    const assignment = assignments.find(row => String(row.patientId) === String(patient._id));
-    const sourceIntake = intakes.find(row => String(row.patientId) === String(patient._id)) || null;
+    const assignment = assignmentByPatient.get(String(patient._id));
+    const sourceIntake = intakeByPatient.get(String(patient._id)) || null;
     const state = coordinationAssignmentState(patient, sourceIntake, assignment);
     const doctor = state.doctor, hospital = state.hospital;
     const intake = sourceIntake ? { ...sourceIntake, hospitalId: idOf(sourceIntake.hospitalId), hospital: sourceIntake.hospitalId?.name ? sourceIntake.hospitalId : null } : null;
@@ -33,7 +36,8 @@ exports.getDoctorsForAssignment = wrap(async (req, res) => {
   const wards = await Ward.find({ _id: { $in: hospitals.map(hospital => hospital.wardId).filter(Boolean) } }).select("_id name code city active verified").lean().exec();
   const wardById = new Map(wards.map(ward => [String(ward._id), ward]));
   const hospitalById = new Map(hospitals.map(hospital => [String(hospital._id), { ...hospital, ward: wardById.get(String(hospital.wardId)) || null }]));
-  return res.json(doctors.map(doctor => ({ ...doctor, hospital: hospitalById.get(String(doctor.hospitalId)) || null, displayName: `Doctor ${String(doctor.fullName || doctor.username || "Bác sĩ").replace(/^doctor\s+/i, "")}`, patientCount: counts.find(value => String(value._id) === String(doctor._id))?.patientCount || 0 })));
+  const countByDoctor = new Map(counts.map(row => [String(row._id), row.patientCount]));
+  return res.json(doctors.map(doctor => ({ ...doctor, hospital: hospitalById.get(String(doctor.hospitalId)) || null, displayName: `Doctor ${String(doctor.fullName || doctor.username || "Bác sĩ").replace(/^doctor\s+/i, "")}`, patientCount: countByDoctor.get(String(doctor._id)) || 0 })));
 });
 exports.getAssignmentSummary = wrap(async (req, res) => {
   const [patients, totalDoctors, assignments] = await Promise.all([

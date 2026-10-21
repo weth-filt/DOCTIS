@@ -76,20 +76,34 @@ exports.getPatients = async (req, res) => {
       )
       .lean();
 
-    const result = await Promise.all(
-      patients.map(async (patient) => {
-        const history = await Health.find({
-          userId: patient._id,
-        })
-          .sort({
-            createdAt: 1,
-          })
-          .lean();
+    if (!patients.length) return res.json([]);
+    const ids = patients.map(patient => patient._id);
+    const summaryOnly = req.query?.summary === "1";
+    const historyByPatient = new Map();
+    const latestByPatient = new Map();
+    if (summaryOnly) {
+      // The list needs one latest reading; full history is still served by the
+      // existing patient-health endpoint when the doctor opens that patient.
+      const latestRows = await Health.aggregate([
+        { $match: { userId: { $in: ids } } },
+        { $sort: { userId: 1, createdAt: -1, _id: -1 } },
+        { $group: { _id: "$userId", latest: { $first: "$$ROOT" } } },
+      ]);
+      latestRows.forEach(row => latestByPatient.set(String(row._id), row.latest));
+    } else {
+      // Preserve the legacy/mobile response, without one history query per user.
+      const histories = await Health.find({ userId: { $in: ids } }).sort({ createdAt: 1 }).lean();
+      histories.forEach(record => {
+        const key = String(record.userId);
+        if (!historyByPatient.has(key)) historyByPatient.set(key, []);
+        historyByPatient.get(key).push(record);
+        latestByPatient.set(key, record);
+      });
+    }
 
-        const latestHealth =
-          history.length > 0
-            ? history[history.length - 1]
-            : null;
+    const result = patients.map((patient) => {
+        const history = historyByPatient.get(String(patient._id)) || [];
+        const latestHealth = latestByPatient.get(String(patient._id)) || null;
 
         /*
         | Nếu database cũ chưa có risk thì tính lại
@@ -108,8 +122,7 @@ exports.getPatients = async (req, res) => {
 
           assignmentStatus: "active",
         };
-      })
-    );
+      });
 
     /*
     |--------------------------------------------------------------------------

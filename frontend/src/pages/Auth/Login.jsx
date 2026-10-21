@@ -11,6 +11,8 @@ import {
 } from "react-icons/fa";
 
 import API from "../../services/api";
+import { preloadWorkspace } from "../../services/workspacePages";
+import { primeWorkspaceReads } from "../../services/workspaceReads";
 import Auth3DVisual from "../../components/Auth3DVisual";
 import { beginPatientWelcome, completePatientWelcome } from "../../components/studio/patientWelcomeSession";
 
@@ -67,6 +69,8 @@ export default function Login() {
       // Lưu token và user data
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(userData));
+      preloadWorkspace(role);
+      primeWorkspaceReads(role);
 
       if (role === "admin") {
         completePatientWelcome();

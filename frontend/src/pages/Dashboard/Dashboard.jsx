@@ -49,6 +49,7 @@ import {
 
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import API from "../../services/api";
+import { readWorkspace } from "../../services/workspaceReads";
 import { validateProfileFormats } from "../../utils/profileValidation";
 import PatientOverview from "../../components/PatientOverview";
 import { useConversationMotion } from "../../components/ConversationMotion";
@@ -365,7 +366,7 @@ export default function Dashboard() {
 
   const fetchHealth = useCallback(async () => {
     try {
-      const res = await API.get("/health/history");
+      const res = await readWorkspace("/health/history");
       const list = Array.isArray(res.data) ? res.data : [];
 
       const sorted = [...list].sort(
@@ -398,7 +399,7 @@ export default function Dashboard() {
 
   const fetchAppointments = useCallback(async () => {
     try {
-      const res = await API.get("/appointments/patient");
+      const res = await readWorkspace("/appointments/patient");
       setAppointments(Array.isArray(res.data) ? res.data : []);
       setApiErrors((prev) => ({ ...prev, appointments: false }));
     } catch (err) {
@@ -413,7 +414,7 @@ export default function Dashboard() {
     const storedUser = safeUserFromStorage();
 
     try {
-      const res = await API.get("/profile");
+      const res = await readWorkspace("/profile");
       const profileData = res.data?.profile || res.data || {};
       setSavedCareProfile(profileData);
       const location = profileAddress(profileData);
@@ -579,20 +580,25 @@ export default function Dashboard() {
     fetchAdvices();
     fetchAppointments();
     fetchProfile();
-    fetchDoctors();
     fetchPrescriptions();
   }, [
     fetchHealth,
     fetchAdvices,
     fetchAppointments,
     fetchProfile,
-    fetchDoctors,
     fetchPrescriptions,
   ]);
 
     useEffect(() => {
     if (menu !== "doctor-chat") return;
-    const interval = setInterval(fetchDoctors, 5000);
+    let running = false;
+    const refresh = async () => {
+      if (running || document.visibilityState === "hidden") return;
+      running = true;
+      try { await fetchDoctors(); } finally { running = false; }
+    };
+    refresh();
+    const interval = setInterval(refresh, 5000);
     return () => clearInterval(interval);
   }, [menu, fetchDoctors]);
 

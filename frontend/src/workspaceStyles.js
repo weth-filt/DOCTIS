@@ -1,0 +1,34 @@
+// Keep the established CSS cascade independent of the order in which role
+// JavaScript chunks arrive. Route splitting must not restyle an open workspace.
+import "./CSS/register.css";
+import "./CSS/saved-care-plan.css";
+import "./CSS/prescription-panel.css";
+import "./CSS/measurement-studio.css";
+import "./CSS/care-scene.css";
+import "./CSS/heart-scene.css";
+import "./CSS/appointment-cancel.css";
+import "./CSS/patient-functions.css";
+import "./CSS/patient-overview.css";
+import "./CSS/coordination.css";
+import "./CSS/ai-workspace.css";
+import "./CSS/conversation-studio.css";
+import "./CSS/dashboard.css";
+import "./CSS/dashboard-modern.css";
+import "./CSS/health-clarity.css";
+import "./CSS/health-studio.css";
+import "./CSS/patient-redesign.css";
+import "./CSS/profile-address.css";
+import "./CSS/care-day-detail.css";
+import "./CSS/role-studio.css";
+import "./CSS/doctor.css";
+import "./CSS/doctor-appointments.css";
+import "./CSS/workspace-primitives.css";
+import "./CSS/hospital-picker.css";
+import "./CSS/hospital-routing.css";
+import "./CSS/coordination-workspace.css";
+import "./CSS/doctis-system.css";
+import "./CSS/index.css";
+import "./CSS/auth.css";
+import "./CSS/admin.css";
+import "./CSS/clinical-theme.css";
+import "./CSS/studio-experience.css";

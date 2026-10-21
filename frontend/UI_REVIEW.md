@@ -1,6 +1,6 @@
 # DOCTIS — ghi chú UI
 
-Cập nhật ngày 20/10/2026. Tài liệu này giữ trạng thái hiện tại; lịch sử chỉnh sửa chi tiết có trong Git.
+Cập nhật ngày 21/10/2026. Tài liệu này giữ trạng thái hiện tại; lịch sử chỉnh sửa chi tiết có trong Git.
 
 ## Các phần đã triển khai
 
@@ -16,6 +16,11 @@ Cập nhật ngày 20/10/2026. Tài liệu này giữ trạng thái hiện tại
 
 ## Phạm vi xác minh
 
+- Hiệu năng 21/10: build production thành công. JavaScript entry ban đầu giảm từ 349,38 KB xuống 160,61 KB gzip (khoảng 54% theo báo cáo CRA). CSS dùng thứ tự chung trước khi tải các chunk vai trò; tổng CSS entry khoảng 102,72 KB gzip. Đây là dung lượng build, không phải kết quả đo thời gian đăng nhập thật.
+- Đăng nhập bắt đầu tải trước chunk và các GET chính của đúng vai trò, không chờ hoàn tất mới điều hướng. Kết quả chỉ bàn giao trong bộ nhớ tối đa 30 giây, dùng một lần; không ghi thêm dữ liệu sức khỏe vào storage. Tách theo JWT hiện tại; xóa bàn giao khi có thao tác ghi; GET thông thường chỉ gộp request còn đang chạy. Màn hình chào vẫn chờ bệnh nhân bấm Bỏ qua, dashboard không dựng ngầm.
+- Chat bệnh nhân chỉ tải danh sách bác sĩ khi mở chat; không polling danh sách khi tab bị ẩn. Các bản nháp/hội thoại vẫn do component cũ quản lý.
+- Danh sách bác sĩ dùng `/doctor/patients?summary=1` chỉ lấy lần đo gần nhất. Mở bệnh nhân vẫn lấy toàn bộ lịch sử qua endpoint cũ; gọi không có `summary=1` vẫn trả hợp đồng cũ. Truy vấn lịch sử và kiểm tra phân công được gộp theo lô; vẫn kiểm tra vai trò, bệnh viện và hồ sơ tiếp nhận. Thêm index lịch sử theo user/thời gian, lời khuyên theo patient/thời gian; đọc `lean()` cho dữ liệu chỉ đọc. Admin tra cứu phân công/số bệnh nhân bằng Map thay vì lặp tìm từng dòng. CORS cache preflight 600 giây; API vẫn kiểm tra xác thực và quyền cho mỗi thao tác.
+- Bảy file backend sửa trong đợt hiệu năng qua kiểm tra cú pháp. Chưa chạy bộ test hoặc đo waterfall bằng phiên đăng nhập thật; chưa đối chiếu vùng triển khai API với vùng Atlas. Không ghi/sửa dữ liệu bệnh nhân để đo hiệu năng.
 - Sửa định dạng hồ sơ ngày 20/10: build production thành công, controller và helper backend qua kiểm tra cú pháp. Chưa chạy bộ test hoặc thao tác lưu hồ sơ thật; không thay đổi dữ liệu đã lưu trên Atlas trong đợt sửa này.
 - Bộ chọn bệnh viện được thay bằng thẻ có tìm kiếm, lọc trạng thái/cùng phường, số bác sĩ và nhãn thai phụ. Dùng chung trong điều phối, bố trí bác sĩ và chỉnh hồ sơ bác sĩ. Danh mục theo Excel còn 12 cơ sở; Atlas đã đối chiếu giữ 10, thêm 2, xóa 15 không có tham chiếu.
 - Build production cho bộ chọn mới thành công. Computer Use tìm thấy Chrome nhưng bị dừng ở bước xác định URL trước khi chụp ảnh; chưa có xác minh trực quan bản này bằng trình duyệt thật.

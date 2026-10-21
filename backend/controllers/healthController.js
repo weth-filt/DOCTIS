@@ -250,7 +250,7 @@ exports.getHistory = async (
         userId: req.user.id
       }).sort({
         createdAt: -1
-      });
+      }).lean();
 
     return res.json(data);
   }
@@ -283,7 +283,7 @@ exports.getLatest = async (
         userId: req.user.id
       }).sort({
         createdAt: -1
-      });
+      }).lean();
 
     return res.json(
       latest || null
@@ -324,7 +324,7 @@ exports.getAdvices = async (
         )
         .sort({
           createdAt: -1
-        });
+        }).lean();
 
 
     return res.json(advices);

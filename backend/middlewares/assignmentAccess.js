@@ -42,8 +42,34 @@ function createAssignmentAccess({ AssignmentModel = DoctorAssignment, UserModel 
   const getAssignedPatientIds = async doctorId => {
     if (!isValidObjectId(doctorId)) return [];
     const rows = await AssignmentModel.find({ doctorId, status: "active" }).select("doctorId patientId hospitalId supportRequestId").lean();
-    const checks = await Promise.all(rows.map(async row => await allowed(row) ? row.patientId : null));
-    return checks.filter(Boolean);
+    if (!rows.length) return [];
+    // Apply the same permission checks in batches. The previous per-row checks
+    // repeated doctor, patient, hospital and intake reads for every patient.
+    const [doctor, patients] = await Promise.all([
+      UserModel.findOne({ _id: doctorId, role: "doctor" }).select("_id role hospitalId").lean(),
+      UserModel.find({ _id: { $in: rows.map(row => row.patientId) }, role: "user" }).select("_id").lean(),
+    ]);
+    if (!doctor) return [];
+    const patientIds = new Set(patients.map(patient => String(patient._id)));
+    const coordinated = rows.filter(row => patientIds.has(String(row.patientId)) && row.hospitalId && row.supportRequestId && same(doctor.hospitalId, row.hospitalId));
+    let hospitals = [], intakes = [];
+    if (coordinated.length) {
+      const Hospital = HospitalModel || require("../models/Hospital");
+      const Intake = SupportRequestModel || require("../models/SupportRequest");
+      [hospitals, intakes] = await Promise.all([
+        Hospital.find({ _id: { $in: coordinated.map(row => row.hospitalId) }, active: true, verified: true }).select("_id").lean(),
+        Intake.find({ _id: { $in: coordinated.map(row => row.supportRequestId) }, status: "assigned" }).select("_id patientId hospitalId assignedDoctorId acceptedAt").lean(),
+      ]);
+    }
+    const hospitalIds = new Set(hospitals.map(hospital => String(hospital._id)));
+    const intakeById = new Map(intakes.map(intake => [String(intake._id), intake]));
+    return rows.filter(row => {
+      if (!patientIds.has(String(row.patientId))) return false;
+      if (!row.hospitalId && !row.supportRequestId) return true;
+      if (!row.hospitalId || !row.supportRequestId || !same(doctor.hospitalId, row.hospitalId)) return false;
+      const intake = intakeById.get(String(row.supportRequestId));
+      return Boolean(hospitalIds.has(String(row.hospitalId)) && intake?.acceptedAt && same(intake.patientId, row.patientId) && same(intake.hospitalId, row.hospitalId) && same(intake.assignedDoctorId, doctorId));
+    }).map(row => row.patientId);
   };
   return { isValidObjectId, isAssignedDoctor, getActiveAssignment, requireAssignedDoctor, getAssignedPatientIds };
 }

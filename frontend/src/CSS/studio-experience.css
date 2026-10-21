@@ -1,4 +1,10 @@
 /* Presentation preferences are scoped to authenticated workspaces. */
+.workspace-loading { min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;background:#f6f8f7;color:#173d3c; }
+.workspace-loading h1 { margin:0;font-size:20px; }.workspace-loading p { margin:0;font-size:14px;color:#546e6f; }
+.workspace-loading button { border:0;border-radius:10px;padding:11px 18px;background:#08787b;color:#fff;font:inherit;cursor:pointer; }
+.workspace-loading > span { width:32px;height:32px;border:3px solid #dce8e4;border-top-color:#08787b;border-radius:50%;animation:workspace-loading-spin .8s linear infinite; }
+@keyframes workspace-loading-spin { to { transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce) { .workspace-loading > span { animation:none; } }
 :is(.dashboard-layout.health-studio-layout.doctis-v5,.role-studio)[data-studio-theme] {
   --care-navy:#0a2e2f; --care-ink:#0b2b2c; --care-muted:#546e6f;
   --care-teal:#08787b; --care-aqua:#5eead4; --care-coral:#d58e79;

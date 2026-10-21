@@ -16,6 +16,7 @@ import "../../CSS/role-studio.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MotionConfig, motion, AnimatePresence } from "framer-motion";
 import API from "../../services/api";
+import { readWorkspace } from "../../services/workspaceReads";
 import {
   FaChartLine, FaChevronRight, FaCrown, FaExchangeAlt, FaHospital,
   FaHeartbeat, FaSearch, FaSignOutAlt, FaShieldAlt,
@@ -85,7 +86,7 @@ export default function AdminDashboard() {
   const loadUsers = useCallback(async () => {
     setLoading(true); setError("");
     try {
-      const res = await API.get("/admin/users", authConfig());
+      const res = await readWorkspace("/admin/users", authConfig());
       setUsers(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       if (process.env.NODE_ENV !== "production") console.error("GET USERS ERROR =", err);
@@ -97,8 +98,8 @@ export default function AdminDashboard() {
     setAssignmentLoading(true);
     try {
       const [p, d] = await Promise.all([
-        API.get("/admin/assignments/patients", authConfig()),
-        API.get("/admin/assignments/doctors", authConfig()),
+        readWorkspace("/admin/assignments/patients", authConfig()),
+        readWorkspace("/admin/assignments/doctors", authConfig()),
       ]);
       setAssignPatients(Array.isArray(p.data) ? p.data : []);
       setAssignDoctors(Array.isArray(d.data) ? d.data : []);

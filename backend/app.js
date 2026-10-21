@@ -80,6 +80,9 @@ app.use((req, res, next) => {
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-auth-token"],
+    // Cache the browser's CORS preflight; every API action still checks its JWT
+    // and current permissions normally. This avoids repeat OPTIONS round trips.
+    maxAge: 600,
   })(req, res, next);
 });
 

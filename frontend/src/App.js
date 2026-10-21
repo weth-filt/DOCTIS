@@ -1,9 +1,12 @@
+import "./workspaceStyles";
 import {
   BrowserRouter,
   Navigate,
   Routes,
   Route,
 } from "react-router-dom";
+import { Component, lazy, Suspense } from "react";
+import { loadPatientWorkspace, loadDoctorWorkspace, loadAdminWorkspace } from "./services/workspacePages";
 
 /* =========================================================
    AUTH PAGES
@@ -16,10 +19,6 @@ import Forgot from "./pages/Auth/Forgot";
 /* =========================================================
    DASHBOARDS
    ========================================================= */
-
-import Dashboard from "./pages/Dashboard/Dashboard";
-import DoctorDashboard from "./pages/Dashboard/DoctorDashboard";
-import AdminDashboard from "./pages/admin/AdminDashboard";
 
 /* =========================================================
    ROUTE GUARDS
@@ -62,6 +61,26 @@ import "./CSS/admin.css";
 import "./CSS/clinical-theme.css";
 import "./CSS/studio-experience.css";
 
+const Dashboard = lazy(loadPatientWorkspace);
+const DoctorDashboard = lazy(loadDoctorWorkspace);
+const AdminDashboard = lazy(loadAdminWorkspace);
+
+function WorkspaceLoading() {
+  return <main className="workspace-loading" role="status" aria-live="polite"><span aria-hidden="true" /><h1>Đang mở không gian chăm sóc…</h1><p>Đang tải giao diện của bạn.</p></main>;
+}
+
+class WorkspaceBoundary extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() {
+    if (this.state.failed) return <main className="workspace-loading" role="alert"><h1>Chưa mở được giao diện</h1><p>Kiểm tra kết nối mạng rồi tải lại trang.</p><button type="button" onClick={() => window.location.reload()}>Tải lại</button></main>;
+    return this.props.children;
+  }
+}
+
+function WorkspaceReady({ children }) {
+  return <WorkspaceBoundary><Suspense fallback={<WorkspaceLoading />}>{children}</Suspense></WorkspaceBoundary>;
+}
 
 function App() {
   return (
@@ -99,7 +118,7 @@ function App() {
 
         <Route
           path="/dashboard"
-          element={<PatientWelcomeGate><Dashboard /></PatientWelcomeGate>}
+          element={<PatientWelcomeGate><WorkspaceReady><Dashboard /></WorkspaceReady></PatientWelcomeGate>}
         />
 
 
@@ -111,7 +130,7 @@ function App() {
           path="/doctor"
           element={
             <DoctorRoute>
-              <DoctorDashboard />
+              <WorkspaceReady><DoctorDashboard /></WorkspaceReady>
             </DoctorRoute>
           }
         />
@@ -125,7 +144,7 @@ function App() {
           path="/admin"
           element={
             <AdminRoute>
-              <AdminDashboard />
+              <WorkspaceReady><AdminDashboard /></WorkspaceReady>
             </AdminRoute>
           }
         />

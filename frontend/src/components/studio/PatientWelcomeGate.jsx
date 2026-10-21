@@ -39,8 +39,8 @@ export default function PatientWelcomeGate({ children }) {
     completePatientWelcome();
     setPending(false);
   };
-  // The dashboard (including its effects/data requests) is not mounted behind
-  // this welcome. Reloading a pending welcome does not dismiss it.
+  // The dashboard is not mounted behind this welcome. Login can prefetch a
+  // short in-memory data handoff without rendering or dismissing this screen.
   if (pending && patient) return <PatientWelcomeScreen name={patient.fullName || patient.username || "bạn"} onContinue={continueToDashboard} />;
   return children;
 }

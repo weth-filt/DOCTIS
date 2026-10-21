@@ -1,7 +1,7 @@
 import { ConversationBack, ConversationNotice, useConversationViewport } from "../../components/ConversationViewport";
+import HealthAnalytics from "../../components/HealthAnalytics";
 import CareScene from "../../components/CareScene";
 import { useWorkspaceMotion } from "../../components/WorkspaceMotion";
-import HealthAnalytics from "../../components/HealthAnalytics";
 import HeartScene from "../../components/3d/HeartScene";
 import { STUDIO_PREFERENCES_KEY, useStudioPreferences } from "../../components/studio/StudioPreferences";
 import StudioControls from "../../components/studio/StudioControls";
@@ -50,6 +50,7 @@ import { useNavigate } from "react-router-dom";
 
 
 import API from "../../services/api";
+import { readWorkspace } from "../../services/workspaceReads";
 import { MotionConfig, motion } from "framer-motion";
 import { useConversationMotion } from "../../components/ConversationMotion";
 import "../../CSS/conversation-studio.css";
@@ -201,7 +202,7 @@ export default function DoctorDashboard() {
     const version = ++appointmentReadVersion.current;
     setAppointmentsLoading(true); setAppointmentError("");
     try {
-      const res = await API.get("/appointments/doctor", authConfig());
+      const res = await readWorkspace("/appointments/doctor", authConfig());
       if (version === appointmentReadVersion.current) setAppointments(safeArray(res.data));
     } catch {
       if (version === appointmentReadVersion.current) setAppointmentError("Chưa tải được lịch hẹn. Vui lòng thử tải lại.");
@@ -225,7 +226,7 @@ export default function DoctorDashboard() {
   const fetchPatients = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await API.get("/doctor/patients", authConfig());
+      const res = await readWorkspace("/doctor/patients?summary=1", authConfig());
       setPatients(res.data || []);
       return safeArray(res.data);
     } catch (err) {
