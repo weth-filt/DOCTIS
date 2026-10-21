@@ -28,6 +28,9 @@
 .doctor-layout.role-studio .appointment-page {
   gap:14px;
 }
+.doctor-layout.role-studio .appointment-box > .create-appointment-btn {
+  margin-top:16px;
+}
 .doctor-layout.role-studio .doctor-main:not(.doctor-main-messages) .role-workspace-content .appointment-page > .patient-table {
   margin-top:0;
 }
