@@ -12,6 +12,7 @@ import "./CSS/patient-overview.css";
 import "./CSS/coordination.css";
 import "./CSS/ai-workspace.css";
 import "./CSS/conversation-studio.css";
+import "./CSS/chat-image-viewer.css";
 import "./CSS/dashboard.css";
 import "./CSS/dashboard-modern.css";
 import "./CSS/health-clarity.css";

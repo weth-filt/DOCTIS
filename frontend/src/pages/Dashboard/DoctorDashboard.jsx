@@ -52,6 +52,7 @@ import { useNavigate } from "react-router-dom";
 import API from "../../services/api";
 import { readWorkspace } from "../../services/workspaceReads";
 import useChatMessages from "../../components/useChatMessages";
+import ChatImageViewer from "../../components/ChatImageViewer";
 import { temporaryChatId } from "../../utils/chatMessages";
 import { MotionConfig, motion } from "framer-motion";
 import { useConversationMotion } from "../../components/ConversationMotion";
@@ -168,6 +169,7 @@ export default function DoctorDashboard() {
     receiveMessages, addPending, confirmPending, rejectPending } = useChatMessages();
   const [messageText, setMessageText] = useState("");
   const [messageAttachment, setMessageAttachment] = useState(null);
+  const [previewAttachment, setPreviewAttachment] = useState(null);
   const [messageLoading, setMessageLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
   const messageAreaRef = useRef(null);
@@ -624,10 +626,9 @@ export default function DoctorDashboard() {
     if (isImage && url) {
       return (
         <div className={`message-image-attachment ${mine ? "mine" : ""}`}>
-          <a
-            href={url}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={() => setPreviewAttachment(attachment)}
             className="message-image-preview-link"
             title="Mở ảnh"
           >
@@ -636,7 +637,7 @@ export default function DoctorDashboard() {
               alt={attachment.name || "Ảnh đính kèm"}
               loading="lazy"
             />
-          </a>
+          </button>
 
           <div className="message-attachment-meta">
             <div className="message-attachment-name">
@@ -650,15 +651,14 @@ export default function DoctorDashboard() {
             </div>
 
             <div className="message-attachment-actions">
-              <a
-                href={url}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={() => setPreviewAttachment(attachment)}
                 className="attachment-action-btn"
                 aria-label={`Mở ảnh ${attachment.name || "đính kèm"}`}
               >
-                Mở ảnh <span aria-hidden="true">↗</span>
-              </a>
+                <FaEye aria-hidden="true" /> Mở ảnh
+              </button>
               <button
                 type="button"
                 className="attachment-action-btn download"
@@ -2181,6 +2181,7 @@ export default function DoctorDashboard() {
         </div>
       )}
       <CancelAppointmentDialog appointment={cancelAppointment} onClose={() => setCancelAppointment(null)} onCancelled={updated => { acceptAppointment(updated); fetchAppointments(); setAppointmentFeedback({ type: "success", message: "Đã hủy lịch hẹn. Lịch được giữ trong lịch sử." }); }} />
+      <ChatImageViewer attachment={previewAttachment} onClose={() => setPreviewAttachment(null)} onDownload={downloadAttachment} theme={prefs.theme} />
     </div></MotionConfig>
   );
 }

@@ -51,6 +51,7 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import API from "../../services/api";
 import { readWorkspace } from "../../services/workspaceReads";
 import useChatMessages from "../../components/useChatMessages";
+import ChatImageViewer from "../../components/ChatImageViewer";
 import { temporaryChatId } from "../../utils/chatMessages";
 import { validateProfileFormats } from "../../utils/profileValidation";
 import PatientOverview from "../../components/PatientOverview";
@@ -314,6 +315,7 @@ export default function Dashboard() {
   const [doctorMessageInput, setDoctorMessageInput] = useState("");
   const [doctorLoading, setDoctorLoading] = useState(false);
   const [doctorAttachment, setDoctorAttachment] = useState(null);
+  const [previewAttachment, setPreviewAttachment] = useState(null);
 
     const [apiErrors, setApiErrors] = useState({});
   const [healthLoading, setHealthLoading] = useState(true);
@@ -1525,11 +1527,10 @@ export default function Dashboard() {
 
     if (canPreviewImage) {
       return (
-        <a
+        <button
+          type="button"
           className="doctor-message-image"
-          href={imageSource}
-          target="_blank"
-          rel="noreferrer"
+          onClick={() => setPreviewAttachment(attachment)}
           title={attachment.name || "Ảnh đính kèm"}
         >
           <img
@@ -1545,7 +1546,7 @@ export default function Dashboard() {
             <FaImage />
             {attachment.name || "Ảnh đính kèm"}
           </span>
-        </a>
+        </button>
       );
     }
 
@@ -2783,6 +2784,7 @@ export default function Dashboard() {
 
       </main>
       </div>
+      <ChatImageViewer attachment={previewAttachment} onClose={() => setPreviewAttachment(null)} theme={preferences.theme} />
     </div></MotionConfig>
   );
 }
