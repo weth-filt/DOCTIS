@@ -10,6 +10,7 @@ Cập nhật ngày 21/10/2026. Tài liệu này giữ trạng thái hiện tại
 - Nhập sức khỏe: form gọn có nhãn/đơn vị, BMI và phản hồi API. Biểu đồ dùng timestamp thật, tooltip theo lần đo, tách khoảng thiếu dữ liệu và không chèn giá trị 0 giả.
 - Chuyển chức năng: rời/vào theo nhóm nội dung, trạng thái hover/press/loading, chỉ báo điều hướng; hỗ trợ reduced motion và giao diện đơn giản. Không dùng chuyển cảnh để tạo lại dữ liệu hoặc hội thoại.
 - Chat: lịch sử, vị trí đọc, tin mới, bản nháp và tệp đính kèm. Tin người dùng căn phải; danh sách và hội thoại thích ứng trên điện thoại.
+- Chat bác sĩ: phản hồi polling cũ được hợp nhất theo ID thay vì xóa danh sách đang hiển thị; giữ tin gửi tạm và tin server đã xác nhận. Trong lúc chờ POST, tạm hoãn nhận snapshot để tránh hiện cả tin tạm lẫn bản đã lưu. Giữ key hiển thị qua bước xác nhận để không tạo lại bubble; dữ liệu từng hội thoại được tách trong bộ nhớ component. Polling không chạy chồng, bỏ phản hồi sau khi rời màn hình; request đọc/gửi có thời hạn để không bị treo mãi. Gửi lỗi trả nội dung về ô soạn khi vẫn đang ở đúng hội thoại.
 - Kế hoạch chăm sóc: phân biệt gợi ý AI với kế hoạch bác sĩ xác nhận; tiến độ có revision, lịch sử và phản hồi lưu.
 - Bác sĩ: quản lý tạo/duyệt/hoàn tất/hủy/nhắc email trong Lịch hẹn; lịch tương lai không thể hoàn tất. Giờ hẹn dùng múi giờ Việt Nam.
 - Admin: badge số có chỗ riêng; nút kết thúc phân công không bị ép thành nút icon. Điều phối đối chiếu địa chỉ, nhóm bệnh viện cùng phường và chỉ dùng bác sĩ thuộc bệnh viện đã tiếp nhận.
@@ -17,6 +18,7 @@ Cập nhật ngày 21/10/2026. Tài liệu này giữ trạng thái hiện tại
 
 ## Phạm vi xác minh
 
+- Sửa nháy/mất tin chat 21/10: 13 kiểm thử trong 3 suite (`useChatMessages`, `ConversationViewport`, `ConversationMotion`) đã qua, gồm snapshot cũ trước/sau POST, ACK đến trái thứ tự, chuyển hội thoại, giữ cùng node DOM, không nhân đôi, tệp đính kèm và trạng thái đã đọc. Chỉ dùng dữ liệu giả, không gửi tin thật. Build production thành công; chưa kiểm tra gửi tin bằng trình duyệt đăng nhập thật.
 - Hiệu năng 21/10: build production thành công. JavaScript entry ban đầu giảm từ 349,38 KB xuống 160,61 KB gzip (khoảng 54% theo báo cáo CRA). CSS dùng thứ tự chung trước khi tải các chunk vai trò; tổng CSS entry khoảng 102,72 KB gzip. Đây là dung lượng build, không phải kết quả đo thời gian đăng nhập thật.
 - Đăng nhập bắt đầu tải trước chunk và các GET chính của đúng vai trò, không chờ hoàn tất mới điều hướng. Kết quả chỉ bàn giao trong bộ nhớ tối đa 30 giây, dùng một lần; không ghi thêm dữ liệu sức khỏe vào storage. Tách theo JWT hiện tại; xóa bàn giao khi có thao tác ghi; GET thông thường chỉ gộp request còn đang chạy. Màn hình chào vẫn chờ bệnh nhân bấm Bỏ qua, dashboard không dựng ngầm.
 - Chat bệnh nhân chỉ tải danh sách bác sĩ khi mở chat; không polling danh sách khi tab bị ẩn. Các bản nháp/hội thoại vẫn do component cũ quản lý.

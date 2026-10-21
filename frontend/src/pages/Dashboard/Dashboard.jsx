@@ -50,6 +50,8 @@ import {
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import API from "../../services/api";
 import { readWorkspace } from "../../services/workspaceReads";
+import useChatMessages from "../../components/useChatMessages";
+import { temporaryChatId } from "../../utils/chatMessages";
 import { validateProfileFormats } from "../../utils/profileValidation";
 import PatientOverview from "../../components/PatientOverview";
 import { useConversationMotion } from "../../components/ConversationMotion";
@@ -306,7 +308,9 @@ export default function Dashboard() {
   const [doctors, setDoctors] = useState([]);
   const [doctorSearch, setDoctorSearch] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [doctorMessages, setDoctorMessages] = useState([]);
+  const { messages: doctorMessages, selectConversation: selectDoctorConversation, isActive: isDoctorConversationActive,
+    hasMessages: hasDoctorMessages, hasPending: hasPendingDoctorMessage, receiveMessages: receiveDoctorMessages,
+    addPending: addPendingDoctorMessage, confirmPending: confirmDoctorMessage, rejectPending: rejectDoctorMessage } = useChatMessages();
   const [doctorMessageInput, setDoctorMessageInput] = useState("");
   const [doctorLoading, setDoctorLoading] = useState(false);
   const [doctorAttachment, setDoctorAttachment] = useState(null);
@@ -604,52 +608,26 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (menu !== "doctor-chat" || !selectedDoctor) return;
-
-    const interval = setInterval(() => {
-      const doctorId = getId(selectedDoctor);
-
-      API.get(`/messages/doctor/${doctorId}`)
-        .then((res) => {
-          const nextMessages = Array.isArray(res.data)
-            ? res.data
-            : Array.isArray(res.data?.messages)
-            ? res.data.messages
-            : [];
-
-          setDoctorMessages((prev) => {
-            const previousById = new Map(
-              prev.map((message) => [String(message?._id || ""), message])
-            );
-            const normalizedMessages = nextMessages.map((message) => {
-              const previous = previousById.get(String(message?._id || ""));
-              if (previous?.attachment && !message?.attachment) {
-                return { ...message, attachment: previous.attachment };
-              }
-              return message;
-            });
-
-            const sameLength = prev.length === normalizedMessages.length;
-            const sameIds =
-              prev.map((m) => String(m?._id || "")).join("|") ===
-              normalizedMessages.map((m) => String(m?._id || "")).join("|");
-
-            const prevLast = prev[prev.length - 1];
-            const nextLast = normalizedMessages[normalizedMessages.length - 1];
-
-            const sameLastContent =
-              String(prevLast?.content || prevLast?.text || "") ===
-              String(nextLast?.content || nextLast?.text || "");
-
-            return sameLength && sameIds && sameLastContent
-              ? prev
-              : normalizedMessages;
-          });
-        })
-        .catch(() => {});
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [menu, selectedDoctor]);
+    const doctorId = getId(selectedDoctor);
+    let stopped = false, running = false;
+    const refresh = async () => {
+      if (stopped || running || document.visibilityState === "hidden" || hasPendingDoctorMessage(doctorId)) return;
+      running = true;
+      try {
+        const res = await API.get(`/messages/doctor/${doctorId}`, { timeout: 15000 });
+        if (stopped) return;
+        const nextMessages = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.messages)
+          ? res.data.messages
+          : [];
+        receiveDoctorMessages(doctorId, nextMessages);
+      } catch { /* Keep the displayed conversation when a refresh fails. */ }
+      finally { running = false; }
+    };
+    const interval = setInterval(refresh, 3000);
+    return () => { stopped = true; clearInterval(interval); };
+  }, [menu, selectedDoctor, hasPendingDoctorMessage, receiveDoctorMessages]);
 
   useEffect(() => {
     const body = doctorChatBodyRef.current;
@@ -1376,15 +1354,16 @@ export default function Dashboard() {
     "Bác sĩ";
 
   const selectDoctor = async (doctor) => {
+    const doctorId = getId(doctor);
+    selectDoctorConversation(doctorId);
     setSelectedDoctor(doctor);
-    setDoctorLoading(true);
+    setDoctorLoading(!hasDoctorMessages(doctorId));
     doctorChatStickToBottomRef.current = true;
 
     try {
-      const doctorId = getId(doctor);
-      const res = await API.get(`/messages/doctor/${doctorId}`);
+      const res = await API.get(`/messages/doctor/${doctorId}`, { timeout: 15000 });
 
-      setDoctorMessages(
+      receiveDoctorMessages(doctorId,
         Array.isArray(res.data)
           ? res.data
           : Array.isArray(res.data?.messages)
@@ -1393,9 +1372,8 @@ export default function Dashboard() {
       );
     } catch (err) {
       if (process.env.NODE_ENV !== "production") console.error("FETCH DOCTOR MESSAGES ERROR =", err);
-      setDoctorMessages([]);
     } finally {
-      setDoctorLoading(false);
+      if (isDoctorConversationActive(doctorId)) setDoctorLoading(false);
     }
   };
 
@@ -1481,7 +1459,7 @@ export default function Dashboard() {
         : "");
 
     const temporaryMessage = {
-      _id: `temp-${Date.now()}`,
+      _id: temporaryChatId(),
       senderId: currentUserId,
       receiverId: doctorId,
       content,
@@ -1493,7 +1471,8 @@ export default function Dashboard() {
     };
 
     doctorChatStickToBottomRef.current = true;
-    setDoctorMessages((prev) => [...prev, temporaryMessage]);
+    addPendingDoctorMessage(doctorId, temporaryMessage);
+    setDoctorLoading(false);
     setDoctorMessageInput("");
     setDoctorAttachment(null);
 
@@ -1502,23 +1481,17 @@ export default function Dashboard() {
         receiverId: doctorId,
         content,
         attachment,
-      });
+      }, { timeout: 30000 });
 
-      if (res.data) {
-        setDoctorMessages((prev) =>
-          prev.map((msg) =>
-            msg._id === temporaryMessage._id
-              ? { ...res.data, attachment: res.data?.attachment || attachment }
-              : msg
-          )
-        );
-      }
+      confirmDoctorMessage(doctorId, temporaryMessage._id, res.data);
     } catch (err) {
       if (process.env.NODE_ENV !== "production") console.error("SEND DOCTOR MESSAGE ERROR =", err);
 
-      setDoctorMessages((prev) =>
-        prev.filter((msg) => msg._id !== temporaryMessage._id)
-      );
+      rejectDoctorMessage(doctorId, temporaryMessage._id);
+      if (isDoctorConversationActive(doctorId)) {
+        setDoctorMessageInput(previous => previous || rawContent);
+        setDoctorAttachment(previous => previous || attachment);
+      }
 
       alert(
         err.response?.data?.msg ||
@@ -2334,7 +2307,7 @@ export default function Dashboard() {
 
                           return (
                             <div
-                              key={msg._id || index}
+                              key={msg._clientKey || msg._id || index}
                               className={`conversation-message ${
                                 isUser ? "patient" : "doctor"
                               }`}

@@ -51,6 +51,8 @@ import { useNavigate } from "react-router-dom";
 
 import API from "../../services/api";
 import { readWorkspace } from "../../services/workspaceReads";
+import useChatMessages from "../../components/useChatMessages";
+import { temporaryChatId } from "../../utils/chatMessages";
 import { MotionConfig, motion } from "framer-motion";
 import { useConversationMotion } from "../../components/ConversationMotion";
 import "../../CSS/conversation-studio.css";
@@ -162,7 +164,8 @@ export default function DoctorDashboard() {
   const [messagePatients, setMessagePatients] = useState([]);
   const [messageSearch, setMessageSearch] = useState("");
   const [selectedChat, setSelectedChat] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const { messages, selectConversation, isActive: isChatActive, hasMessages, hasPending,
+    receiveMessages, addPending, confirmPending, rejectPending } = useChatMessages();
   const [messageText, setMessageText] = useState("");
   const [messageAttachment, setMessageAttachment] = useState(null);
   const [messageLoading, setMessageLoading] = useState(false);
@@ -264,24 +267,13 @@ export default function DoctorDashboard() {
     const patientId = String(selectedChat._id);
 
     const refreshConversation = async () => {
-      if (stopped || inFlight || document.visibilityState === "hidden") return;
+      if (stopped || inFlight || document.visibilityState === "hidden" || hasPending(patientId)) return;
       inFlight = true;
       try {
-        const res = await API.get(`/messages/patient/${patientId}`, authConfig());
+        const res = await API.get(`/messages/patient/${patientId}`, { ...authConfig(), timeout: 15000 });
         if (stopped) return;
         const incoming = safeArray(res.data);
-        setMessages((previous) => {
-          const previousById = new Map(previous.map((message) => [String(message?._id), message]));
-          const serverIds = new Set(incoming.map((message) => String(message?._id)));
-          const pending = previous.filter((message) => String(message?._id || "").startsWith("temp-") && !serverIds.has(String(message._id)));
-          return [
-            ...incoming.map((message) => {
-              const old = previousById.get(String(message?._id));
-              return old?.attachment && !message?.attachment ? { ...message, attachment: old.attachment } : message;
-            }),
-            ...pending,
-          ];
-        });
+        receiveMessages(patientId, incoming);
         setMessagePatients((previous) => previous.map((patient) =>
           String(patient._id) === patientId ? { ...patient, unread: 0 } : patient
         ));
@@ -299,7 +291,7 @@ export default function DoctorDashboard() {
       stopped = true;
       window.clearInterval(interval);
     };
-  }, [activeMenu, selectedChat?._id]);
+  }, [activeMenu, selectedChat?._id, hasPending, receiveMessages]);
 
   useEffect(() => {
     if (activeMenu !== "messages") return;
@@ -717,18 +709,20 @@ export default function DoctorDashboard() {
   };
 
   const openChat = async (patient) => {
+    const patientId = String(patient._id);
+    selectConversation(patientId);
     setSelectedChat(patient);
     messageStickToBottomRef.current = true;
     setMobileConversationOpen(true);
     setMessageAttachment(null);
-    setMessageLoading(true);
+    setMessageLoading(!hasMessages(patientId));
 
     try {
       const res = await API.get(
         `/messages/patient/${patient._id}`,
-        authConfig()
+        { ...authConfig(), timeout: 15000 }
       );
-      setMessages(safeArray(res.data));
+      receiveMessages(patientId, safeArray(res.data));
       setMessagePatients((prev) =>
         prev.map((p) =>
           String(p._id) === String(patient._id)
@@ -739,7 +733,7 @@ export default function DoctorDashboard() {
     } catch (err) {
       alert(err.response?.data?.msg || "Không thể tải cuộc trò chuyện.");
     } finally {
-      setMessageLoading(false);
+      if (isChatActive(patientId)) setMessageLoading(false);
     }
   };
 
@@ -763,6 +757,7 @@ export default function DoctorDashboard() {
         dataUrl: messageAttachment.dataUrl,
       }
     : null;
+  const patientId = String(selectedChat._id);
 
   // =====================================================
   // QUAN TRỌNG:
@@ -770,7 +765,7 @@ export default function DoctorDashboard() {
   // để catch cũng sử dụng được.
   // =====================================================
   const temporaryMessage = {
-    _id: `temp-${Date.now()}`,
+    _id: temporaryChatId(),
     senderId: currentUser?.id || currentUser?._id,
     receiverId: selectedChat._id,
     senderRole: "doctor",
@@ -784,10 +779,8 @@ export default function DoctorDashboard() {
   };
 
   // Hiển thị ngay trên giao diện trước khi server trả về
-  setMessages((prev) => [
-    ...prev,
-    temporaryMessage,
-  ]);
+  addPending(patientId, temporaryMessage);
+  setMessageLoading(false);
 
   setMessageText("");
   setMessageAttachment(null);
@@ -800,36 +793,18 @@ export default function DoctorDashboard() {
     const res = await API.post(
       "/messages/send",
       {
-        receiverId: selectedChat._id,
+        receiverId: patientId,
 
         // Có thể ""
         content: content || "",
 
         attachment,
       },
-      authConfig()
+      { ...authConfig(), timeout: 30000 }
     );
 
     // Thay message tạm bằng message thật từ server
-    if (res.data) {
-      setMessages((prev) =>
-        prev.map((message) =>
-          message._id === temporaryMessage._id
-            ? {
-                ...res.data,
-
-                // Đảm bảo attachment không bị mất
-                attachment:
-                  res.data?.attachment || attachment,
-
-                // Cho phép message chỉ có file
-                content:
-                  res.data?.content || "",
-              }
-            : message
-        )
-      );
-    }
+    confirmPending(patientId, temporaryMessage._id, res.data);
 
     await fetchMessagePatients();
 
@@ -843,12 +818,11 @@ export default function DoctorDashboard() {
     );
 
     // Xóa message tạm nếu gửi thất bại
-    setMessages((prev) =>
-      prev.filter(
-        (message) =>
-          message._id !== temporaryMessage._id
-      )
-    );
+    rejectPending(patientId, temporaryMessage._id);
+    if (isChatActive(patientId)) {
+      setMessageText(previous => previous || content);
+      setMessageAttachment(previous => previous || attachment);
+    }
 
     alert(
       err.response?.data?.msg ||
@@ -1429,7 +1403,7 @@ export default function DoctorDashboard() {
                         const showDate = currentDate && currentDate !== previousDate;
 
                         return (
-                          <div key={message._id || index}>
+                          <div key={message._clientKey || message._id || index}>
                             {showDate && (
                               <div className="conversation-date">
                                 <span>{currentDate}</span>
