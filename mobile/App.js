@@ -232,7 +232,6 @@ function WorkspaceApp() {
   const [aiMessages, setAiMessages] = useState([{ role: 'assistant', text: 'Xin chào! Mình là trợ lý kiến thức sức khỏe DOCTIS, tập trung vào đái tháo đường type 2. Bạn có thể hỏi về theo dõi đường huyết, ăn uống, vận động, thuốc và biến chứng.' }]);
   const [aiInput, setAiInput] = useState('');
   const [aiBusy, setAiBusy] = useState(false);
-  const [aiNudgeVisible, setAiNudgeVisible] = useState(true);
   const [messageText, setMessageText] = useState('');
   const [messageAttachment, setMessageAttachment] = useState(null);
   const [attachmentBusy, setAttachmentBusy] = useState(false);
@@ -393,7 +392,6 @@ function WorkspaceApp() {
     setMessages([]);
     setTab('home');
     setAiInput('');
-    setAiNudgeVisible(true);
     setAiMessages([{ role: 'assistant', text: 'Xin chào! Mình là trợ lý kiến thức sức khỏe DOCTIS, tập trung vào đái tháo đường type 2. Bạn có thể hỏi về theo dõi đường huyết, ăn uống, vận động, thuốc và biến chứng.' }]);
   }, []);
 
@@ -747,27 +745,6 @@ function WorkspaceApp() {
         <BottomDock tab={tab} onNavigate={id => { setError(''); setNotice(''); setTab(id); }} />
       </View>}
       </KeyboardAvoidingView>
-      {token && patientMode && tab === 'profile' && !keyboardVisible && (
-        <View pointerEvents="box-none" style={styles.aiFloatingLayer}>
-          {aiNudgeVisible && (
-            <View style={styles.aiWelcomeCard}>
-              <HealthArt robot size={44} />
-              <Text style={styles.aiWelcomeText}>Bạn có cần DOCTIS AI hỗ trợ gì không?</Text>
-              <Pressable style={styles.aiWelcomeClose} onPress={() => setAiNudgeVisible(false)} accessibilityRole="button" accessibilityLabel="Đóng lời mời DOCTIS AI">
-                <Text style={styles.aiWelcomeCloseText}>×</Text>
-              </Pressable>
-            </View>
-          )}
-          <Pressable
-            style={styles.aiFloatingButton}
-            onPress={() => { setAiNudgeVisible(false); setTab('ai'); }}
-            accessibilityRole="button"
-            accessibilityLabel="Mở trò chuyện với DOCTIS AI"
-          >
-            <HealthArt robot size={56} />
-          </Pressable>
-        </View>
-      )}
     </SafeAreaView>
   );
 }
