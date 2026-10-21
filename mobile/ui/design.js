@@ -100,6 +100,7 @@ export function Skeleton() {
 }
 
 const iconPaths = {
+  camera: 'M3 6h4l2-3h6l2 3h4v15H3ZM16 13a4 4 0 1 0-8 0 4 4 0 0 0 8 0Z',
   home: 'M3 10.5 12 3l9 7.5M5.5 9v11h5v-6h3v6h5V9',
   health: 'M12 4v16M4 12h16',
   care: 'M20.8 5.5c-2.1-2.3-5.7-1.4-8.8 1.6C8.9 4.1 5.3 3.2 3.2 5.5-.5 9.7 6.3 16.7 12 21c5.7-4.3 12.5-11.3 8.8-15.5Z',

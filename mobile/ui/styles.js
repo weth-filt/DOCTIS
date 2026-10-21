@@ -167,7 +167,7 @@ export const styles = StyleSheet.create({
   cancelButton: { minHeight: 44, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#E6C9CC', borderRadius: 13, paddingHorizontal: 14, paddingVertical: 12, marginTop: 16 },
   cancelButtonText: { color: '#AD3E4A', fontSize: 14, fontFamily: fonts.bold },
   profileIdentity: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingBottom: 24, gap: 14 },
-  profileAvatar: { width: 62, height: 62, borderRadius: 23, backgroundColor: '#E5EEDC', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#FFFFFF' },
+  profileAvatar: { width: 82, height: 82, overflow: 'hidden', borderRadius: 28, backgroundColor: '#E5EEDC', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#FFFFFF' },
   profileAvatarText: { color: '#315F4B', fontSize: 27, fontFamily: fonts.display },
   profileIdentityText: { flex: 1 },
   profileName: { color: '#183E40', fontSize: 21, fontFamily: fonts.bold, lineHeight: 29 },
@@ -308,5 +308,14 @@ export const styles = StyleSheet.create({
   heroBmiValue: { color: '#FFFFFF', fontSize: 20, fontFamily: fonts.bold },
   inputFocused: { borderColor: '#087E80', backgroundColor: '#FFFFFF' },
   inputReadOnly: { backgroundColor: '#EEF2E8', color: '#57706E' },
+  headerAvatarContent: { width: '100%', height: '100%', borderRadius: 22, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  avatarImage: { width: '100%', height: '100%' },
+  profileAvatarPicker: { width: 86, height: 86, justifyContent: 'center', alignItems: 'center' },
+  avatarCameraBadge: { position: 'absolute', right: -1, bottom: -1, width: 30, height: 30, borderRadius: 12, backgroundColor: '#087E80', borderWidth: 2, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  avatarEditor: { paddingBottom: 18 },
+  avatarChooseButton: { minHeight: 46, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#EDF3E8', borderWidth: 1, borderColor: '#D6E3D7', borderRadius: 14 },
+  avatarChooseText: { fontFamily: fonts.bold, fontSize: 14, color: '#087E80' },
+  avatarHint: { fontFamily: fonts.body, fontSize: 14, lineHeight: 22, color: '#57706E', marginTop: 10 },
+  avatarError: { fontFamily: fonts.medium, fontSize: 14, lineHeight: 22, color: '#AD3E4A', marginTop: 10 },
 
 });

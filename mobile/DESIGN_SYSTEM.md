@@ -104,6 +104,7 @@ có nhãn chữ; không chỉ dựa vào màu. Chưa có chứng nhận audit WC
 ### Hồ sơ
 
 - Identity có avatar ceramic, tên/email.
+- Chạm avatar hoặc Thêm/Đổi ảnh đại diện để chọn ảnh; có xem trước, Lưu ảnh và Bỏ chọn. Ảnh được cắt vuông, chuyển JPEG tối đa512×512 và lưu riêng qua `PUT /profile` với trường `avatar`. Ảnh đã lưu xuất hiện ở header và được lấy lại từ API sau khi đăng nhập. Không đưa dữ liệu ảnh vào SecureStore.
 - Phân nhóm trong cùng khung: cá nhân, y tế, liên hệ khẩn cấp, địa chỉ phục vụ.
 - Giữ chỉnh sửa/lưu/hủy/đăng xuất và hướng dẫn cập nhật địa chỉ đồng bộ qua web.
 - Hồ sơ không có nút AI nổi hoặc khung lời mời che thông tin; truy cập AI từ thẻ ở trang chủ.

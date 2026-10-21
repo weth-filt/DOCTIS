@@ -13,6 +13,7 @@ import { Lora_500Medium } from '@expo-google-fonts/lora/500Medium';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AmbientArt, CountValue, feedback, HealthArt, Icon, Intro, LetterGreeting, MotionProvider, Pressable, Reveal, Skeleton, successFeedback, useReducedMotion } from './ui/design';
 import { styles } from './ui/styles';
+import { prepareAvatar } from './ui/avatar';
 import {
   ActivityIndicator,
   Animated,
@@ -55,6 +56,11 @@ const sessionStore = {
     }
     await SecureStore.deleteItemAsync(key);
   },
+};
+// Fetch the photo from /profile instead of putting image blobs into SecureStore.
+const cacheSessionUser = (value) => {
+  const { avatar, ...identity } = value || {};
+  return sessionStore.setItemAsync(USER_KEY, JSON.stringify(identity));
 };
 const NAV_ITEMS = [
   { id: 'home', label: 'Tổng quan' },
@@ -215,6 +221,12 @@ function WorkspaceApp() {
   const [profile, setProfile] = useState(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileBusy, setProfileBusy] = useState(false);
+  const [avatarDraft, setAvatarDraft] = useState(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
+  const avatarOperation = useRef(0);
+  const avatarLock = useRef(false);
+  const profileRevision = useRef(0);
   const [health, setHealth] = useState(null);
   const [history, setHistory] = useState([]);
   const [healthForm, setHealthForm] = useState({ height: '', weight: '', glucose: '', systolic: '', diastolic: '', heartRate: '' });
@@ -272,6 +284,7 @@ function WorkspaceApp() {
   }, []);
 
   const loadData = useCallback(async (activeToken, quiet = false) => {
+    const readRevision = profileRevision.current;
     if (!quiet) setLoading(true);
     setError('');
     const jobs = await Promise.allSettled([
@@ -291,9 +304,11 @@ function WorkspaceApp() {
       return;
     }
     if (profileResult.status === 'fulfilled') {
-      setProfile(profileResult.value);
-      setUser((previous) => ({ ...previous, ...profileResult.value }));
-      await sessionStore.setItemAsync(USER_KEY, JSON.stringify(profileResult.value));
+      if (readRevision === profileRevision.current) {
+        setProfile(profileResult.value);
+        setUser((previous) => ({ ...previous, ...profileResult.value }));
+        await cacheSessionUser(profileResult.value);
+      }
     } else {
       setError(profileResult.reason?.message || 'Không tải được hồ sơ.');
     }
@@ -381,7 +396,14 @@ function WorkspaceApp() {
     setToken('');
     setUser(null);
     setProfile(null);
+    avatarOperation.current += 1;
+    profileRevision.current += 1;
+    avatarLock.current = false;
+    setAvatarDraft(null);
+    setAvatarBusy(false);
+    setAvatarError('');
     setDataReady(false);
+    setEditingProfile(false);
     setHealth(null);
     setHistory([]);
     setAppointments([]);
@@ -469,7 +491,7 @@ function WorkspaceApp() {
       } else {
         const result = await api('/auth/login', { method: 'POST', body: { email, password: authForm.password } });
         await sessionStore.setItemAsync(TOKEN_KEY, result.token);
-        await sessionStore.setItemAsync(USER_KEY, JSON.stringify(result.user));
+        await cacheSessionUser(result.user);
         setToken(result.token);
         setUser(result.user);
         setProfile(result.user);
@@ -507,6 +529,7 @@ function WorkspaceApp() {
   };
 
   const saveProfile = async () => {
+    profileRevision.current += 1;
     setProfileBusy(true);
     setError('');
     try {
@@ -514,14 +537,62 @@ function WorkspaceApp() {
       const locationKeys = ['address', 'addressDetail', 'province', 'district', 'ward', 'wardId', 'city'];
       const profileWithoutLocation = Object.fromEntries(Object.entries(profile || {}).filter(([key]) => !locationKeys.includes(key)));
       const result = await api('/profile', { token, method: 'PUT', body: profileWithoutLocation });
+      profileRevision.current += 1;
       const saved = result.profile || profile;
       setProfile(saved);
       setUser((previous) => ({ ...previous, ...saved }));
-      await sessionStore.setItemAsync(USER_KEY, JSON.stringify(saved));
+      await cacheSessionUser(saved);
       setEditingProfile(false);
       setNotice('Đã cập nhật hồ sơ.');
     } catch (err) { setError(err.message); }
     finally { setProfileBusy(false); }
+  };
+
+  const chooseAvatar = async () => {
+    if (avatarLock.current || profileBusy || editingProfile) return;
+    avatarLock.current = true;
+    const operation = ++avatarOperation.current;
+    setAvatarBusy(true);
+    setAvatarError('');
+    try {
+      // Keep this call in the button gesture: mobile browsers block deferred pickers.
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: Platform.OS !== 'web', aspect: [1, 1], quality: .9, allowsMultipleSelection: false });
+      if (operation !== avatarOperation.current || result.canceled || !result.assets?.[0]) return;
+      const selected = await prepareAvatar(result.assets[0]);
+      if (operation === avatarOperation.current) setAvatarDraft(selected);
+    } catch (err) {
+      if (operation === avatarOperation.current) setAvatarError(err.message || 'Chưa chọn được ảnh. Bạn thử lại nhé.');
+    } finally {
+      if (operation === avatarOperation.current) { avatarLock.current = false; setAvatarBusy(false); }
+    }
+  };
+
+  const saveAvatar = async () => {
+    if (avatarLock.current || avatarDraft === null) return;
+    avatarLock.current = true;
+    const operation = ++avatarOperation.current;
+    profileRevision.current += 1;
+    setAvatarBusy(true);
+    setAvatarError('');
+    try {
+      const result = await api('/profile', { token, method: 'PUT', body: { avatar: avatarDraft } });
+      if (operation !== avatarOperation.current) return;
+      profileRevision.current += 1;
+      const saved = result?.profile;
+      if (typeof saved?.avatar !== 'string') throw new Error('Chưa xác nhận được ảnh đã lưu. Vui lòng tải lại hồ sơ.');
+      const updated = { ...(profile || user), avatar: saved.avatar, updatedAt: saved.updatedAt };
+      setProfile(previous => ({ ...previous, avatar: saved.avatar, updatedAt: saved.updatedAt }));
+      setUser(previous => ({ ...previous, avatar: saved.avatar, updatedAt: saved.updatedAt }));
+      setAvatarDraft(null);
+      setNotice('Đã cập nhật ảnh đại diện.');
+      successFeedback();
+      // The server is the durable copy; a failed local identity cache must not report a failed upload.
+      await cacheSessionUser(updated).catch(() => {});
+    } catch (err) {
+      if (operation === avatarOperation.current) setAvatarError(err.message || 'Chưa lưu được ảnh. Bạn thử lại nhé.');
+    } finally {
+      if (operation === avatarOperation.current) { avatarLock.current = false; setAvatarBusy(false); }
+    }
   };
 
   const cancelAppointment = (appointment) => Alert.alert('Hủy lịch hẹn?', 'Lịch hẹn sẽ được chuyển sang trạng thái đã hủy.', [
@@ -714,7 +785,7 @@ function WorkspaceApp() {
     if (tab === 'health') return <HealthScreen health={health} history={history} form={healthForm} setForm={setHealthForm} onSave={submitHealth} busy={healthBusy} />;
     if (tab === 'care') return <CareScreen carePlan={carePlan} prescriptions={prescriptions} activeDay={careActiveDay} setActiveDay={setCareActiveDay} doneIds={careDoneIds} onToggleActivity={toggleCareActivity} remindedIds={careRemindedIds} reminderBusyId={careReminderBusyId} onCreateReminder={createCareReminder} />;
     if (tab === 'appointments') return <AppointmentsScreen appointments={appointments} onCancel={cancelAppointment} />;
-    if (tab === 'profile') return <ProfileScreen profile={profile || user} editing={editingProfile} setEditing={setEditingProfile} setProfile={setProfile} onSave={saveProfile} busy={profileBusy} onSignOut={signOut} />;
+    if (tab === 'profile') return <ProfileScreen profile={profile || user} editing={editingProfile} setEditing={setEditingProfile} setProfile={setProfile} onSave={saveProfile} busy={profileBusy} onSignOut={signOut} avatarDraft={avatarDraft} avatarBusy={avatarBusy} avatarError={avatarError} onChooseAvatar={chooseAvatar} onSaveAvatar={saveAvatar} onCancelAvatar={() => { setAvatarDraft(null); setAvatarError(''); }} />;
     if (tab === 'ai') return <AIChatScreen messages={aiMessages} value={aiInput} setValue={setAiInput} onSend={sendAIMessage} busy={aiBusy} onBack={() => setTab('home')} />;
     if (tab === 'messages') return <MessagesScreen doctors={doctors} doctor={doctor} setDoctor={setDoctor} messages={messages} user={user} value={messageText} setValue={setMessageText} onSend={sendMessage} busy={messageBusy} attachment={messageAttachment} attachmentBusy={attachmentBusy} onChooseAttachment={chooseMessageAttachment} onRemoveAttachment={() => setMessageAttachment(null)} onOpenAttachment={openMessageAttachment} onComposerFocus={() => setTimeout(() => screenScrollRef.current?.scrollToEnd({ animated: true }), 300)} />;
     return <HomeScreen user={profile || user} greeting={greeting} health={health} appointments={appointments} carePlan={carePlan} onNavigate={setTab} dataReady={dataReady} />;
@@ -726,7 +797,7 @@ function WorkspaceApp() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.appHeader}>
         <BrandHeader compact />
-        <Pressable accessibilityLabel="Mở hồ sơ cá nhân" style={styles.avatarButton} onPress={() => setTab('profile')}><Text style={styles.avatarText}>{greeting.slice(0, 1).toUpperCase()}</Text></Pressable>
+        <Pressable accessibilityLabel="Mở hồ sơ cá nhân" style={styles.avatarButton} onPress={() => setTab('profile')}><PatientAvatar name={greeting} avatar={(profile || user)?.avatar} style={styles.headerAvatarContent} textStyle={styles.avatarText} /></Pressable>
       </View>
       {!!error && <Notice tone="error" text={error} onClose={() => setError('')} />}
       {!!notice && <Notice text={notice} onClose={() => setNotice('')} />}
@@ -1031,7 +1102,14 @@ function AppointmentCard({ item, onCancel }) {
   </Card>;
 }
 
-function ProfileScreen({ profile, editing, setEditing, setProfile, onSave, busy, onSignOut }) {
+function PatientAvatar({ name, avatar, style, textStyle }) {
+  const [failedSource, setFailedSource] = useState(null);
+  const source = typeof avatar === 'string' ? avatar : '';
+  return <View style={style}>{source && source !== failedSource ? <Image accessibilityLabel={`Ảnh đại diện của ${name}`} source={{ uri: source }} resizeMode="cover" style={styles.avatarImage} onError={() => setFailedSource(source)} /> : <Text style={textStyle}>{String(name || 'B').slice(0, 1).toUpperCase()}</Text>}</View>;
+}
+
+function ProfileScreen({ profile, editing, setEditing, setProfile, onSave, busy, onSignOut, avatarDraft, avatarBusy, avatarError, onChooseAvatar, onSaveAvatar, onCancelAvatar }) {
+  const avatarPreview = avatarDraft ?? profile?.avatar;
   const fields = [
     ['fullName', 'Họ và tên'], ['phone', 'Số điện thoại'], ['dateOfBirth', 'Ngày sinh'], ['gender', 'Giới tính'],
     ['bloodType', 'Nhóm máu'], ['chronicDiseases', 'Bệnh nền'], ['allergies', 'Dị ứng'], ['currentMedications', 'Thuốc đang dùng'],
@@ -1040,7 +1118,19 @@ function ProfileScreen({ profile, editing, setEditing, setProfile, onSave, busy,
   return <>
     <ScreenTitle eyebrow="THÔNG TIN CÁ NHÂN" title="Hồ sơ sức khỏe" subtitle="Thông tin này giúp đội ngũ chăm sóc hiểu hồ sơ của bạn." />
     <Card style={styles.profileCard}>
-      <View style={styles.profileIdentity}><View style={styles.profileAvatar}><Text style={styles.profileAvatarText}>{fullName(profile).slice(0, 1).toUpperCase()}</Text></View><View style={styles.profileIdentityText}><Text style={styles.profileName}>{fullName(profile)}</Text><Text style={styles.bodyMuted}>{profile?.email}</Text></View></View>
+      <View style={styles.profileIdentity}>
+        <Pressable accessibilityLabel="Chọn ảnh đại diện" accessibilityState={{ disabled: busy || avatarBusy || editing, busy: avatarBusy }} disabled={busy || avatarBusy || editing} onPress={onChooseAvatar} style={styles.profileAvatarPicker}>
+          <PatientAvatar name={fullName(profile)} avatar={avatarPreview} style={styles.profileAvatar} textStyle={styles.profileAvatarText} />
+          <View pointerEvents="none" style={styles.avatarCameraBadge}>{avatarBusy ? <ActivityIndicator size="small" color="#FFFFFF" /> : <Icon name="camera" size={18} color="#FFFFFF" />}</View>
+        </Pressable>
+        <View style={styles.profileIdentityText}><Text style={styles.profileName}>{fullName(profile)}</Text><Text style={styles.bodyMuted}>{profile?.email}</Text></View>
+      </View>
+      {!editing && <View style={styles.avatarEditor}>
+        <Pressable accessibilityState={{ disabled: busy || avatarBusy }} disabled={busy || avatarBusy} onPress={onChooseAvatar} style={styles.avatarChooseButton}><Icon name="camera" size={20} /><Text style={styles.avatarChooseText}>{avatarBusy ? 'Đang xử lý ảnh…' : avatarPreview ? 'Đổi ảnh đại diện' : 'Thêm ảnh đại diện'}</Text></Pressable>
+        <Text style={styles.avatarHint}>{avatarDraft !== null ? 'Ảnh xem trước. Nhấn Lưu ảnh để cập nhật hồ sơ.' : 'Chọn ảnh từ thiết bị. Ảnh được cắt vuông và thu nhỏ trước khi lưu.'}</Text>
+        {!!avatarError && <Text accessibilityLiveRegion="polite" style={styles.avatarError}>{avatarError}</Text>}
+        {avatarDraft !== null && <View style={styles.actionRow}><ActionButton title="Lưu ảnh" onPress={onSaveAvatar} disabled={busy || avatarBusy} loading={avatarBusy} style={styles.flexButton} /><ActionButton title="Bỏ chọn" secondary onPress={onCancelAvatar} disabled={busy || avatarBusy} loading={false} style={styles.flexButton} /></View>}
+      </View>}
       <View style={styles.profileFields}>{fields.map(([key, label], index) => <View key={key}>
         {[0, 4, 8, 10].includes(index) && <View style={styles.profileGroupHeading}><Icon name={index === 0 ? 'profile' : index === 4 ? 'care' : index === 8 ? 'shield' : 'home'} size={19} /><Text style={styles.profileGroupTitle}>{index === 0 ? 'Thông tin cá nhân' : index === 4 ? 'Thông tin y tế' : index === 8 ? 'Liên hệ khẩn cấp' : 'Địa chỉ phục vụ'}</Text></View>}
         <View style={styles.profileField}>
@@ -1050,9 +1140,9 @@ function ProfileScreen({ profile, editing, setEditing, setProfile, onSave, busy,
           {key === 'address' && editing && <Text style={styles.bodyMuted}>Để cập nhật địa chỉ và phường, mở DOCTIS trên web → Bệnh viện và bác sĩ phụ trách. Thay đổi địa chỉ cần được đồng bộ với hồ sơ tiếp nhận.</Text>}
         </>}
       </View></View>)}</View>
-      {editing ? <View style={styles.actionRow}><ActionButton title="Lưu thay đổi" onPress={onSave} disabled={busy} style={styles.flexButton} /><ActionButton title="Hủy" secondary onPress={() => setEditing(false)} style={styles.flexButton} /></View> : <ActionButton title="Chỉnh sửa hồ sơ" secondary onPress={() => setEditing(true)} style={styles.fullButton} />}
+      {editing ? <View style={styles.actionRow}><ActionButton title="Lưu thay đổi" onPress={onSave} disabled={busy || avatarBusy} loading={busy} style={styles.flexButton} /><ActionButton title="Hủy" secondary onPress={() => setEditing(false)} disabled={busy || avatarBusy} loading={false} style={styles.flexButton} /></View> : <><ActionButton title="Chỉnh sửa hồ sơ" secondary disabled={avatarBusy || avatarDraft !== null} loading={false} onPress={() => setEditing(true)} style={styles.fullButton} />{avatarDraft !== null && <Text style={styles.avatarHint}>Lưu ảnh hoặc bỏ chọn trước khi chỉnh sửa thông tin.</Text>}</>}
     </Card>
-    <ActionButton title="Đăng xuất" secondary onPress={onSignOut} style={styles.fullButton} />
+    <ActionButton title="Đăng xuất" secondary onPress={onSignOut} disabled={busy || avatarBusy} loading={false} style={styles.fullButton} />
   </>;
 }
 
