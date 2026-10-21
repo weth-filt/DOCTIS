@@ -5,21 +5,29 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import { useFonts } from 'expo-font';
+import { Manrope_400Regular } from '@expo-google-fonts/manrope/400Regular';
+import { Manrope_500Medium } from '@expo-google-fonts/manrope/500Medium';
+import { Manrope_700Bold } from '@expo-google-fonts/manrope/700Bold';
+import { Lora_500Medium } from '@expo-google-fonts/lora/500Medium';
+import { LinearGradient } from 'expo-linear-gradient';
+import { AmbientArt, CountValue, feedback, HealthArt, Icon, Intro, LetterGreeting, MotionProvider, Pressable, Reveal, Skeleton, successFeedback, useReducedMotion } from './ui/design';
+import { styles } from './ui/styles';
 import {
   ActivityIndicator,
+  Animated,
   AppState,
   Alert,
   Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   RefreshControl,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
@@ -49,11 +57,11 @@ const sessionStore = {
   },
 };
 const NAV_ITEMS = [
-  { id: 'home', label: 'Tổng quan', icon: '⌂' },
-  { id: 'health', label: 'Sức khỏe', icon: '＋' },
-  { id: 'care', label: 'Chăm sóc', icon: '♡' },
-  { id: 'appointments', label: 'Lịch hẹn', icon: '▦' },
-  { id: 'profile', label: 'Hồ sơ', icon: '○' },
+  { id: 'home', label: 'Tổng quan' },
+  { id: 'health', label: 'Sức khỏe' },
+  { id: 'care', label: 'Chăm sóc' },
+  { id: 'appointments', label: 'Lịch hẹn' },
+  { id: 'profile', label: 'Hồ sơ' },
 ];
 
 async function api(path, { token, method = 'GET', body, signal } = {}) {
@@ -113,21 +121,23 @@ const displayDate = (value) => {
 const prettyStatus = (value) => ({ pending: 'Đang chờ', approved: 'Đã xác nhận', completed: 'Đã khám', cancelled: 'Đã hủy', confirmed: 'Đã chốt', draft: 'Bản nháp' }[value] || value || '—');
 
 function Field({ label, value, onChangeText, placeholder, secureTextEntry, keyboardType, multiline, onFocus, autoCapitalize = 'sentences', autoCorrect = false, editable = true }) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={styles.fieldWrap}>
       {!!label && <Text style={styles.fieldLabel}>{label}</Text>}
       <TextInput
-        style={[styles.input, multiline && styles.multilineInput]}
+        style={[styles.input, multiline && styles.multilineInput, focused && styles.inputFocused, !editable && styles.inputReadOnly]}
         value={value}
-        accessibilityLabel={label}
+        accessibilityLabel={label || placeholder}
         editable={editable}
         onChangeText={onChangeText}
         placeholder={placeholder || label}
-        placeholderTextColor="#94a8af"
+        placeholderTextColor="#57706E"
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType || 'default'}
         multiline={multiline}
-        onFocus={onFocus}
+        onFocus={event => { setFocused(true); onFocus?.(event); }}
+        onBlur={() => setFocused(false)}
         autoCapitalize={autoCapitalize}
         autoCorrect={autoCorrect}
       />
@@ -137,7 +147,7 @@ function Field({ label, value, onChangeText, placeholder, secureTextEntry, keybo
 
 function ActionButton({ title, onPress, secondary, disabled, loading = disabled, style }) {
   return (
-    <Pressable onPress={onPress} disabled={disabled} style={({ pressed }) => [styles.button, secondary && styles.buttonSecondary, disabled && styles.buttonDisabled, pressed && !disabled && styles.buttonPressed, style]}>
+    <Pressable onPress={() => { feedback(); onPress?.(); }} disabled={disabled} accessibilityState={{ disabled: !!disabled, busy: !!loading }} style={({ pressed }) => [styles.button, secondary && styles.buttonSecondary, disabled && styles.buttonDisabled, pressed && !disabled && styles.buttonPressed, style]}>
       {loading ? <ActivityIndicator color={secondary ? '#087d83' : '#fff'} /> : <Text style={[styles.buttonText, secondary && styles.buttonSecondaryText]}>{title}</Text>}
     </Pressable>
   );
@@ -178,6 +188,13 @@ function RegistrationWardField({ wards, value, onChange, loading, error, onRetry
 }
 
 export default function App() {
+  useFonts({ Manrope_400Regular, Manrope_500Medium, Manrope_700Bold, Lora_500Medium });
+  const [intro, setIntro] = useState(true);
+  const finishIntro = useCallback(() => setIntro(false), []);
+  return <MotionProvider><View style={styles.stage}><View style={styles.appFrame}><WorkspaceApp />{intro && <Intro onDone={finishIntro} />}</View></View></MotionProvider>;
+}
+
+function WorkspaceApp() {
   const [authMode, setAuthMode] = useState('login');
   const [authForm, setAuthForm] = useState(registrationFields);
   const [authBusy, setAuthBusy] = useState(false);
@@ -192,6 +209,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [tab, setTab] = useState('home');
   const [loading, setLoading] = useState(false);
+  const [dataReady, setDataReady] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [profile, setProfile] = useState(null);
@@ -292,6 +310,7 @@ export default function App() {
       setDoctor((previous) => list.find((item) => String(item._id) === String(previous?._id)) || list[0] || null);
     }
     setLoading(false);
+    setDataReady(true);
   }, []);
 
   useEffect(() => {
@@ -363,6 +382,15 @@ export default function App() {
     setToken('');
     setUser(null);
     setProfile(null);
+    setDataReady(false);
+    setHealth(null);
+    setHistory([]);
+    setAppointments([]);
+    setCarePlan(null);
+    setPrescriptions([]);
+    setDoctors([]);
+    setDoctor(null);
+    setMessages([]);
     setTab('home');
     setAiInput('');
     setAiNudgeVisible(true);
@@ -378,7 +406,6 @@ export default function App() {
         if (savedToken && savedUser && active) {
           setToken(savedToken);
           setUser(JSON.parse(savedUser));
-          await loadData(savedToken, true);
         }
       } catch {
         if (active) setError('Không thể khôi phục phiên đăng nhập. Hãy đăng nhập lại.');
@@ -452,7 +479,6 @@ export default function App() {
         setAuthForm(registrationFields());
         setTab('home');
         if (result.user?.role !== 'user') setNotice('Phiên bản mobile hiện dành cho tài khoản bệnh nhân. Bác sĩ và quản trị viên vui lòng dùng website DOCTIS.');
-        else await loadData(result.token, true);
       }
     } catch (err) {
       setError(err.message);
@@ -477,6 +503,7 @@ export default function App() {
       setHistory((previous) => [saved, ...previous]);
       setHealthForm({ height: '', weight: '', glucose: '', systolic: '', diastolic: '', heartRate: '' });
       setNotice('Đã lưu chỉ số sức khỏe vào hồ sơ của bạn.');
+      successFeedback();
     } catch (err) { setError(err.message); }
     finally { setHealthBusy(false); }
   };
@@ -685,13 +712,14 @@ export default function App() {
   }
 
   const renderScreen = () => {
+    if (!dataReady && !['home', 'ai'].includes(tab)) return <><ScreenTitle eyebrow="KHÔNG GIAN CHĂM SÓC" title={NAV_ITEMS.find(item => item.id === tab)?.label || 'Bác sĩ phụ trách'} subtitle="Đang cập nhật dữ liệu của bạn…" /><Skeleton /><Skeleton /></>;
     if (tab === 'health') return <HealthScreen health={health} history={history} form={healthForm} setForm={setHealthForm} onSave={submitHealth} busy={healthBusy} />;
     if (tab === 'care') return <CareScreen carePlan={carePlan} prescriptions={prescriptions} activeDay={careActiveDay} setActiveDay={setCareActiveDay} doneIds={careDoneIds} onToggleActivity={toggleCareActivity} remindedIds={careRemindedIds} reminderBusyId={careReminderBusyId} onCreateReminder={createCareReminder} />;
     if (tab === 'appointments') return <AppointmentsScreen appointments={appointments} onCancel={cancelAppointment} />;
     if (tab === 'profile') return <ProfileScreen profile={profile || user} editing={editingProfile} setEditing={setEditingProfile} setProfile={setProfile} onSave={saveProfile} busy={profileBusy} onSignOut={signOut} />;
     if (tab === 'ai') return <AIChatScreen messages={aiMessages} value={aiInput} setValue={setAiInput} onSend={sendAIMessage} busy={aiBusy} onBack={() => setTab('home')} />;
     if (tab === 'messages') return <MessagesScreen doctors={doctors} doctor={doctor} setDoctor={setDoctor} messages={messages} user={user} value={messageText} setValue={setMessageText} onSend={sendMessage} busy={messageBusy} attachment={messageAttachment} attachmentBusy={attachmentBusy} onChooseAttachment={chooseMessageAttachment} onRemoveAttachment={() => setMessageAttachment(null)} onOpenAttachment={openMessageAttachment} onComposerFocus={() => setTimeout(() => screenScrollRef.current?.scrollToEnd({ animated: true }), 300)} />;
-    return <HomeScreen user={profile || user} greeting={greeting} health={health} appointments={appointments} carePlan={carePlan} onNavigate={setTab} />;
+    return <HomeScreen user={profile || user} greeting={greeting} health={health} appointments={appointments} carePlan={carePlan} onNavigate={setTab} dataReady={dataReady} />;
   };
 
   return (
@@ -700,7 +728,7 @@ export default function App() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.appHeader}>
         <BrandHeader compact />
-        <Pressable style={styles.avatarButton} onPress={() => setTab('profile')}><Text style={styles.avatarText}>{greeting.slice(0, 1).toUpperCase()}</Text></Pressable>
+        <Pressable accessibilityLabel="Mở hồ sơ cá nhân" style={styles.avatarButton} onPress={() => setTab('profile')}><Text style={styles.avatarText}>{greeting.slice(0, 1).toUpperCase()}</Text></Pressable>
       </View>
       {!!error && <Notice tone="error" text={error} onClose={() => setError('')} />}
       {!!notice && <Notice text={notice} onClose={() => setNotice('')} />}
@@ -713,22 +741,17 @@ export default function App() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
       >
-        {renderScreen()}
+        <Reveal key={tab}>{renderScreen()}</Reveal>
       </ScrollView>
       {!keyboardVisible && <View style={styles.tabBar}>
-        {NAV_ITEMS.map((item) => (
-          <Pressable key={item.id} style={styles.tabItem} onPress={() => { setError(''); setNotice(''); setTab(item.id); }}>
-            <View style={[styles.tabIconWrap, tab === item.id && styles.tabIconActive]}><Text style={[styles.tabIcon, tab === item.id && styles.tabIconSelected]}>{item.icon}</Text></View>
-            <Text numberOfLines={1} style={[styles.tabLabel, tab === item.id && styles.tabLabelSelected]}>{item.label}</Text>
-          </Pressable>
-        ))}
+        <BottomDock tab={tab} onNavigate={id => { setError(''); setNotice(''); setTab(id); }} />
       </View>}
       </KeyboardAvoidingView>
-      {token && patientMode && (tab === 'home' || tab === 'profile') && !keyboardVisible && (
+      {token && patientMode && tab === 'profile' && !keyboardVisible && (
         <View pointerEvents="box-none" style={styles.aiFloatingLayer}>
           {aiNudgeVisible && (
             <View style={styles.aiWelcomeCard}>
-              <Text style={styles.aiWelcomeRobot}>🤖</Text>
+              <HealthArt robot size={44} />
               <Text style={styles.aiWelcomeText}>Bạn có cần DOCTIS AI hỗ trợ gì không?</Text>
               <Pressable style={styles.aiWelcomeClose} onPress={() => setAiNudgeVisible(false)} accessibilityRole="button" accessibilityLabel="Đóng lời mời DOCTIS AI">
                 <Text style={styles.aiWelcomeCloseText}>×</Text>
@@ -741,7 +764,7 @@ export default function App() {
             accessibilityRole="button"
             accessibilityLabel="Mở trò chuyện với DOCTIS AI"
           >
-            <Text style={styles.aiFloatingIcon}>🤖</Text>
+            <HealthArt robot size={56} />
           </Pressable>
         </View>
       )}
@@ -752,49 +775,92 @@ export default function App() {
 function BrandHeader({ compact = false }) {
   return (
     <View style={[styles.brandHeader, compact && styles.brandHeaderCompact]}>
-      <View style={styles.logo}><Text style={styles.logoText}>♥</Text></View>
-      <View><Text style={styles.brand}>DOCTIS</Text><Text style={styles.brandCaption}>SỨC KHỎE THÔNG MINH</Text></View>
+      <View style={styles.logo}><Icon name="pulse" color="#E3F2C1" size={26} /></View>
+      <View><Text style={styles.brand}>DOCTIS<Text style={styles.brandPeriod}>.</Text></Text><Text style={styles.brandCaption}>ĐỒNG HÀNH MỖI NGÀY</Text></View>
       {!compact && <View style={styles.liveBadge}><View style={styles.liveDot} /><Text style={styles.liveText}>Bảo mật</Text></View>}
     </View>
   );
 }
 
+function BottomDock({ tab, onNavigate }) {
+  const [width, setWidth] = useState(0);
+  const reduced = useReducedMotion();
+  const slide = useRef(new Animated.Value(0)).current;
+  const selected = NAV_ITEMS.findIndex(item => item.id === tab);
+  useEffect(() => {
+    if (selected < 0) return;
+    const toValue = selected * width / NAV_ITEMS.length;
+    if (reduced) { slide.setValue(toValue); return; }
+    const animation = Animated.spring(slide, { toValue, stiffness: 260, damping: 26, mass: .8, useNativeDriver: true });
+    animation.start();
+    return () => animation.stop();
+  }, [selected, width, reduced, slide]);
+  return <View accessibilityRole="tablist" onLayout={event => setWidth(event.nativeEvent.layout.width)} style={styles.dockInner}>
+    {width > 0 && selected >= 0 && <Animated.View pointerEvents="none" style={[styles.dockIndicator, { width: width / NAV_ITEMS.length - 4, transform: [{ translateX: slide }] }]} />}
+    {NAV_ITEMS.map(item => <Pressable key={item.id} accessibilityRole="tab" accessibilityLabel={item.label} accessibilityState={{ selected: tab === item.id }} style={styles.tabItem} onPress={() => { feedback(); onNavigate(item.id); }}><View style={[styles.tabIconWrap, item.id === 'care' && styles.tabCenter]}><Icon name={item.id} size={22} color={tab === item.id ? '#087E80' : '#57706E'} /></View><Text numberOfLines={1} style={[styles.tabLabel, tab === item.id && styles.tabLabelSelected]}>{item.label}</Text></Pressable>)}
+  </View>;
+}
+
 function Notice({ text, tone = 'success', onClose }) {
-  return <Pressable onPress={onClose} style={[styles.notice, tone === 'error' && styles.noticeError]}><Text style={[styles.noticeText, tone === 'error' && styles.noticeErrorText]}>{text}</Text>{!!onClose && <Text style={styles.noticeClose}>×</Text>}</Pressable>;
+  return <View accessibilityLiveRegion="polite" style={[styles.notice, tone === 'error' && styles.noticeError]}><Icon name={tone === 'error' ? 'shield' : 'check'} size={20} color={tone === 'error' ? '#AD3E4A' : '#087E80'} /><Text style={[styles.noticeText, tone === 'error' && styles.noticeErrorText]}>{text}</Text>{!!onClose && <Pressable onPress={onClose} accessibilityLabel="Đóng thông báo" style={styles.noticeDismiss}><Text style={styles.noticeClose}>×</Text></Pressable>}</View>;
 }
 
 function LoadingScreen() {
-  return <SafeAreaView style={[styles.safeArea, styles.loadingScreen]}><ActivityIndicator size="large" color="#087d83" /><Text style={styles.loadingLabel}>Đang mở DOCTIS…</Text></SafeAreaView>;
+  return <SafeAreaView style={[styles.safeArea, styles.loadingScreen]}><HealthArt size={140} /><Text style={styles.sectionTitle}>Không gian chăm sóc của bạn</Text><ActivityIndicator style={{ marginTop: 24 }} color="#087d83" /><Text style={styles.loadingLabel}>Đang khôi phục phiên đăng nhập…</Text></SafeAreaView>;
 }
 
-function HomeScreen({ user, greeting, health, appointments, carePlan, onNavigate }) {
+function HomeScreen({ user, greeting, health, appointments, carePlan, onNavigate, dataReady }) {
+  const [context, setContext] = useState(0);
+  const [tip, setTip] = useState(0);
+  const { width } = useWindowDimensions();
+  const reduced = useReducedMotion();
+  const tips = [
+    { title: 'Một chút quan tâm,\nmỗi ngày.', detail: 'Lưu lại lần đo hôm nay để theo dõi thay đổi theo thời gian.', action: 'Ghi chỉ số', screen: 'health' },
+    { title: 'Chăm sóc theo\nnhịp sống của bạn.', detail: 'Xem hoạt động trong kế hoạch và cập nhật những việc đã hoàn thành.', action: 'Xem kế hoạch', screen: 'care' },
+    { title: 'Luôn có một\nkết nối bên bạn.', detail: 'Trao đổi những điều bạn muốn chia sẻ với bác sĩ phụ trách.', action: 'Nhắn bác sĩ', screen: 'messages' },
+  ];
+  useEffect(() => {
+    if (reduced) return undefined;
+    const interval = setInterval(() => { if (AppState.currentState === 'active') setTip(previous => (previous + 1) % tips.length); }, 6000);
+    return () => clearInterval(interval);
+  }, [reduced]);
   const upcoming = asArray(appointments).find((item) => ['pending', 'approved'].includes(item.status));
+  const metrics = [
+    { label: 'Huyết áp', icon: 'pulse', value: health?.systolic != null && health?.diastolic != null ? `${health.systolic}/${health.diastolic}` : '—', unit: 'mmHg' },
+    { label: 'Đường huyết', icon: 'drop', value: health?.glucose ?? '—', unit: 'mg/dL' },
+    { label: 'Cân nặng', icon: 'scale', value: health?.weight ?? '—', unit: 'kg' },
+  ];
+  const selected = metrics[context];
   return <>
-    <View style={styles.homeHero}>
-      <Text style={styles.heroEyebrow}>THEO DÕI SỨC KHỎE CÙNG DOCTIS</Text>
-      <Text style={styles.homeTitle} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.72}>Xin chào, {greeting}</Text>
-      <Text style={styles.homeDescription}>Ghi lại chỉ số và theo dõi kế hoạch chăm sóc của bạn mỗi ngày.</Text>
-      <View style={styles.heroStats}><Metric light label="HUYẾT ÁP GẦN NHẤT" value={health?.systolic != null && health?.diastolic != null ? `${health.systolic}/${health.diastolic}` : '—'} unit="mmHg" /><View style={styles.statDivider} /><Metric light label="BMI GẦN NHẤT" value={health?.bmi == null ? '—' : `${health.bmi}`} unit="kg/m²" /></View>
-    </View>
-    <View style={styles.sectionHeading}><View><Text style={styles.sectionTitle}>Truy cập nhanh</Text><Text style={styles.sectionSubtitle}>Các tiện ích trong tài khoản của bạn</Text></View></View>
+    <View style={styles.greetingRow}><View style={styles.flex}><Text style={styles.screenEyebrow}>{new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' })}</Text><LetterGreeting text="Xin chào," style={styles.greetingTitle} /><Reveal delay={70}><Text style={styles.greetingName}>{greeting}</Text></Reveal></View><View style={styles.greetingMark}><Icon name="spark" color="#71884F" size={25} /></View></View>
+    <LinearGradient colors={context === 1 ? ['#234B50', '#173C48'] : context === 2 ? ['#425544', '#253F38'] : ['#1D5955', '#103F40']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.homeHero}>
+      <View style={styles.heroTop}><Text style={styles.heroEyebrow}>NHỊP SỨC KHỎE CỦA BẠN</Text><Icon name="pulse" color="#DDF2AB" size={22} /></View>
+      <View style={styles.heroContext}>{metrics.map((metric, index) => <Pressable key={metric.label} accessibilityRole="tab" accessibilityState={{ selected: index === context }} onPress={() => setContext(index)} style={[styles.contextTab, context === index && styles.contextTabActive]}><Text style={[styles.contextText, context === index && styles.contextTextActive]}>{metric.label}</Text></Pressable>)}</View>
+      <View style={styles.heroBody}><Reveal key={context} style={styles.heroReading}><Text style={styles.heroMetricLabel}>{selected.label} gần nhất</Text><CountValue value={selected.value} style={styles.heroNumber} /><Text style={styles.heroUnit}>{selected.unit}</Text><Text style={styles.heroUpdated}>{!dataReady ? 'Đang tải lần đo…' : health?.createdAt ? displayDate(health.createdAt) : 'Chưa có lần đo'}</Text></Reveal><AmbientArt size={width < 370 ? 100 : 142} /></View>
+      <View style={styles.heroBmi}><Text style={styles.heroFooterText}>BMI gần nhất</Text><Text style={styles.heroBmiValue}>{health?.bmi ?? '—'} <Text style={styles.heroUnit}>kg/m²</Text></Text></View>
+      <Pressable onPress={() => onNavigate('health')} style={styles.heroFooter}><Text style={styles.heroFooterText}>Ghi nhận một lần đo mới</Text><Icon name="arrow" size={21} color="#E0F1D5" /></Pressable>
+    </LinearGradient>
+    <View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Hôm nay, bạn cần gì?</Text><Text style={styles.sectionSubtitle}>Chăm sóc từ những điều nhỏ</Text></View>
     <View style={styles.quickGrid}>
-      <QuickCard icon="＋" title="Cập nhật sức khỏe" detail="Thêm chỉ số mới" tint="#e7f7f7" onPress={() => onNavigate('health')} />
-      <QuickCard icon="♡" title="Kế hoạch chăm sóc" detail={carePlan ? 'Xem kế hoạch bác sĩ' : 'Chưa có kế hoạch chốt'} tint="#eef1ff" onPress={() => onNavigate('care')} />
-      <QuickCard icon="▦" title="Lịch hẹn" detail={upcoming ? displayDate(upcoming.appointmentDate) : 'Xem lịch khám'} tint="#fff4e7" onPress={() => onNavigate('appointments')} />
-      <QuickCard icon="✚" title="Trò chuyện bác sĩ" detail="Trao đổi với bác sĩ phụ trách" tint="#f1ecff" onPress={() => onNavigate('messages')} />
+      <QuickCard icon="health" title="Ghi chỉ số" detail="Thêm lần đo mới" tint="#E1EFE6" onPress={() => onNavigate('health')} />
+      <QuickCard icon="care" title="Chăm sóc" detail={carePlan ? 'Kế hoạch của bạn' : 'Chờ kế hoạch mới'} tint="#EAE9F2" delay={50} onPress={() => onNavigate('care')} />
+      <QuickCard icon="appointments" title="Lịch khám" detail={upcoming ? displayDate(upcoming.appointmentDate) : 'Theo dõi lịch hẹn'} tint="#F7E8D8" delay={100} onPress={() => onNavigate('appointments')} />
+      <QuickCard icon="message" title="Nhắn bác sĩ" detail="Kết nối người phụ trách" tint="#E0EDF0" delay={150} onPress={() => onNavigate('messages')} />
     </View>
-    <Card style={styles.dashboardCard}><View style={styles.cardHeading}><View><Text style={styles.cardTitle}>Chỉ số sức khỏe gần nhất</Text><Text style={styles.cardSub}>{health?.createdAt ? `Cập nhật ${displayDate(health.createdAt)}` : 'Chưa có dữ liệu được ghi nhận'}</Text></View><Text style={styles.statusDot}>●</Text></View><View style={styles.metricGrid}><Metric label="GLUCOSE" value={health?.glucose ?? '—'} unit="mg/dL" /><Metric label="HUYẾT ÁP" value={health?.systolic != null && health?.diastolic != null ? `${health.systolic}/${health.diastolic}` : '—'} unit="mmHg" /><Metric label="NHỊP TIM" value={health?.heartRate ?? '—'} unit="bpm" /><Metric label="CÂN NẶNG" value={health?.weight ?? '—'} unit="kg" /></View></Card>
+    <Pressable accessibilityLabel="Trò chuyện với DOCTIS AI" onPress={() => onNavigate('ai')} style={styles.aiInvite}><HealthArt robot size={82} /><View style={styles.flex}><Text style={styles.aiInviteKicker}>DOCTIS AI</Text><Text style={styles.aiInviteTitle}>Có điều bạn muốn hỏi?</Text><Text style={styles.aiInviteDetail}>Cùng tìm hiểu về sức khỏe</Text></View><Icon name="arrow" size={22} /></Pressable>
+    {!dataReady ? <Skeleton /> : <Card style={styles.dashboardCard}><View style={styles.cardHeading}><View style={styles.flex}><Text style={styles.cardTitle}>Chỉ số sức khỏe gần nhất</Text><Text style={styles.cardSub}>{health?.createdAt ? `Cập nhật ${displayDate(health.createdAt)}` : 'Chưa có dữ liệu được ghi nhận'}</Text></View><Icon name="pulse" size={22} /></View><View style={styles.metricGrid}><Metric label="GLUCOSE" value={health?.glucose ?? '—'} unit="mg/dL" /><Metric label="HUYẾT ÁP" value={health?.systolic != null && health?.diastolic != null ? `${health.systolic}/${health.diastolic}` : '—'} unit="mmHg" /><Metric label="NHỊP TIM" value={health?.heartRate ?? '—'} unit="bpm" /><Metric label="CÂN NẶNG" value={health?.weight ?? '—'} unit="kg" /></View></Card>}
+    <Card style={styles.tipCard}><Reveal key={tip}><Text style={styles.screenEyebrow}>ĐỒNG HÀNH CÙNG BẠN · {tip + 1}/3</Text><Text style={styles.tipTitle}>{tips[tip].title}</Text><Text style={styles.bodyText}>{tips[tip].detail}</Text><Pressable style={styles.tipAction} onPress={() => onNavigate(tips[tip].screen)}><Text style={styles.switchStrong}>{tips[tip].action}</Text><Icon name="arrow" size={20} /></Pressable></Reveal><View style={styles.tipDots}>{tips.map((_, index) => <Pressable key={index} accessibilityLabel={`Nội dung ${index + 1}`} accessibilityState={{ selected: tip === index }} onPress={() => setTip(index)} style={styles.tipDotTarget}><View style={[styles.tipDot, index === tip && styles.tipDotActive]} /></Pressable>)}</View></Card>
     {user?.chronicDiseases ? <Card><Text style={styles.cardTitle}>Thông tin sức khỏe cần lưu ý</Text><Text style={styles.bodyText}>{user.chronicDiseases}</Text>{user.allergies ? <Text style={styles.bodyMuted}>Dị ứng: {user.allergies}</Text> : null}</Card> : null}
     <Text style={styles.disclaimer}>DOCTIS hỗ trợ theo dõi thông tin sức khỏe, không thay thế chẩn đoán hoặc điều trị của nhân viên y tế.</Text>
   </>;
 }
 
 function Metric({ label, value, unit, light = false }) {
-  return <View style={styles.metric}><Text style={[styles.metricLabel, light && styles.metricLabelLight]}>{label}</Text><Text style={[styles.metricValue, light && styles.metricValueLight]}>{value}<Text style={[styles.metricUnit, light && styles.metricUnitLight]}>{unit ? ` ${unit}` : ''}</Text></Text></View>;
+  return <View style={styles.metric}><Text style={[styles.metricLabel, light && styles.metricLabelLight]}>{label}</Text><CountValue value={value} style={[styles.metricValue, light && styles.metricValueLight]} /><Text style={[styles.metricUnit, light && styles.metricUnitLight]}>{unit}</Text></View>;
 }
 
-function QuickCard({ icon, title, detail, tint, onPress }) {
-  return <Pressable onPress={onPress} style={({ pressed }) => [styles.quickCard, pressed && styles.quickPressed]}><View style={[styles.quickIcon, { backgroundColor: tint }]}><Text style={styles.quickIconText}>{icon}</Text></View><Text style={styles.quickTitle}>{title}</Text><Text numberOfLines={2} style={styles.quickDetail}>{detail}</Text><Text style={styles.quickArrow}>↗</Text></Pressable>;
+function QuickCard({ icon, title, detail, tint, onPress, delay = 0 }) {
+  return <Reveal delay={delay} style={styles.quickCardWrap}><Pressable onPress={onPress} style={styles.quickCard}><View style={styles.quickTop}><View style={[styles.quickIcon, { backgroundColor: tint }]}><Icon name={icon} size={25} /></View><Icon name="arrow" size={18} color="#648079" /></View><Text style={styles.quickTitle}>{title}</Text><Text style={styles.quickDetail}>{detail}</Text></Pressable></Reveal>;
 }
 
 function ScreenTitle({ eyebrow, title, subtitle }) {
@@ -817,19 +883,21 @@ function HealthScreen({ health, history, form, setForm, onSave, busy }) {
 
 function AIChatScreen({ messages, value, setValue, onSend, busy, onBack }) {
   const chatScrollRef = useRef(null);
+  const { height } = useWindowDimensions();
+  const reduced = useReducedMotion();
 
   useEffect(() => {
-    requestAnimationFrame(() => chatScrollRef.current?.scrollToEnd({ animated: true }));
-  }, [messages, busy]);
+    requestAnimationFrame(() => chatScrollRef.current?.scrollToEnd({ animated: !reduced }));
+  }, [messages, busy, reduced]);
 
   return <>
     <Pressable style={styles.aiBackButton} onPress={onBack} accessibilityRole="button">
       <Text style={styles.aiBackText}>‹  Quay lại</Text>
     </Pressable>
-    <ScreenTitle eyebrow="TRỢ LÝ SỨC KHỎE" title="Trò chuyện với DOCTIS AI" subtitle="Hỏi đáp kiến thức về đái tháo đường type 2 và chăm sóc sức khỏe." />
-    <Card style={styles.aiChatCard}>
+    <View style={styles.aiIntro}><View style={styles.flex}><Text style={styles.screenEyebrow}>MỘT NGƯỜI BẠN TRI THỨC</Text><Text style={styles.screenTitle}>Hỏi DOCTIS AI</Text><Text style={styles.screenSubtitle}>Cùng hiểu hơn về sức khỏe của bạn.</Text></View><AmbientArt robot size={112} /></View>
+    <Card style={[styles.aiChatCard, { height: Math.max(440, Math.min(650, height - 310)) }]}>
       <View style={styles.aiChatHeader}>
-        <View style={styles.aiChatIcon}><Text style={styles.aiChatIconText}>✦</Text></View>
+        <View style={styles.aiChatIcon}><Icon name="spark" size={24} /></View>
         <View style={styles.aiChatHeading}>
           <Text style={styles.aiChatTitle}>Trợ lý sức khỏe DOCTIS</Text>
           <Text style={styles.aiChatSubtitle}>Kiến thức tham khảo về type 2</Text>
@@ -852,11 +920,13 @@ function AIChatScreen({ messages, value, setValue, onSend, busy, onBack }) {
             </View>
           </View>;
         })}
-        {busy ? <View style={styles.aiMessageRow}><View style={styles.aiThinkingBubble}><ActivityIndicator size="small" color="#087d83" /><Text style={styles.aiThinkingText}>DOCTIS AI đang trả lời…</Text></View></View> : null}
+        {messages.length === 1 && <View style={styles.aiSuggestions}>{['Tìm hiểu về đường huyết', 'Ăn uống và vận động', 'Tôi muốn hỏi về thuốc'].map(suggestion => <Pressable key={suggestion} onPress={() => setValue(suggestion)} style={styles.aiSuggestion}><Text style={styles.aiSuggestionText}>{suggestion}</Text><Icon name="arrow" size={18} /></Pressable>)}</View>}
+        {busy ? <View style={styles.aiMessageRow}><View accessibilityLiveRegion="polite" style={styles.aiThinkingBubble}><ActivityIndicator size="small" color="#087d83" /><Text style={styles.aiThinkingText}>DOCTIS AI đang trả lời…</Text></View></View> : null}
       </ScrollView>
       <View style={styles.aiComposer}>
         <TextInput
           style={styles.aiInput}
+          accessibilityLabel="Nội dung gửi DOCTIS AI"
           value={value}
           onChangeText={setValue}
           placeholder="Hỏi về đường huyết, ăn uống, vận động…"
@@ -866,8 +936,8 @@ function AIChatScreen({ messages, value, setValue, onSend, busy, onBack }) {
           returnKeyType="send"
           onSubmitEditing={onSend}
         />
-        <Pressable style={[styles.aiSendButton, (busy || !value.trim()) && styles.messageSendDisabled]} onPress={onSend} disabled={busy || !value.trim()}>
-          <Text style={styles.aiSendText}>{busy ? '…' : '↑'}</Text>
+        <Pressable accessibilityLabel="Gửi câu hỏi" style={[styles.aiSendButton, (busy || !value.trim()) && styles.messageSendDisabled]} onPress={onSend} disabled={busy || !value.trim()}>
+          {busy ? <ActivityIndicator color="#FFFFFF" /> : <Icon name="arrow" size={24} color="#FFFFFF" />}
         </Pressable>
       </View>
       <Text style={styles.aiDisclaimer}>AI có thể tham khảo chỉ số sức khỏe gần nhất của bạn. Thông tin chỉ để tham khảo, không thay thế bác sĩ.</Text>
@@ -893,27 +963,28 @@ function CareScreen({ carePlan, prescriptions, activeDay, setActiveDay, doneIds,
     if (key.includes('MEDIC')) return { icon: '✚', label: 'Thuốc', tone: styles.careMedicineTone };
     return { icon: '＋', label: 'Chăm sóc', tone: styles.careOtherTone };
   };
-  const renderActivity = (day, item, dayIndex, compact = false) => {
+  const renderActivity = (day, item, dayIndex) => {
     const key = `${carePlan?._id}-${day?.dayIndex ?? dayIndex}-${item.id || item.time}`;
     const complete = doneIds.includes(key);
     const reminded = remindedIds.includes(key);
     const meta = typeMeta(item.type);
-    return <View key={key} style={[styles.careActivityRow, complete && styles.careActivityDone, compact && styles.careActivityCompact]}>
-      <Text style={styles.careActivityTime}>{item.time || '—'}</Text>
-      <View style={[styles.careActivityIcon, meta.tone]}><Text style={styles.careActivityIconText}>{meta.icon}</Text></View>
-      <View style={styles.careActivityCopy}>
-        <Text style={[styles.careActivityTitle, complete && styles.careActivityTitleDone]} numberOfLines={compact ? 1 : 2}>{item.title || meta.label}</Text>
-        {compact ? null : <><Text style={styles.careActivityType}>{meta.label}</Text>{item.description ? <Text style={styles.careActivityDescription}>{item.description}</Text> : null}</>}
+    return <View key={key} style={[styles.careActivityRow, complete && styles.careActivityDone]}>
+      <View style={styles.careActivityMain}>
+        <Text style={styles.careActivityTime}>{item.time || '—'}</Text>
+        <View style={[styles.careActivityIcon, meta.tone]}><Icon name={meta.label === 'Ăn uống' ? 'meal' : meta.label === 'Vận động' ? 'walk' : meta.label === 'Thuốc' ? 'medicine' : 'health'} size={22} /></View>
+        <View style={styles.careActivityCopy}>
+          <Text style={[styles.careActivityTitle, complete && styles.careActivityTitleDone]}>{item.title || meta.label}</Text>
+          <Text style={styles.careActivityType}>{meta.label}</Text>{item.description ? <Text style={styles.careActivityDescription}>{item.description}</Text> : null}
+        </View>
       </View>
-      {!compact && <View style={styles.careActivityActions}>
+      <View style={styles.careActivityActions}>
         <Pressable style={[styles.careActionButton, reminded && styles.careReminderDone]} onPress={() => onCreateReminder(day, item, dayIndex)} disabled={reminded || reminderBusyId === key}>
           {reminderBusyId === key ? <ActivityIndicator size="small" color="#3977f2" /> : <Text style={[styles.careActionText, reminded && styles.careReminderDoneText]}>{reminded ? 'Đã nhắc' : '♧ Nhắc email'}</Text>}
         </Pressable>
-        <Pressable style={[styles.careDoneButton, complete && styles.careDoneButtonActive]} onPress={() => onToggleActivity(key)}>
+        <Pressable accessibilityState={{ selected: complete }} style={[styles.careDoneButton, complete && styles.careDoneButtonActive]} onPress={() => { feedback(); onToggleActivity(key); }}>
           <Text style={[styles.careDoneButtonText, complete && styles.careDoneButtonTextActive]}>{complete ? '✓ Đã xong' : 'Đánh dấu xong'}</Text>
         </Pressable>
-      </View>}
-      {compact && <View style={[styles.careTinyCheck, complete && styles.careTinyCheckActive]}><Text style={styles.careTinyCheckText}>{complete ? '✓' : ''}</Text></View>}
+      </View>
     </View>;
   };
 
@@ -924,8 +995,8 @@ function CareScreen({ carePlan, prescriptions, activeDay, setActiveDay, doneIds,
         <View style={styles.carePlanIntroTop}>
           <View style={styles.carePlanIntroIcon}><Text style={styles.carePlanIntroIconText}>✚</Text></View>
           <View style={styles.carePlanIntroCopy}><Text style={styles.cardTitle}>{carePlan.source === 'AI' ? 'Kế hoạch chăm sóc cá nhân' : 'Kế hoạch của bác sĩ'}</Text><Text style={styles.cardSub}>Cập nhật {displayDate(carePlan.updatedAt)}</Text></View>
-          <Text style={[styles.careConfirmedPill, carePlan.source === 'AI' && styles.careDraftPill]}>{carePlan.source === 'AI' ? 'AI · Chờ rà soát' : '● Đã chốt'}</Text>
         </View>
+        <Text style={[styles.careConfirmedPill, carePlan.source === 'AI' && styles.careDraftPill]}>{carePlan.source === 'AI' ? 'AI · Chờ rà soát' : 'Đang thực hiện'}</Text>
         {carePlan.doctorNote ? <View style={styles.careDoctorNote}><Text style={styles.careDoctorNoteLabel}>LƯU Ý TỪ BÁC SĨ</Text><Text style={styles.bodyText}>{carePlan.doctorNote}</Text></View> : null}
       </Card>
       {days.length ? <>
@@ -939,20 +1010,19 @@ function CareScreen({ carePlan, prescriptions, activeDay, setActiveDay, doneIds,
               const items = activitiesFor(day);
               const done = items.filter((item) => doneIds.includes(`${carePlan._id}-${day?.dayIndex ?? index}-${item.id || item.time}`)).length;
               const percent = items.length ? Math.round(done / items.length * 100) : 0;
-              return <Pressable key={`${day.dayIndex}-${index}`} onPress={() => setActiveDay(index)} style={[styles.careDayCard, index === selectedIndex && styles.careDayCardActive]}>
-                <View style={styles.careDayCardHeader}><View style={[styles.careDayNumber, index === selectedIndex && styles.careDayNumberActive]}><Text style={[styles.careDayNumberText, index === selectedIndex && styles.careDayNumberTextActive]}>{String(index + 1).padStart(2, '0')}</Text></View><View style={styles.careDayCardTitleWrap}><Text style={styles.careDayCardTitle}>{dayName(day, index)}</Text><Text style={styles.careDayCount}>{done}/{items.length} việc</Text></View><Text style={styles.careDayPercent}>{percent}%</Text></View>
+              return <Pressable accessibilityLabel={`${dayName(day, index)}, ${done} trên ${items.length} việc đã hoàn thành`} accessibilityState={{ selected: index === selectedIndex }} key={`${day.dayIndex}-${index}`} onPress={() => { feedback(); setActiveDay(index); }} style={[styles.careDayCard, index === selectedIndex && styles.careDayCardActive]}>
+                <View style={styles.careDayCardHeader}><View style={[styles.careDayNumber, index === selectedIndex && styles.careDayNumberActive]}><Text style={[styles.careDayNumberText, index === selectedIndex && styles.careDayNumberTextActive]}>{String(index + 1).padStart(2, '0')}</Text></View><View style={styles.careDayCardTitleWrap}><Text style={[styles.careDayCardTitle, index === selectedIndex && styles.careDayTextActive]}>{dayName(day, index)}</Text><Text style={[styles.careDayCount, index === selectedIndex && styles.careDayTextActive]}>{done}/{items.length} việc</Text></View><Text style={[styles.careDayPercent, index === selectedIndex && styles.careDayTextActive]}>{percent}%</Text></View>
                 <View style={styles.careProgressTrack}><View style={[styles.careProgressFill, { width: `${percent}%` }]} /></View>
-                {items.slice(0, 4).map((item) => renderActivity(day, item, index, true))}
-                {!items.length && <Text style={styles.careNoActivities}>Chưa có hoạt động</Text>}
+                {!items.length && <Text style={[styles.careNoActivities, index === selectedIndex && styles.careDayTextActive]}>Chưa có hoạt động</Text>}
               </Pressable>;
             })}
           </ScrollView>
         </Card>
-        <Card style={styles.careDetailCard}>
+        <Reveal key={selectedIndex}><Card style={styles.careDetailCard}>
           <View style={styles.careDetailHeader}><View style={styles.careSectionHeading}><Text style={styles.careKicker}>CHI TIẾT NGÀY</Text><Text style={styles.careSectionTitle}>{dayName(selectedDay, selectedIndex)}</Text><Text style={styles.careSectionSub}>{selectedDone}/{selectedActivities.length} hoạt động hoàn thành</Text></View><View style={styles.careDayStatus}><Text style={styles.careDayStatusText}>{carePlan.source === 'AI' ? '✦ Kế hoạch cá nhân' : '✚ Kế hoạch bác sĩ'}</Text></View></View>
           {selectedDay?.summary ? <Text style={styles.careDaySummary}>{selectedDay.summary}</Text> : null}
           {selectedActivities.length ? selectedActivities.map((item) => renderActivity(selectedDay, item, selectedIndex)) : <EmptyState text="Chưa có hoạt động cho ngày này." />}
-        </Card>
+        </Card></Reveal>
       </> : <Card><EmptyState text="Kế hoạch chưa có lịch theo ngày." /></Card>}
     </> : <Card><Text style={styles.cardTitle}>Kế hoạch của bác sĩ</Text><EmptyState text="Bác sĩ chưa chốt kế hoạch chăm sóc cho bạn." /></Card>}
     <Card><Text style={styles.cardTitle}>Đơn thuốc đã chốt</Text>{asArray(prescriptions).length ? asArray(prescriptions).map((prescription) => <View key={prescription._id} style={styles.prescriptionCard}><View style={styles.cardHeading}><Text style={styles.planItemTitle}>{prescription.title || 'Đơn thuốc'}</Text><Text style={styles.dayStatus}>Đã chốt</Text></View><Text style={styles.cardSub}>{displayDate(prescription.confirmedAt || prescription.createdAt)}</Text>{prescription.note ? <Text style={styles.bodyMuted}>{prescription.note}</Text> : null}{asArray(prescription.medicines).map((medicine, index) => <View key={`${medicine.name}-${index}`} style={styles.medicineRow}><Text style={styles.medicineName}>{medicine.name}</Text><Text style={styles.bodyMuted}>{[medicine.dosage, medicine.frequency, asArray(medicine.times).join(', ')].filter(Boolean).join(' · ')}</Text></View>)}</View>) : <EmptyState text="Chưa có đơn thuốc đã chốt." />}</Card>
@@ -960,10 +1030,28 @@ function CareScreen({ carePlan, prescriptions, activeDay, setActiveDay, doneIds,
 }
 
 function AppointmentsScreen({ appointments, onCancel }) {
+  const activeCount = asArray(appointments).filter(item => ['pending', 'approved'].includes(item.status)).length;
   return <>
     <ScreenTitle eyebrow="THEO DÕI KHÁM BỆNH" title="Lịch hẹn" subtitle="Xem trạng thái cuộc hẹn với bác sĩ phụ trách." />
-    <Card><Text style={styles.cardTitle}>Các cuộc hẹn</Text>{asArray(appointments).length ? asArray(appointments).map((item) => <View key={item._id} style={styles.appointmentCard}><View style={styles.cardHeading}><Text style={styles.appointmentType}>{item.type || 'Lịch khám'}</Text><Text style={[styles.statusPill, item.status === 'approved' && styles.statusApproved, item.status === 'cancelled' && styles.statusCancelled]}>{prettyStatus(item.status)}</Text></View><Text style={styles.appointmentDate}>{displayDate(item.appointmentDate)}</Text>{item.doctorId?.fullName || item.doctorId?.username ? <Text style={styles.bodyMuted}>Bác sĩ: {item.doctorId.fullName || item.doctorId.username}</Text> : null}{item.note ? <Text style={styles.bodyMuted}>Ghi chú: {item.note}</Text> : null}{['pending', 'approved'].includes(item.status) ? <Pressable onPress={() => onCancel(item)} style={styles.cancelButton}><Text style={styles.cancelButtonText}>Hủy lịch hẹn</Text></Pressable> : null}</View>) : <EmptyState text="Bạn chưa có lịch hẹn. Bác sĩ phụ trách có thể tạo lịch hẹn trên DOCTIS." />}</Card>
+    <View style={styles.appointmentSummary}><View style={styles.appointmentSummaryIcon}><Icon name="appointments" size={30} /></View><View style={styles.flex}><Text style={styles.cardTitle}>{activeCount} lịch hẹn đang theo dõi</Text><Text style={styles.bodyMuted}>Lịch khám được cập nhật bởi bác sĩ.</Text></View></View>
+    <Text style={styles.appointmentListTitle}>Các cuộc hẹn của bạn</Text>
+    {asArray(appointments).length ? asArray(appointments).map((item, index) => <Reveal key={item._id} delay={Math.min(index, 4) * 50}><AppointmentCard item={item} onCancel={onCancel} /></Reveal>) : <Card><EmptyState text="Bạn chưa có lịch hẹn. Bác sĩ phụ trách có thể tạo lịch hẹn trên DOCTIS." /></Card>}
   </>;
+}
+
+function AppointmentCard({ item, onCancel }) {
+  const [expanded, setExpanded] = useState(false);
+  const date = new Date(item.appointmentDate);
+  const validDate = !Number.isNaN(date.getTime());
+  return <Card style={styles.appointmentCard}>
+    <Pressable accessibilityLabel={`${item.type || 'Lịch khám'}, ${displayDate(item.appointmentDate)}. Xem chi tiết`} accessibilityState={{ expanded }} onPress={() => setExpanded(previous => !previous)} style={styles.appointmentMain}>
+      <View style={styles.appointmentDateTile}><Text style={styles.appointmentMonth}>{validDate ? `THÁNG ${date.getMonth() + 1}` : 'NGÀY'}</Text><Text style={styles.appointmentDay}>{validDate ? date.getDate() : '—'}</Text></View>
+      <View style={styles.flex}><Text style={styles.appointmentType}>{item.type || 'Lịch khám'}</Text><View style={styles.appointmentTimeRow}><Icon name="clock" size={16} /><Text style={styles.appointmentTime}>{validDate ? date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'Chưa cập nhật'}</Text></View><Text style={[styles.statusPill, item.status === 'approved' && styles.statusApproved, item.status === 'cancelled' && styles.statusCancelled]}>{prettyStatus(item.status)}</Text></View><Text style={styles.appointmentChevron}>{expanded ? '−' : '+'}</Text>
+    </Pressable>
+    <Text style={styles.appointmentDate}>{displayDate(item.appointmentDate)}</Text>
+    {expanded && <Reveal><View style={styles.appointmentDetails}>{item.doctorId?.fullName || item.doctorId?.username ? <Text style={styles.bodyText}>Bác sĩ: {item.doctorId.fullName || item.doctorId.username}</Text> : null}{item.note ? <Text style={styles.bodyText}>Ghi chú: {item.note}</Text> : <Text style={styles.bodyMuted}>Không có ghi chú thêm.</Text>}{['pending', 'approved'].includes(item.status) ? <Pressable onPress={() => onCancel(item)} style={styles.cancelButton}><Text style={styles.cancelButtonText}>Hủy lịch hẹn</Text></Pressable> : null}</View></Reveal>}
+    <Text style={styles.appointmentHint}>{expanded ? 'Chạm thẻ để thu gọn' : 'Chạm thẻ để xem bác sĩ và ghi chú'}</Text>
+  </Card>;
 }
 
 function ProfileScreen({ profile, editing, setEditing, setProfile, onSave, busy, onSignOut }) {
@@ -974,15 +1062,17 @@ function ProfileScreen({ profile, editing, setEditing, setProfile, onSave, busy,
   ];
   return <>
     <ScreenTitle eyebrow="THÔNG TIN CÁ NHÂN" title="Hồ sơ sức khỏe" subtitle="Thông tin này giúp đội ngũ chăm sóc hiểu hồ sơ của bạn." />
-    <Card>
+    <Card style={styles.profileCard}>
       <View style={styles.profileIdentity}><View style={styles.profileAvatar}><Text style={styles.profileAvatarText}>{fullName(profile).slice(0, 1).toUpperCase()}</Text></View><View style={styles.profileIdentityText}><Text style={styles.profileName}>{fullName(profile)}</Text><Text style={styles.bodyMuted}>{profile?.email}</Text></View></View>
-      <View style={styles.profileFields}>{fields.map(([key, label]) => <View key={key} style={styles.profileField}>
+      <View style={styles.profileFields}>{fields.map(([key, label], index) => <View key={key}>
+        {[0, 4, 8, 10].includes(index) && <View style={styles.profileGroupHeading}><Icon name={index === 0 ? 'profile' : index === 4 ? 'care' : index === 8 ? 'shield' : 'home'} size={19} /><Text style={styles.profileGroupTitle}>{index === 0 ? 'Thông tin cá nhân' : index === 4 ? 'Thông tin y tế' : index === 8 ? 'Liên hệ khẩn cấp' : 'Địa chỉ phục vụ'}</Text></View>}
+        <View style={styles.profileField}>
         {editing && key !== 'address' ? <Field label={label} value={profile?.[key] || ''} onChangeText={(value) => setProfile((previous) => ({ ...previous, [key]: value }))} /> : <>
           <Text style={styles.profileLabel}>{label}</Text>
           <Text style={styles.profileValue}>{key === 'address' ? [profile?.address, profile?.ward, profile?.city || profile?.province].filter(Boolean).join(', ') || 'Chưa cập nhật' : profile?.[key] || 'Chưa cập nhật'}</Text>
           {key === 'address' && editing && <Text style={styles.bodyMuted}>Để cập nhật địa chỉ và phường, mở DOCTIS trên web → Bệnh viện và bác sĩ phụ trách. Thay đổi địa chỉ cần được đồng bộ với hồ sơ tiếp nhận.</Text>}
         </>}
-      </View>)}</View>
+      </View></View>)}</View>
       {editing ? <View style={styles.actionRow}><ActionButton title="Lưu thay đổi" onPress={onSave} disabled={busy} style={styles.flexButton} /><ActionButton title="Hủy" secondary onPress={() => setEditing(false)} style={styles.flexButton} /></View> : <ActionButton title="Chỉnh sửa hồ sơ" secondary onPress={() => setEditing(true)} style={styles.fullButton} />}
     </Card>
     <ActionButton title="Đăng xuất" secondary onPress={onSignOut} style={styles.fullButton} />
@@ -1039,8 +1129,8 @@ function MessagesScreen({ doctors, doctor, setDoctor, messages, user, value, set
         </ScrollView>
 
         <Text style={styles.cardTitle}>Gửi tin nhắn</Text>
-        <TextInput style={styles.messageComposerInput} value={value} onChangeText={setValue} placeholder="Nhập nội dung tin nhắn..." placeholderTextColor="#91a4a8" onFocus={onComposerFocus} multiline={false} autoCorrect autoCapitalize="sentences" returnKeyType="send" onSubmitEditing={onSend} />
-        {attachment ? <View style={styles.pendingAttachment}><Text numberOfLines={1} style={styles.pendingAttachmentName}>{attachment.type?.startsWith('image/') ? '▧ ' : '▤ '}{attachment.name}</Text><Pressable onPress={onRemoveAttachment}><Text style={styles.removeAttachment}>×</Text></Pressable></View> : null}
+        <TextInput accessibilityLabel="Tin nhắn gửi bác sĩ" style={styles.messageComposerInput} value={value} onChangeText={setValue} placeholder="Nhập nội dung tin nhắn..." placeholderTextColor="#57706E" onFocus={onComposerFocus} multiline={false} autoCorrect autoCapitalize="sentences" returnKeyType="send" onSubmitEditing={onSend} />
+        {attachment ? <View style={styles.pendingAttachment}><Text numberOfLines={1} style={styles.pendingAttachmentName}>{attachment.type?.startsWith('image/') ? '▧ ' : '▤ '}{attachment.name}</Text><Pressable accessibilityLabel="Bỏ tệp đính kèm" style={styles.noticeDismiss} onPress={onRemoveAttachment}><Text style={styles.removeAttachment}>×</Text></Pressable></View> : null}
         <View style={styles.messageActionsRow}>
           <Pressable style={styles.attachmentActionButton} onPress={() => onChooseAttachment('image')} disabled={attachmentBusy}><Text style={styles.attachmentActionText}>▧ Ảnh</Text></Pressable>
           <Pressable style={styles.attachmentActionButton} onPress={() => onChooseAttachment('file')} disabled={attachmentBusy}><Text style={styles.attachmentActionText}>＋ Tệp</Text></Pressable>
@@ -1058,295 +1148,12 @@ function MobileMessageAttachment({ attachment, mine, onOpen }) {
   return <View style={[styles.messageAttachmentCard, mine && styles.messageAttachmentMine]}>
     {isImage && source ? <Image source={{ uri: source }} style={styles.messageImage} resizeMode="cover" /> : <Text style={styles.messageFileIcon}>▤</Text>}
     <View style={styles.messageAttachmentDetails}>
-      <Text numberOfLines={2} style={[styles.messageAttachmentName, mine && styles.messageMineText]}>{attachment.name || (isImage ? 'Ảnh đính kèm' : 'Tệp đính kèm')}</Text>
-      <Text style={[styles.messageAttachmentMeta, mine && styles.messageMineText]}>{attachment.size ? `${(attachment.size / 1024).toFixed(1)} KB` : 'Tệp đính kèm'}{attachment.type ? ` · ${attachment.type.split('/').pop()}` : ''}</Text>
+      <Text numberOfLines={2} style={styles.messageAttachmentName}>{attachment.name || (isImage ? 'Ảnh đính kèm' : 'Tệp đính kèm')}</Text>
+      <Text style={styles.messageAttachmentMeta}>{attachment.size ? `${(attachment.size / 1024).toFixed(1)} KB` : 'Tệp đính kèm'}{attachment.type ? ` · ${attachment.type.split('/').pop()}` : ''}</Text>
     </View>
     <Pressable style={styles.openAttachmentButton} onPress={() => onOpen(attachment)}><Text style={styles.openAttachmentText}>{isImage ? 'Lưu' : 'Mở / lưu'}</Text></Pressable>
   </View>;
 }
 function EmptyState({ text }) {
-  return <View style={styles.emptyState}><View style={styles.emptyIcon}><Text style={styles.emptyIconText}>i</Text></View><Text style={styles.emptyText}>{text}</Text></View>;
+  return <View style={styles.emptyState}><HealthArt size={108} /><Text style={styles.emptyText}>{text}</Text></View>;
 }
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f3f7f8' },
-  flex: { flex: 1 },
-  screenScroll: { minHeight: 0, maxHeight: '100%' },
-  page: { paddingHorizontal: 18, paddingTop: 17, paddingBottom: 25 },
-  authPage: { paddingHorizontal: 22, paddingTop: 22, paddingBottom: 32, maxWidth: 580, width: '100%', alignSelf: 'center', flexGrow: 1 },
-  brandHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 22 },
-  brandHeaderCompact: { marginBottom: 0 },
-  logo: { width: 43, height: 43, borderRadius: 15, backgroundColor: '#087d83', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  logoText: { color: '#fff', fontSize: 23, fontWeight: '900' },
-  brand: { color: '#17364a', fontSize: 18, fontWeight: '900', letterSpacing: 0.8 },
-  brandCaption: { color: '#76909a', fontSize: 8, fontWeight: '800', letterSpacing: 1, marginTop: 2 },
-  liveBadge: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 7, borderRadius: 16, backgroundColor: '#e7f5ee' },
-  liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#27a879', marginRight: 6 },
-  liveText: { color: '#258264', fontSize: 10, fontWeight: '700' },
-  authHero: { paddingVertical: 16, paddingHorizontal: 4 },
-  authEyebrow: { color: '#168b8b', fontSize: 9, fontWeight: '900', letterSpacing: 1.1, marginBottom: 9 },
-  authTitle: { color: '#18394c', fontSize: 27, lineHeight: 33, fontWeight: '900', letterSpacing: -0.5 },
-  authSubtitle: { color: '#728991', fontSize: 13, lineHeight: 20, marginTop: 8 },
-  authCard: { padding: 18, marginTop: 10 },
-  registrationAddress: { borderTopWidth: 1, borderTopColor: '#e2ebed', marginTop: 2, paddingTop: 16, marginBottom: 8 },
-  wardStatus: { flexDirection: 'row', alignItems: 'center', gap: 9, paddingVertical: 12 },
-  wardTrigger: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  wardName: { color: '#234254', fontSize: 13, flexShrink: 1 },
-  wardChevron: { color: '#087d83', fontSize: 18, fontWeight: '800' },
-  wardOptions: { borderWidth: 1, borderColor: '#dce7e9', borderRadius: 12, padding: 10, marginTop: 6, backgroundColor: '#fbfdfd' },
-  wardList: { maxHeight: 220 },
-  wardOption: { minHeight: 44, paddingHorizontal: 10, paddingVertical: 10, borderRadius: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  wardOptionSelected: { backgroundColor: '#e2f1f0' },
-  wardError: { color: '#ad4051', fontSize: 11, lineHeight: 17, marginBottom: 10 },
-  authSubmit: { marginTop: 4 },
-  switchAuth: { alignItems: 'center', paddingTop: 18, paddingBottom: 3 },
-  switchText: { color: '#748a91', fontSize: 12 },
-  switchStrong: { color: '#087d83', fontWeight: '900' },
-  authFootnote: { color: '#98a8ac', fontSize: 10, lineHeight: 15, textAlign: 'center', marginTop: 17, paddingHorizontal: 12 },
-  appHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e4ecee', paddingHorizontal: 18, paddingVertical: 10 },
-  avatarButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#e2f1f0', alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: '#087d83', fontWeight: '900' },
-  homeHero: { backgroundColor: '#103b4b', borderRadius: 24, padding: 21, overflow: 'hidden' },
-  heroEyebrow: { color: '#7fe0da', fontSize: 9, letterSpacing: 0.9, fontWeight: '900' },
-  homeTitle: { color: '#fff', fontSize: 24, lineHeight: 30, fontWeight: '900', marginTop: 11, flexShrink: 1 },
-  homeDescription: { color: '#c4dadd', fontSize: 12, lineHeight: 18, marginTop: 7 },
-  heroStats: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.09)', borderRadius: 14, padding: 12, marginTop: 19 },
-  statDivider: { width: 1, height: 33, backgroundColor: 'rgba(255,255,255,0.2)', marginHorizontal: 14 },
-  sectionHeading: { marginTop: 24, marginBottom: 13 },
-  sectionTitle: { color: '#18394c', fontSize: 17, fontWeight: '900' },
-  sectionSubtitle: { color: '#82959c', fontSize: 10, marginTop: 4 },
-  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 11 },
-  quickCard: { width: '48.3%', minHeight: 138, backgroundColor: '#fff', borderColor: '#e2ebed', borderWidth: 1, borderRadius: 18, padding: 14 },
-  quickPressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
-  quickIcon: { width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  quickIconText: { color: '#087d83', fontSize: 19, fontWeight: '900' },
-  quickTitle: { color: '#234254', fontSize: 11, fontWeight: '900', paddingRight: 5 },
-  quickDetail: { color: '#84969d', fontSize: 9, marginTop: 5, lineHeight: 14 },
-  quickArrow: { color: '#85a4a8', fontSize: 16 },
-  card: { backgroundColor: '#fff', borderColor: '#e2ebed', borderWidth: 1, borderRadius: 19, padding: 16, marginBottom: 12 },
-  dashboardCard: { marginTop: 16 },
-  cardHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  cardTitle: { color: '#234254', fontSize: 14, fontWeight: '900' },
-  cardSub: { color: '#869aa1', fontSize: 10, lineHeight: 15, marginTop: 4, marginBottom: 11 },
-  statusDot: { color: '#26ae82', fontSize: 11 },
-  metricGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 10, marginTop: 15 },
-  metric: { flex: 1, minWidth: 105 },
-  metricLabel: { color: '#a0afb3', fontSize: 8, letterSpacing: 0.7, fontWeight: '900' },
-  metricLabelLight: { color: '#c2e8e8' },
-  metricValue: { color: '#18394c', fontSize: 17, fontWeight: '900', marginTop: 4 },
-  metricValueLight: { color: '#fff' },
-  metricUnit: { color: '#8a9da3', fontSize: 8, fontWeight: '600' },
-  metricUnitLight: { color: '#dcf4f3' },
-  disclaimer: { color: '#9aa9ad', fontSize: 9, lineHeight: 14, textAlign: 'center', paddingHorizontal: 8, paddingTop: 6 },
-  screenTitleWrap: { marginBottom: 17 },
-  screenEyebrow: { color: '#168b8b', fontSize: 9, fontWeight: '900', letterSpacing: 1.05 },
-  screenTitle: { color: '#17394b', fontSize: 24, fontWeight: '900', marginTop: 5 },
-  screenSubtitle: { color: '#7f939a', fontSize: 11, lineHeight: 17, marginTop: 5 },
-  fieldWrap: { marginBottom: 12 },
-  fieldLabel: { color: '#56717a', fontSize: 10, fontWeight: '800', marginBottom: 6 },
-  input: { minHeight: 46, borderWidth: 1, borderColor: '#dce7e9', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, color: '#234254', backgroundColor: '#fbfdfd', fontSize: 13 },
-  multilineInput: { minHeight: 82, textAlignVertical: 'top' },
-  button: { minHeight: 47, paddingHorizontal: 18, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: '#087d83' },
-  buttonSecondary: { backgroundColor: '#eef7f6', borderWidth: 1, borderColor: '#d8e9e7' },
-  buttonDisabled: { opacity: 0.65 },
-  buttonPressed: { opacity: 0.82, transform: [{ scale: 0.99 }] },
-  buttonText: { color: '#fff', fontSize: 13, fontWeight: '900' },
-  buttonSecondaryText: { color: '#087d83' },
-  fullButton: { marginTop: 8 },
-  actionRow: { flexDirection: 'row', gap: 9, marginTop: 5 },
-  flexButton: { flex: 1 },
-  formGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  formGridItem: { width: '48.5%' },
-  riskPill: { backgroundColor: '#eef7f6', borderRadius: 10, padding: 10, marginTop: 14 },
-  riskText: { color: '#247b78', fontSize: 10, fontWeight: '800' },
-  historyRow: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 11, borderTopWidth: 1, borderTopColor: '#edf1f2' },
-  historyDot: { width: 8, height: 8, borderRadius: 5, backgroundColor: '#51b8b0', marginTop: 5, marginRight: 10 },
-  historyContent: { flex: 1 },
-  historyDate: { color: '#365767', fontSize: 10, fontWeight: '800' },
-  historySummary: { color: '#81959c', fontSize: 9, marginTop: 4 },
-  emptyState: { alignItems: 'center', paddingVertical: 17, paddingHorizontal: 12 },
-  emptyIcon: { width: 31, height: 31, borderRadius: 11, backgroundColor: '#e9f4f3', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  emptyIconText: { color: '#3a9693', fontWeight: '900' },
-  emptyText: { color: '#84989e', fontSize: 10, lineHeight: 16, textAlign: 'center' },
-  bodyText: { color: '#54717a', fontSize: 11, lineHeight: 17, marginTop: 7 },
-  bodyMuted: { color: '#82969d', fontSize: 10, lineHeight: 15, marginTop: 4 },
-  doctorNote: { backgroundColor: '#f5f8f9', borderRadius: 12, padding: 12, marginBottom: 13 },
-  doctorNoteLabel: { color: '#168b8b', fontSize: 8, letterSpacing: 0.8, fontWeight: '900' },
-  dayBlock: { borderTopWidth: 1, borderTopColor: '#eaf0f1', paddingTop: 12, marginTop: 12 },
-  dayHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  dayTitle: { color: '#234254', fontSize: 12, fontWeight: '900' },
-  dayStatus: { color: '#268372', backgroundColor: '#eaf7f2', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 9, fontSize: 8, fontWeight: '900' },
-  planItem: { flexDirection: 'row', paddingVertical: 9, borderTopWidth: 1, borderTopColor: '#f0f3f4' },
-  planTime: { width: 51, color: '#168b8b', fontSize: 10, fontWeight: '900', paddingTop: 1 },
-  planItemContent: { flex: 1 },
-  planItemTitle: { color: '#315261', fontSize: 11, fontWeight: '900' },
-  planType: { color: '#9aa9ae', fontSize: 8, letterSpacing: 0.6, fontWeight: '800', marginTop: 5 },
-  prescriptionCard: { borderTopWidth: 1, borderTopColor: '#edf1f2', paddingTop: 12, marginTop: 10 },
-  medicineRow: { paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#f1f4f4', marginTop: 5 },
-  medicineName: { color: '#315261', fontSize: 10, fontWeight: '900' },
-  carePlanIntro: { backgroundColor: '#f7fcfc', borderColor: '#dceeed' },
-  carePlanIntroTop: { flexDirection: 'row', alignItems: 'center' },
-  carePlanIntroIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#e5f6f3', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  carePlanIntroIconText: { color: '#078b8e', fontSize: 20, fontWeight: '900' },
-  carePlanIntroCopy: { flex: 1 },
-  careConfirmedPill: { color: '#13896b', backgroundColor: '#e8f8f1', overflow: 'hidden', paddingHorizontal: 9, paddingVertical: 6, borderRadius: 12, fontSize: 8, fontWeight: '900' },
-  careDraftPill: { color: '#8c6b32', backgroundColor: '#fff6e5' },
-  careDoctorNote: { marginTop: 12, padding: 11, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e7efef' },
-  careDoctorNoteLabel: { color: '#168b8b', fontSize: 8, fontWeight: '900', letterSpacing: 0.8 },
-  careWeekCard: { paddingHorizontal: 12, paddingTop: 15, paddingBottom: 12 },
-  careSectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  careSectionHeading: { flex: 1, minWidth: 0 },
-  careKicker: { color: '#64819a', fontSize: 8, letterSpacing: 1, fontWeight: '900' },
-  careSectionTitle: { color: '#234254', fontSize: 15, lineHeight: 20, fontWeight: '900', marginTop: 3 },
-  careSectionSub: { color: '#82969d', fontSize: 9, lineHeight: 14, marginTop: 4 },
-  careProgressBadge: { minWidth: 66, alignItems: 'center', paddingHorizontal: 8, paddingVertical: 7, borderRadius: 12, backgroundColor: '#f3f7ff', borderWidth: 1, borderColor: '#e0e9fa', marginLeft: 8 },
-  careProgressLabel: { color: '#8b9db5', fontSize: 7, fontWeight: '900', letterSpacing: 0.5 },
-  careProgressValue: { color: '#3977f2', fontSize: 13, fontWeight: '900', marginTop: 2 },
-  careWeekScroller: { paddingRight: 3, gap: 8 },
-  careDayCard: { width: 178, padding: 9, borderRadius: 14, backgroundColor: '#f8faff', borderWidth: 1, borderColor: '#e4ebf8' },
-  careDayCardActive: { backgroundColor: '#fff', borderColor: '#8cb2ff', shadowColor: '#3577ee', shadowOpacity: 0.1, shadowRadius: 9, elevation: 2 },
-  careDayCardHeader: { flexDirection: 'row', alignItems: 'center' },
-  careDayNumber: { width: 26, height: 26, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#eaf0ff', marginRight: 7 },
-  careDayNumberActive: { backgroundColor: '#477af1' },
-  careDayNumberText: { color: '#477af1', fontSize: 8, fontWeight: '900' },
-  careDayNumberTextActive: { color: '#fff' },
-  careDayCardTitleWrap: { flex: 1 },
-  careDayCardTitle: { color: '#315261', fontSize: 9, fontWeight: '900' },
-  careDayCount: { color: '#96a7b4', fontSize: 7, marginTop: 2 },
-  careDayPercent: { color: '#3977f2', fontSize: 8, fontWeight: '900' },
-  careProgressTrack: { height: 3, overflow: 'hidden', backgroundColor: '#e9eef5', borderRadius: 3, marginTop: 8, marginBottom: 4 },
-  careProgressFill: { height: 3, borderRadius: 3, backgroundColor: '#29b896' },
-  careActivityRow: { minHeight: 58, flexDirection: 'row', alignItems: 'center', padding: 9, borderRadius: 13, backgroundColor: '#fbfdff', borderWidth: 1, borderColor: '#e8eef6', marginTop: 7 },
-  careActivityDone: { backgroundColor: '#f1fbf7', borderColor: '#d9f1e6' },
-  careActivityCompact: { minHeight: 36, paddingVertical: 5, paddingHorizontal: 4, borderWidth: 0, borderRadius: 9, backgroundColor: 'transparent', marginTop: 3 },
-  careActivityTime: { width: 42, color: '#597a9e', fontSize: 8, fontWeight: '900' },
-  careActivityIcon: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center', marginRight: 8, backgroundColor: '#fff1e7' },
-  careMealTone: { backgroundColor: '#fff2e7' },
-  careMoveTone: { backgroundColor: '#e8f8f3' },
-  careMedicineTone: { backgroundColor: '#edf0ff' },
-  careOtherTone: { backgroundColor: '#e8f5f6' },
-  careActivityIconText: { color: '#388e92', fontSize: 13, fontWeight: '900' },
-  careActivityCopy: { flex: 1, minWidth: 0 },
-  careActivityTitle: { color: '#315261', fontSize: 10, fontWeight: '900', lineHeight: 14 },
-  careActivityTitleDone: { color: '#36816d' },
-  careActivityType: { color: '#8095a1', fontSize: 8, marginTop: 3 },
-  careActivityDescription: { color: '#728996', fontSize: 9, lineHeight: 14, marginTop: 4 },
-  careTinyCheck: { width: 16, height: 16, borderRadius: 8, borderWidth: 1, borderColor: '#d8e2ed', marginLeft: 5, alignItems: 'center', justifyContent: 'center' },
-  careTinyCheckActive: { backgroundColor: '#20ad86', borderColor: '#20ad86' },
-  careTinyCheckText: { color: '#fff', fontSize: 9, fontWeight: '900' },
-  careNoActivities: { color: '#8b9ba8', fontSize: 8, textAlign: 'center', paddingVertical: 14 },
-  careDetailCard: { paddingHorizontal: 12 },
-  careDetailHeader: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#edf2f4', paddingBottom: 10, marginBottom: 4 },
-  careDayStatus: { backgroundColor: '#f3f7ff', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 6, marginLeft: 7 },
-  careDayStatusText: { color: '#647fa5', fontSize: 7, fontWeight: '900' },
-  careDaySummary: { color: '#657f8a', backgroundColor: '#f4f9f8', borderRadius: 10, padding: 9, marginTop: 8, fontSize: 9, lineHeight: 14 },
-  careActivityActions: { alignItems: 'flex-end', gap: 5, marginLeft: 6 },
-  careActionButton: { minWidth: 84, minHeight: 28, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7, borderRadius: 9, backgroundColor: '#eef4ff', borderWidth: 1, borderColor: '#dce7fb' },
-  careActionText: { color: '#3977f2', fontSize: 8, fontWeight: '800' },
-  careReminderDone: { backgroundColor: '#eef9f4', borderColor: '#d3efe2' },
-  careReminderDoneText: { color: '#258666' },
-  careDoneButton: { minWidth: 84, minHeight: 28, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7, borderRadius: 9, backgroundColor: '#078b8e' },
-  careDoneButtonActive: { backgroundColor: '#e7f7f0', borderWidth: 1, borderColor: '#ccebdd' },
-  careDoneButtonText: { color: '#fff', fontSize: 8, fontWeight: '900' },
-  careDoneButtonTextActive: { color: '#248369' },
-  appointmentCard: { borderTopWidth: 1, borderTopColor: '#edf1f2', paddingTop: 13, marginTop: 10 },
-  appointmentType: { color: '#315261', fontSize: 11, fontWeight: '900' },
-  appointmentDate: { color: '#087d83', fontSize: 12, fontWeight: '900', marginTop: 9 },
-  statusPill: { overflow: 'hidden', color: '#94702c', backgroundColor: '#fff5e4', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 10, fontSize: 8, fontWeight: '900' },
-  statusApproved: { color: '#247d65', backgroundColor: '#e8f7f1' },
-  statusCancelled: { color: '#ab5960', backgroundColor: '#fff0f1' },
-  cancelButton: { alignSelf: 'flex-start', borderWidth: 1, borderColor: '#f1d9da', borderRadius: 10, paddingHorizontal: 11, paddingVertical: 8, marginTop: 10 },
-  cancelButtonText: { color: '#b25760', fontSize: 9, fontWeight: '900' },
-  profileIdentity: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  profileAvatar: { width: 50, height: 50, borderRadius: 18, backgroundColor: '#e5f2f1', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  profileAvatarText: { color: '#087d83', fontSize: 20, fontWeight: '900' },
-  profileIdentityText: { flex: 1 },
-  profileName: { color: '#234254', fontSize: 14, fontWeight: '900' },
-  profileFields: { borderTopWidth: 1, borderTopColor: '#edf1f2', paddingTop: 8 },
-  profileField: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f1f4f4' },
-  profileLabel: { color: '#98a8ad', fontSize: 8, fontWeight: '800', letterSpacing: 0.5 },
-  profileValue: { color: '#365767', fontSize: 11, fontWeight: '700', marginTop: 4 },
-  doctorChoice: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#e6eeee', borderRadius: 13, padding: 10, marginTop: 10 },
-  doctorChoiceActive: { backgroundColor: '#f0f8f7', borderColor: '#aad7d3' },
-  doctorAvatar: { width: 37, height: 37, borderRadius: 14, backgroundColor: '#e6edff', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  doctorAvatarText: { color: '#5570bc', fontWeight: '900' },
-  aiChatCard: { height: 540, padding: 13, flexDirection: 'column' },
-  aiChatHeader: { flexDirection: 'row', alignItems: 'center', paddingBottom: 11, borderBottomWidth: 1, borderBottomColor: '#edf2f2' },
-  aiChatIcon: { width: 36, height: 36, borderRadius: 13, backgroundColor: '#e9f5f4', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  aiChatIconText: { color: '#087d83', fontSize: 20, fontWeight: '900' },
-  aiChatHeading: { flex: 1, minWidth: 0 },
-  aiChatTitle: { color: '#234254', fontSize: 11, fontWeight: '900' },
-  aiChatSubtitle: { color: '#879ba1', fontSize: 8, marginTop: 3 },
-  aiOnline: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 10, backgroundColor: '#eef8f4' },
-  aiOnlineDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#35a77b' },
-  aiOnlineText: { color: '#32846b', fontSize: 8, fontWeight: '900' },
-  aiMessageList: { flex: 1, minHeight: 0, marginVertical: 9 },
-  aiMessageContent: { flexGrow: 1, justifyContent: 'flex-end', paddingVertical: 3 },
-  aiMessageRow: { width: '100%', alignItems: 'flex-start', marginVertical: 4 },
-  aiMessageRowMine: { alignItems: 'flex-end' },
-  aiMessageBubble: { maxWidth: '88%', paddingHorizontal: 11, paddingVertical: 9, borderRadius: 14, borderBottomLeftRadius: 4, backgroundColor: '#eef4f5' },
-  aiMessageBubbleMine: { borderBottomLeftRadius: 14, borderBottomRightRadius: 4, backgroundColor: '#087d83' },
-  aiMessageBubbleError: { backgroundColor: '#fff0ef', borderColor: '#f2d5d3', borderWidth: 1 },
-  aiMessageText: { color: '#315261', fontSize: 10, lineHeight: 16 },
-  aiMessageTextMine: { color: '#fff' },
-  aiThinkingBubble: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 11, paddingVertical: 9, borderRadius: 14, backgroundColor: '#eef4f5' },
-  aiThinkingText: { color: '#708991', fontSize: 9 },
-  aiComposer: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 9, borderTopWidth: 1, borderTopColor: '#edf2f2' },
-  aiInput: { flex: 1, height: 42, borderWidth: 1, borderColor: '#dce7e9', borderRadius: 13, paddingHorizontal: 11, color: '#234254', backgroundColor: '#fbfdfd', fontSize: 10 },
-  aiSendButton: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: '#087d83' },
-  aiSendText: { color: '#fff', fontSize: 21, lineHeight: 24, fontWeight: '900' },
-  aiDisclaimer: { color: '#98a8ad', fontSize: 7, lineHeight: 11, textAlign: 'center', marginTop: 7 },
-  messageHistoryCard: { height: 440, padding: 13, flexDirection: 'column' },
-  messageList: { flex: 1, minHeight: 0, marginTop: 9, marginBottom: 10 },
-  messageListContent: { flexGrow: 1, justifyContent: 'flex-end', paddingBottom: 2 },
-  messageBubble: { alignSelf: 'flex-start', maxWidth: '85%', backgroundColor: '#eef4f5', borderRadius: 14, borderBottomLeftRadius: 4, paddingHorizontal: 11, paddingVertical: 9, marginVertical: 4 },
-  messageMine: { alignSelf: 'flex-end', backgroundColor: '#087d83', borderBottomLeftRadius: 14, borderBottomRightRadius: 4 },
-  messageText: { color: '#315261', fontSize: 11, lineHeight: 16 },
-  messageMineText: { color: '#fff' },
-  messageTime: { color: '#8ba0a5', fontSize: 8, marginTop: 4 },
-  messageAttachmentCard: { flexDirection: 'row', alignItems: 'center', maxWidth: 270, marginTop: 7, padding: 8, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#dce9e9' },
-  messageAttachmentMine: { backgroundColor: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.32)' },
-  messageImage: { width: 54, height: 54, borderRadius: 8, marginRight: 9, backgroundColor: '#e9f0f0' },
-  messageFileIcon: { width: 40, height: 44, textAlign: 'center', textAlignVertical: 'center', color: '#087d83', fontSize: 20, backgroundColor: '#eaf5f4', borderRadius: 9, marginRight: 9, overflow: 'hidden' },
-  messageAttachmentDetails: { flex: 1, minWidth: 0 },
-  messageAttachmentName: { color: '#315261', fontSize: 10, lineHeight: 14, fontWeight: '800' },
-  messageAttachmentMeta: { color: '#82969d', fontSize: 8, marginTop: 4 },
-  openAttachmentButton: { paddingHorizontal: 9, paddingVertical: 7, marginLeft: 6, borderRadius: 9, backgroundColor: '#e8f4f3' },
-  openAttachmentText: { color: '#087d83', fontSize: 9, fontWeight: '900' },
-  pendingAttachment: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, backgroundColor: '#edf7f6' },
-  pendingAttachmentName: { flex: 1, color: '#315261', fontSize: 9, fontWeight: '700' },
-  removeAttachment: { color: '#9c5560', fontSize: 19, fontWeight: '700', paddingLeft: 10 },
-  messageComposerInput: { width: '100%', height: 44, marginTop: 10, borderWidth: 1, borderColor: '#dce7e9', borderRadius: 12, paddingHorizontal: 12, color: '#234254', backgroundColor: '#fbfdfd', fontSize: 12 },
-  messageActionsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
-  attachmentActionButton: { minHeight: 38, paddingHorizontal: 12, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#eef7f6', borderWidth: 1, borderColor: '#dbeae8' },
-  attachmentActionText: { color: '#087d83', fontSize: 10, fontWeight: '900' },
-  messageSendButton: { minWidth: 72, height: 40, paddingHorizontal: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#087d83' },
-  messageSendDisabled: { opacity: 0.4 },
-  messageSendText: { color: '#fff', fontSize: 17, fontWeight: '900' },
-  attachmentHint: { color: '#9aabad', fontSize: 8, marginTop: 6, marginLeft: 2 },
-  notice: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e9f6f1', borderRadius: 11, marginHorizontal: 16, marginTop: 8, paddingVertical: 9, paddingHorizontal: 11 },
-  noticeError: { backgroundColor: '#fff0ef' },
-  noticeText: { flex: 1, color: '#27765f', fontSize: 10, lineHeight: 15 },
-  noticeErrorText: { color: '#ad504c' },
-  noticeClose: { color: '#83999d', fontSize: 18, paddingLeft: 8 },
-  tabBar: { flexDirection: 'row', flexShrink: 0, backgroundColor: '#fff', borderTopColor: '#e3ebed', borderTopWidth: 1, paddingTop: 7, paddingBottom: Platform.OS === 'web' ? 'max(12px, env(safe-area-inset-bottom))' : Platform.OS === 'ios' ? 5 : 8, paddingHorizontal: 5 },
-  tabItem: { flex: 1, alignItems: 'center', justifyContent: 'center', minWidth: 0 },
-  tabIconWrap: { width: 30, height: 27, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  tabIconActive: { backgroundColor: '#e5f4f2' },
-  tabIcon: { color: '#7c969c', fontSize: 19, fontWeight: '800' },
-  tabIconSelected: { color: '#087d83' },
-  tabLabel: { color: '#85999e', fontSize: 8, fontWeight: '700', marginTop: 3 },
-  tabLabelSelected: { color: '#087d83', fontWeight: '900' },
-  aiFloatingLayer: { position: 'absolute', right: 15, bottom: 120, alignItems: 'flex-end', zIndex: 30, elevation: 20 },
-  aiWelcomeCard: { width: 258, minHeight: 62, flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingLeft: 11, paddingRight: 34, marginBottom: 10, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#dfeaec', shadowColor: '#15394b', shadowOpacity: 0.16, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 7 },
-  aiWelcomeRobot: { fontSize: 26, marginRight: 9 },
-  aiWelcomeText: { flex: 1, color: '#234254', fontSize: 10, lineHeight: 15, fontWeight: '800' },
-  aiWelcomeClose: { position: 'absolute', right: 7, top: 6, width: 23, height: 23, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: '#f0f5f5' },
-  aiWelcomeCloseText: { color: '#6f858c', fontSize: 17, lineHeight: 20, fontWeight: '700' },
-  aiFloatingButton: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: '#087d83', borderWidth: 2, borderColor: '#fff', shadowColor: '#087d83', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 8 },
-  aiFloatingIcon: { fontSize: 26 },
-  aiBackButton: { alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 3, marginBottom: 8 },
-  aiBackText: { color: '#087d83', fontSize: 11, fontWeight: '900' },
-  loadingScreen: { alignItems: 'center', justifyContent: 'center' },
-  loadingLabel: { color: '#708991', fontSize: 12, marginTop: 12 },
-});

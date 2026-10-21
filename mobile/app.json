@@ -11,7 +11,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#F7F8F2",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -23,8 +23,8 @@
       "favicon": "./assets/favicon.png",
       "name": "DOCTIS - Sức khỏe thông minh",
       "shortName": "DOCTIS",
-      "themeColor": "#087f83",
-      "backgroundColor": "#f2f7f7",
+      "themeColor": "#F7F8F2",
+      "backgroundColor": "#F7F8F2",
       "display": "standalone"
     },
     "plugins": [

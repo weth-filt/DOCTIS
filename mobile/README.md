@@ -24,3 +24,9 @@ Trang chia sẻ công khai có mã QR, nút mở app, tải QR và chia sẻ lin
 Ứng dụng gọi API mặc định tại `https://doctis.vercel.app/api`. Nếu deploy API ở địa chỉ khác, đặt biến `EXPO_PUBLIC_API_URL` trong Vercel trước khi build. Nếu API đang giới hạn CORS bằng `ALLOWED_ORIGINS`, thêm chính xác domain production của app mobile vào biến này ở dự án backend rồi redeploy backend.
 
 Bản PWA chạy qua trình duyệt và có thể ghim vào màn hình chính; để phân phối ứng dụng iOS native cài đặt trực tiếp, cần build và phân phối qua Apple TestFlight/App Store.
+
+## Giao diện Nhịp chăm sóc
+
+Ứng dụng dùng Lora/Manrope tiếng Việt được đóng gói cùng app, đồ họa SVG và React Native Animated. Bố cục ưu tiên điện thoại, giới hạn chiều rộng 600 px trên màn hình lớn. Chế độ giảm chuyển động theo cài đặt hệ thống hoặc trình duyệt.
+
+Xem [design system và motion spec](DESIGN_SYSTEM.md) để biết palette, bố cục từng màn, asset, trạng thái triển khai và giới hạn xác nhận trên thiết bị.
