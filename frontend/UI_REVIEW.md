@@ -6,6 +6,7 @@ Cập nhật ngày 21/10/2026. Tài liệu này giữ trạng thái hiện tại
 
 - Hồ sơ: các nhóm thông tin, dị ứng/bệnh nền, ảnh đại diện và chế độ xem/chỉnh sửa. Địa chỉ đăng ký hiển thị tại Thông tin địa chỉ, lưu qua API địa chỉ riêng và giữ bản nháp khi đổi chức năng.
 - Cập nhật hồ sơ: kiểm tra CCCD đúng 12 chữ số, email và định dạng SĐT Việt Nam ở cả form và API. Hiện lỗi dưới từng ô khi rời ô/bấm lưu; số liên hệ phụ được để trống, nhưng nếu nhập phải đúng định dạng. API trả HTTP 400 cùng lỗi từng trường trước khi ghi, giữ kiểm tra trùng CCCD/email; không tự sửa dữ liệu cũ.
+- Ô hồ sơ có icon (CCCD, SĐT, họ tên) dùng chính input làm khung viền, nền và focus như ô SĐT bố/mẹ. Icon đặt bên trong bằng position; wrapper không còn viền/focus riêng nên không tạo hai khung lồng nhau.
 - Nhập sức khỏe: form gọn có nhãn/đơn vị, BMI và phản hồi API. Biểu đồ dùng timestamp thật, tooltip theo lần đo, tách khoảng thiếu dữ liệu và không chèn giá trị 0 giả.
 - Chuyển chức năng: rời/vào theo nhóm nội dung, trạng thái hover/press/loading, chỉ báo điều hướng; hỗ trợ reduced motion và giao diện đơn giản. Không dùng chuyển cảnh để tạo lại dữ liệu hoặc hội thoại.
 - Chat: lịch sử, vị trí đọc, tin mới, bản nháp và tệp đính kèm. Tin người dùng căn phải; danh sách và hội thoại thích ứng trên điện thoại.

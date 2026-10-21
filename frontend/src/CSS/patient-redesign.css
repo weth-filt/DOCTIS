@@ -38,13 +38,13 @@
 .health-studio-layout .studio-profile-section { grid-column:1/-1; scroll-margin-top:100px; padding:23px 26px; border-radius:22px; border-color:var(--care-line); background:var(--care-paper); box-shadow:var(--care-shadow); }
 .health-studio-layout .studio-profile-section .profile-section-title { font-size:17px; border-color:var(--care-line); }
 .health-studio-layout .studio-profile-field > label { color:var(--care-muted); font-size:12px; }
-.health-studio-layout .studio-profile-control { color:var(--care-teal); background:var(--care-soft); border:1px solid var(--care-line); border-radius:11px; padding-inline:12px; box-shadow:inset 0 1px 2px #073a2404; }
+.health-studio-layout .studio-profile-control { position:relative; display:block; min-width:0; color:var(--care-teal); background:transparent; border:0; border-radius:0; padding:0; box-shadow:none; }
+.health-studio-layout .studio-profile-control > svg { position:absolute; inset-inline-start:12px; top:50%; transform:translateY(-50%); pointer-events:none; }
 .health-studio-layout[data-studio-theme] .studio-profile-field :is(input:not([type="checkbox"]),select,textarea) { background:var(--care-soft)!important; color:var(--care-ink)!important; border:1px solid var(--care-line)!important; min-height:42px!important; padding:10px 12px!important; font-size:13px; }
-.health-studio-layout[data-studio-theme] .studio-profile-control > :is(input:not([type="checkbox"]),select,textarea) { background:transparent!important; border:0!important; box-shadow:none!important; padding-inline:0!important; }
+.health-studio-layout[data-studio-theme] .studio-profile-control > :is(input:not([type="checkbox"]),select,textarea) { padding-inline-start:34px!important; }
 .health-studio-layout[data-studio-theme] .studio-profile-field textarea { min-height:82px!important; }
 .health-studio-layout[data-studio-theme] .profile-editor:disabled :is(input:not([type="checkbox"]),select,textarea) { background:transparent!important; border-color:transparent!important; box-shadow:none!important; }
 .health-studio-layout[data-studio-theme] .studio-condition-tile input[type="checkbox"] { flex:0 0 20px; width:20px!important; height:20px!important; min-height:20px!important; padding:0!important; margin:0; border-radius:4px!important; }
-.health-studio-layout .studio-profile-control:focus-within { border-color:var(--care-teal); box-shadow:0 0 0 3px #5eead420; background:var(--care-paper); }
 .health-studio-layout[data-studio-theme] .conversation-workspace .conversation-search input { color:var(--care-ink)!important; background:transparent!important; border:0!important; padding:8px 0!important; box-shadow:none!important; }
 .health-studio-layout[data-studio-theme] .conversation-workspace .conversation-input textarea { color:var(--care-ink)!important; background:var(--care-soft)!important; border:1px solid var(--care-line)!important; padding:12px 14px!important; }
 .health-studio-layout[data-studio-theme] .conversation-workspace .conversation-input textarea:focus { border-color:var(--care-teal)!important; box-shadow:0 0 0 3px #5eead420!important; }
