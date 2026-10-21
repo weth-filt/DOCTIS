@@ -106,6 +106,7 @@ có nhãn chữ; không chỉ dựa vào màu. Chưa có chứng nhận audit WC
 - Identity có avatar ceramic, tên/email.
 - Phân nhóm trong cùng khung: cá nhân, y tế, liên hệ khẩn cấp, địa chỉ phục vụ.
 - Giữ chỉnh sửa/lưu/hủy/đăng xuất và hướng dẫn cập nhật địa chỉ đồng bộ qua web.
+- Hồ sơ không có nút AI nổi hoặc khung lời mời che thông tin; truy cập AI từ thẻ ở trang chủ.
 
 ### DOCTIS AI và nhắn bác sĩ
 
