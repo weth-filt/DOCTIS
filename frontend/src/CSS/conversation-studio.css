@@ -114,3 +114,28 @@
 .conversation-empty-icon { box-shadow:4px 5px 0 color-mix(in srgb,var(--care-teal) 15%,var(--care-paper)); }
 .conversation-workspace :is(.message-file-attachment,.message-image-attachment,.message-attachment-preview) { background:var(--care-paper); color:var(--care-ink); border-color:var(--care-line); }
 .conversation-workspace .message-file-attachment :is(a,strong,span), .conversation-workspace .message-attachment-preview :is(strong,span) { color:var(--care-ink); }
+
+/* Attachment bubbles size to the card, rather than to the image's natural
+   width. Keep document/screenshot previews intact and actions on their own row. */
+.conversation-workspace .conversation-bubble.has-attachment { width:min(360px,82%);max-width:82%;min-width:0;padding:8px; }
+.conversation-workspace .conversation-bubble.has-attachment > p { margin:2px 4px 8px; }
+.conversation-workspace .conversation-bubble.has-attachment > small { margin:7px 3px 0; }
+.conversation-workspace .message-image-attachment { width:100%;min-width:0;margin:0;border:1px solid var(--care-line);border-radius:12px;overflow:hidden;background:var(--care-paper); }
+.conversation-workspace .message-image-preview-link { display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden;background:var(--care-soft);border-bottom:1px solid var(--care-line); }
+.conversation-workspace .message-image-attachment .message-image-preview-link img { display:block;width:auto;max-width:100%;height:auto;max-height:320px;object-fit:contain; }
+.conversation-workspace .message-image-attachment .message-attachment-meta { display:grid;grid-template-columns:minmax(0,1fr);gap:10px;padding:10px; }
+.conversation-workspace .message-image-attachment .message-attachment-name { display:flex;align-items:center;gap:8px;min-width:0;font-size:12px;font-weight:600;color:var(--care-ink); }
+.conversation-workspace .message-attachment-name > svg { flex:0 0 16px;width:16px;height:16px;color:var(--care-teal); }
+.conversation-workspace .message-attachment-label { display:grid;gap:2px;min-width:0;flex:1; }
+.conversation-workspace .message-attachment-label > span { display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.conversation-workspace .message-attachment-label > small { display:block;margin:0;text-align:left;font-size:11px;font-weight:400;line-height:1.5;color:var(--care-muted); }
+.conversation-workspace .message-attachment-actions { display:flex;align-items:center;gap:8px; }
+.conversation-workspace .message-attachment-actions .attachment-action-btn { display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;margin:0;padding:7px 10px;border:1px solid var(--care-line);border-radius:8px;background:var(--care-soft);color:var(--care-ink);font:inherit;font-size:12px;font-weight:600;line-height:1.4;text-decoration:none;white-space:nowrap;overflow-wrap:normal;word-break:normal;cursor:pointer; }
+.conversation-workspace .message-image-attachment .attachment-action-btn { flex:1 1 0;min-width:0; }
+.conversation-workspace .message-attachment-actions .attachment-action-btn.download { background:var(--care-accent-soft);color:var(--care-teal); }
+.conversation-workspace .message-attachment-actions .attachment-action-btn > svg { flex:0 0 13px;width:13px;height:13px; }
+.conversation-workspace .message-attachment-actions .attachment-action-btn:hover { background:var(--care-accent-soft);color:var(--care-teal); }
+.conversation-workspace .conversation-bubble.has-attachment .message-file-attachment { width:100%;min-width:0;margin:0; }
+@media(max-width:760px) {
+  .conversation-workspace .conversation-bubble.has-attachment { width:min(360px,92%);max-width:92%; }
+}

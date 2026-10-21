@@ -640,10 +640,13 @@ export default function DoctorDashboard() {
 
           <div className="message-attachment-meta">
             <div className="message-attachment-name">
-              <FaImage />
-              <span title={attachment.name || "Ảnh đính kèm"}>
-                {attachment.name || "Ảnh đính kèm"}
-              </span>
+              <FaImage aria-hidden="true" />
+              <div className="message-attachment-label">
+                <span title={attachment.name || "Ảnh đính kèm"}>
+                  {attachment.name || "Ảnh đính kèm"}
+                </span>
+                <small>{formatFileSize(attachment.size)}</small>
+              </div>
             </div>
 
             <div className="message-attachment-actions">
@@ -652,15 +655,17 @@ export default function DoctorDashboard() {
                 target="_blank"
                 rel="noreferrer"
                 className="attachment-action-btn"
+                aria-label={`Mở ảnh ${attachment.name || "đính kèm"}`}
               >
-                Mở
+                Mở ảnh <span aria-hidden="true">↗</span>
               </a>
               <button
                 type="button"
                 className="attachment-action-btn download"
                 onClick={() => downloadAttachment(attachment)}
+                aria-label={`Tải xuống ${attachment.name || "ảnh đính kèm"}`}
               >
-                <FaDownload /> Tải xuống
+                <FaDownload aria-hidden="true" /> Tải xuống
               </button>
             </div>
           </div>
@@ -1411,7 +1416,7 @@ export default function DoctorDashboard() {
                             )}
 
                             <div className={`conversation-message ${mine ? "mine" : "theirs"}`}>
-                              <div className="conversation-bubble">
+                              <div className={`conversation-bubble${message.attachment ? " has-attachment" : ""}`}>
                                 {message.content && (
                                   <p>{message.content}</p>
                                 )}
