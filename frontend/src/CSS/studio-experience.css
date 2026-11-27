@@ -33,6 +33,17 @@
 }
 [data-studio-theme] :is(.studio-sidebar,.doctor-sidebar,.admin-sidebar) { background:var(--care-sidebar); color:var(--care-sidebar-ink); }
 [data-studio-theme] ::placeholder { color:var(--care-muted); opacity:1; }
+/* Legacy admin search fields used white text even on the light surface. */
+.role-studio[data-studio-theme] .toolbar-search input {
+  color:var(--care-ink,#0b2b2c);
+  -webkit-text-fill-color:var(--care-ink,#0b2b2c);
+  caret-color:var(--care-teal,#08787b);
+}
+.role-studio[data-studio-theme] .toolbar-search input::placeholder {
+  color:var(--care-muted,#546e6f);
+  -webkit-text-fill-color:var(--care-muted,#546e6f);
+  opacity:1;
+}
 [data-studio-theme="dark"] :is(.studio-profile-section,.profile-page-header,.health-form,.health-form-card,.studio-form-section,.measurement-panel,.conversation-workspace,.conversation-list,.conversation-heading,.conversation-composer) { background:var(--care-paper); border-color:var(--care-line); color:var(--care-ink); }
 [data-studio-theme="dark"] :is(input,textarea,select):not([type="checkbox"]):not([type="radio"]) { color:var(--care-ink); caret-color:var(--care-aqua); }
 [data-studio-theme="dark"] :is(.studio-input,.studio-field,.profile-form input,.profile-form select,.profile-form textarea) { background:var(--care-soft); border-color:var(--care-line); }
